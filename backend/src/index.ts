@@ -1,35 +1,32 @@
 import express from 'express';
 import cors from 'cors';
+import path from 'path';
 
 const app = express();
-const PORT = 3001; // Try a different port
+// Use the PORT environment variable that Cloud Run provides (defaults to 8080)
+const PORT = process.env.PORT || 8080;
 
-// Very permissive CORS setup
-app.use(cors({
-  origin: '*',
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
+// CORS setup
+app.use(cors());
 
-// Debug every request
-app.use((req, res, next) => {
-  console.log(`REQUEST: ${req.method} ${req.path}`);
-  console.log(`Headers:`, req.headers);
-  next();
-});
+// JSON middleware
+app.use(express.json());
 
-// Simple API route with no restrictions
+// API routes
 app.get('/api/message', (req, res) => {
   console.log('Message endpoint accessed');
   res.status(200).json({ message: 'ok', success: true });
 });
 
-// Root route
-app.get('/', (req, res) => {
-  res.send('API is running');
+// Serve static frontend files (if this is a combined service)
+app.use(express.static(path.join(__dirname, '../public')));
+
+// Serve index.html for all other routes (SPA support)
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, '../public/index.html'));
 });
 
 // Start server
 app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });

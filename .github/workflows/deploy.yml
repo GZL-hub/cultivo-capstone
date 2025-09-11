@@ -46,4 +46,4 @@ jobs:
       with:
         service: ${{ env.SERVICE_NAME }}
         region: ${{ env.REGION }}
-        image: ${{ env.AR_HOSTNAME }}/${{ env.PROJECT_ID }}/${{ env.AR_REPOSITORY }}/${{ env.SERVICE_NAME }}:${{ github.sha }}
+        image: ${{ env.AR_HOSTNAME }}/${{ env.PROJECT_ID }}/${{ env.AR_REPOSITORY }}/${{ env.SERVICE_NAME }}:${{ github.sha }}  

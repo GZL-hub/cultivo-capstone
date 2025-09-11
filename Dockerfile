@@ -30,8 +30,8 @@ RUN npm install --only=production
 # Copy frontend build to be served by the backend
 COPY --from=frontend-builder /app/frontend/build ./public
 
-# Expose the backend port
-EXPOSE 3001
+# Expose the port that Cloud Run will use
+EXPOSE 8080
 
 # Start the server
 CMD ["node", "dist/index.js"]
