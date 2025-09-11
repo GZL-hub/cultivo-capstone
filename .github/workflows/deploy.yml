@@ -8,8 +8,6 @@ env:
   PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
   REGION: asia-southeast1
   SERVICE_NAME: cultivo-capstone
-  AR_REPOSITORY: cloud-run-source-deploy
-  AR_HOSTNAME: asia-southeast1-docker.pkg.dev
 
 jobs:
   build-and-deploy:
@@ -19,31 +17,21 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v3
       
-    # Use the updated auth action for better authentication handling
     - id: 'auth'
       name: 'Authenticate to Google Cloud'
       uses: 'google-github-actions/auth@v1'
       with:
         credentials_json: '${{ secrets.GCP_SA_KEY }}'
     
-    # Set up the Cloud SDK with the authenticated credentials
     - name: 'Set up Cloud SDK'
       uses: 'google-github-actions/setup-gcloud@v1'
-      with:
-        project_id: ${{ secrets.GCP_PROJECT_ID }}
-      
-    # Explicitly configure Docker auth
-    - name: Authorize Docker push
-      run: gcloud auth configure-docker ${{ env.AR_HOSTNAME }} --quiet
-      
-    # Build and push with explicit project ID
-    - name: Build and push to Artifact Registry
-      run: |
-        gcloud builds submit --project=${{ secrets.GCP_PROJECT_ID }} --tag ${{ env.AR_HOSTNAME }}/${{ env.PROJECT_ID }}/${{ env.AR_REPOSITORY }}/${{ env.SERVICE_NAME }}:${{ github.sha }}
     
-    - name: Deploy to Cloud Run
-      uses: google-github-actions/deploy-cloudrun@v1
-      with:
-        service: ${{ env.SERVICE_NAME }}
-        region: ${{ env.REGION }}
-        image: ${{ env.AR_HOSTNAME }}/${{ env.PROJECT_ID }}/${{ env.AR_REPOSITORY }}/${{ env.SERVICE_NAME }}:${{ github.sha }}
+    # Use Cloud Build to build and deploy in one step
+    - name: 'Build and Deploy using Cloud Build'
+      run: |
+        gcloud run deploy ${{ env.SERVICE_NAME }} \
+          --source . \
+          --project ${{ env.PROJECT_ID }} \
+          --region ${{ env.REGION }} \
+          --platform managed \
+          --allow-unauthenticated
