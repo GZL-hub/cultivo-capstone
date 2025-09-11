@@ -26,7 +26,7 @@ jobs:
     - name: 'Set up Cloud SDK'
       uses: 'google-github-actions/setup-gcloud@v1'
     
-    # Use Cloud Build to build and deploy in one step
+    # Use Cloud Build to build and deploy in one step with logging options
     - name: 'Build and Deploy using Cloud Build'
       run: |
         gcloud run deploy ${{ env.SERVICE_NAME }} \
@@ -34,4 +34,10 @@ jobs:
           --project ${{ env.PROJECT_ID }} \
           --region ${{ env.REGION }} \
           --platform managed \
-          --allow-unauthenticated
+          --allow-unauthenticated \
+          --log-http \
+          --verbosity=debug \
+          --no-use-default-service-account \
+          --build-log-streaming \
+          --build-arg GOOGLE_BUILDABLE=. \
+          --set-build-env-vars=LOGGING_MODE=CLOUD_LOGGING_ONLY
