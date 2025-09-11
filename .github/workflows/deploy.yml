@@ -19,20 +19,27 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v3
       
-    - name: Set up Cloud SDK
-      uses: google-github-actions/setup-gcloud@v1
+    # Use the updated auth action for better authentication handling
+    - id: 'auth'
+      name: 'Authenticate to Google Cloud'
+      uses: 'google-github-actions/auth@v1'
+      with:
+        credentials_json: '${{ secrets.GCP_SA_KEY }}'
+    
+    # Set up the Cloud SDK with the authenticated credentials
+    - name: 'Set up Cloud SDK'
+      uses: 'google-github-actions/setup-gcloud@v1'
       with:
         project_id: ${{ secrets.GCP_PROJECT_ID }}
-        service_account_key: ${{ secrets.GCP_SA_KEY }}
-        export_default_credentials: true
-        
-    - name: Authorize Docker push
-      run: gcloud auth configure-docker ${{ env.AR_HOSTNAME }}
       
-    # Use the root directory which now contains the combined Dockerfile
+    # Explicitly configure Docker auth
+    - name: Authorize Docker push
+      run: gcloud auth configure-docker ${{ env.AR_HOSTNAME }} --quiet
+      
+    # Build and push with explicit project ID
     - name: Build and push to Artifact Registry
       run: |
-        gcloud builds submit --tag ${{ env.AR_HOSTNAME }}/${{ env.PROJECT_ID }}/${{ env.AR_REPOSITORY }}/${{ env.SERVICE_NAME }}:${{ github.sha }}
+        gcloud builds submit --project=${{ secrets.GCP_PROJECT_ID }} --tag ${{ env.AR_HOSTNAME }}/${{ env.PROJECT_ID }}/${{ env.AR_REPOSITORY }}/${{ env.SERVICE_NAME }}:${{ github.sha }}
     
     - name: Deploy to Cloud Run
       uses: google-github-actions/deploy-cloudrun@v1
