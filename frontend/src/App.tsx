@@ -9,7 +9,7 @@ function App() {
   useEffect(() => {
     const fetchMessage = async () => {
       try {
-        const response = await fetch('http://localhost:3001/api/message');
+        const response = await fetch('/api/message');        
         const data = await response.json();
         setMessage(data.message);
         setLoading(false);
