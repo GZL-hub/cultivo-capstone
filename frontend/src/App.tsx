@@ -25,8 +25,8 @@ function App() {
   return (
     <div className="App">
       <header className="App-header">
-        {loading && <p>Loading message...</p>}
-        {error && <p>Error: {error}</p>}
+        {loading && <p>Loading message TEST 1...</p>}
+        {error && <p>Error TEST 1: {error}</p>}
         {message && <p>Message from server: {message}</p>}
       </header>
     </div>
