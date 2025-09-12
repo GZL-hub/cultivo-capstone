@@ -1,0 +1,40 @@
+# Node.js dependencies
+node_modules/
+
+# Build output
+/dist/
+
+# TypeScript
+*.tsbuildinfo
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Docker
+*.pid
+
+# Misc
+.idea/
+.vscode/
+
+# Ignore coverage reports
+coverage/
+
+# Ignore lock files (optional, if you use only one)
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Ignore test output
+/test-output/
