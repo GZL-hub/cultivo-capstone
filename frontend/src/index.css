@@ -1,3 +1,21 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Import Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Figtree:ital,wght@0,300..900;1,300..900&family=Noto+Sans:wght@100;200;300;500;700&family=Roboto+Mono:ital,wght@0,100..700;1,100..700&display=swap');
+
+/* Rest of your existing CSS */
+
+/* Define font variables for consistent use */
+:root {
+  --font-figtree: 'Figtree', sans-serif;
+  --font-noto-sans: 'Noto Sans', sans-serif;
+  --font-roboto-mono: 'Roboto Mono', monospace;
+}
+
+/* Apply default font to body */
+body {
+  font-family: var(--font-figtree);
+  /* Your existing body styles */
+}
