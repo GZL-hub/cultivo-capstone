@@ -2,28 +2,94 @@ import React from 'react';
 
 const Dashboard = () => {
   return (
-    <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-md p-6">
-      <h1 className="text-2xl font-bold text-green-700 mb-4">Dashboard</h1>
+    <div className="w-full h-full flex flex-col px-2 py-2">    
+      {/* Top row - devices stats and weather */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+        {/* Total Devices Registered */}
+        <div className="bg-white p-4 rounded-lg shadow-md border-l-4 border-blue-500">
+          <h2 className="text-lg font-semibold text-gray-700 mb-1">Total Devices Registered</h2>
+          <div className="h-16 flex items-center justify-center">
+            {/* Content will go here */}
+          </div>
+        </div>
+        
+        {/* Total Devices Online */}
+        <div className="bg-white p-4 rounded-lg shadow-md border-l-4 border-green-500">
+          <h2 className="text-lg font-semibold text-gray-700 mb-1">Total Devices Online</h2>
+          <div className="h-16 flex items-center justify-center">
+            {/* Content will go here */}
+          </div>
+        </div>
+        
+        {/* Weather Card */}
+        <div className="bg-white p-4 rounded-lg shadow-md border-l-4 border-yellow-500">
+          <h2 className="text-lg font-semibold text-gray-700 mb-1">Weather</h2>
+          <div className="h-16 flex items-center justify-center">
+            {/* Weather data will go here */}
+          </div>
+        </div>
+      </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-        <div className="bg-green-50 p-6 rounded-lg border border-green-100">
-          <h2 className="text-lg font-semibold text-green-800 mb-3">Farm Status</h2>
-          <p className="text-gray-600">All systems operational. Monitoring active.</p>
+      {/* Main content area - flex-grow to take remaining height */}
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-4 flex-grow">
+        {/* Left column - Rainwater collector and Sensor Dashboard */}
+        <div className="md:col-span-4 flex flex-col space-y-4">
+          {/* Rainwater Collector */}
+          <div className="bg-white p-4 rounded-lg shadow-md flex-1">
+            <h2 className="text-lg font-semibold text-gray-700 mb-2">Rainwater Collector</h2>
+            <div className="h-[calc(100%-2rem)] flex items-center justify-center border border-dashed border-gray-300 rounded-md">
+              {/* Rainwater data will go here */}
+            </div>
+          </div>
+          
+          {/* Sensor Dashboard (no title) */}
+          <div className="bg-white p-4 rounded-lg shadow-md flex-1">
+            <div className="grid grid-cols-2 gap-3 h-[calc(100%-1rem)]">
+              {/* Plant Health */}
+              <div className="border border-gray-200 rounded-md p-3">
+                <h3 className="text-sm font-medium text-gray-700 mb-1">Plant Health</h3>
+                <div className="h-[calc(100%-1.75rem)] flex items-center justify-center border border-dashed border-gray-300 rounded-md">
+                  {/* Plant health data will go here */}
+                </div>
+              </div>
+              
+              {/* Camera */}
+              <div className="border border-gray-200 rounded-md p-3">
+                <h3 className="text-sm font-medium text-gray-700 mb-1">Camera</h3>
+                <div className="h-[calc(100%-1.75rem)] flex items-center justify-center border border-dashed border-gray-300 rounded-md">
+                  {/* Camera feed will go here */}
+                </div>
+              </div>
+              
+              {/* pH Level */}
+              <div className="border border-gray-200 rounded-md p-3">
+                <h3 className="text-sm font-medium text-gray-700 mb-1">pH Level</h3>
+                <div className="h-[calc(100%-1.75rem)] flex items-center justify-center border border-dashed border-gray-300 rounded-md">
+                  {/* pH level data will go here */}
+                </div>
+              </div>
+              
+              {/* Soil Moisture */}
+              <div className="border border-gray-200 rounded-md p-3">
+                <h3 className="text-sm font-medium text-gray-700 mb-1">Soil Moisture</h3>
+                <div className="h-[calc(100%-1.75rem)] flex items-center justify-center border border-dashed border-gray-300 rounded-md">
+                  {/* Soil moisture data will go here */}
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
         
-        <div className="bg-blue-50 p-6 rounded-lg border border-blue-100">
-          <h2 className="text-lg font-semibold text-blue-800 mb-3">Weather Forecast</h2>
-          <p className="text-gray-600">Sunny, 24°C. Optimal for harvesting.</p>
-        </div>
-
-        <div className="bg-amber-50 p-6 rounded-lg border border-amber-100">
-          <h2 className="text-lg font-semibold text-amber-800 mb-3">Crop Health</h2>
-          <p className="text-gray-600">92% healthy. 3 areas require attention.</p>
-        </div>
-        
-        <div className="bg-purple-50 p-6 rounded-lg border border-purple-100">
-          <h2 className="text-lg font-semibold text-purple-800 mb-3">Resource Usage</h2>
-          <p className="text-gray-600">Water usage 12% below average.</p>
+        {/* Right column - Farm Map (taking full height) */}
+        <div className="md:col-span-8 flex">
+          {/* Farm Map (no title) */}
+          <div className="bg-white p-4 rounded-lg shadow-md w-full">
+            {/* No title here as requested */}
+            <div className="h-full flex items-center justify-center border border-dashed border-gray-300 rounded-md">
+              {/* Google Maps with Farm Info and Active Sensors will go here */}
+              <p className="text-gray-500">Google Map with Farm Info and Active Sensors</p>
+            </div>
+          </div>
         </div>
       </div>
     </div>

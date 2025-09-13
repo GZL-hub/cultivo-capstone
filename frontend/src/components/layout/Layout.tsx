@@ -28,8 +28,8 @@ const Layout: React.FC<LayoutProps> = ({ children, onLogout }) => {
           collapsed={collapsed}
           onLogout={onLogout}
         />
-        <main className="flex-1 p-6 overflow-auto">
-          {children}
+        <main className="flex-1 p-3 md:p-4 lg:p-5 overflow-auto w-full">
+        {children}
         </main>
       </div>
     </div>
