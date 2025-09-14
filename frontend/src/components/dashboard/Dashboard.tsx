@@ -1,33 +1,39 @@
 import React from 'react';
+import DeviceStatistics from './cards/DeviceStatistics';
+import WeatherCard from './cards/WeatherCard';
 
 const Dashboard = () => {
+  // Define deviceStats with default values
+  const deviceStats = {
+    totalRegistered: 0,
+    totalOnline: 0
+  };
+
+  // Define weather data with default values
+  const weatherData = {
+    temperature: 24,
+    condition: 'Sunny',
+    humidity: 65,
+    windSpeed: 8,
+  };
+
   return (
     <div className="w-full h-full flex flex-col px-2 py-2">    
       {/* Top row - devices stats and weather */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-        {/* Total Devices Registered */}
-        <div className="bg-white p-4 rounded-lg shadow-md border-l-4 border-blue-500">
-          <h2 className="text-lg font-semibold text-gray-700 mb-1">Total Devices Registered</h2>
-          <div className="h-16 flex items-center justify-center">
-            {/* Content will go here */}
-          </div>
-        </div>
-        
-        {/* Total Devices Online */}
-        <div className="bg-white p-4 rounded-lg shadow-md border-l-4 border-green-500">
-          <h2 className="text-lg font-semibold text-gray-700 mb-1">Total Devices Online</h2>
-          <div className="h-16 flex items-center justify-center">
-            {/* Content will go here */}
-          </div>
-        </div>
-        
-        {/* Weather Card */}
-        <div className="bg-white p-4 rounded-lg shadow-md border-l-4 border-yellow-500">
-          <h2 className="text-lg font-semibold text-gray-700 mb-1">Weather</h2>
-          <div className="h-16 flex items-center justify-center">
-            {/* Weather data will go here */}
-          </div>
-        </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+        {/* Device Statistics Component */}
+        <DeviceStatistics 
+          totalRegistered={deviceStats.totalRegistered} 
+          totalOnline={deviceStats.totalOnline} 
+        />
+      
+        {/* Weather Card Component */}
+        <WeatherCard 
+          temperature={weatherData.temperature}
+          condition={weatherData.condition}
+          humidity={weatherData.humidity}
+          windSpeed={weatherData.windSpeed}
+        />
       </div>
       
       {/* Main content area - flex-grow to take remaining height */}
