@@ -53,7 +53,7 @@ const WeatherCard: React.FC<WeatherCardProps> = ({
     // Night: 19:00 - 5:59 (7pm - 5:59am)
     if (hour >= 19 || hour < 6) {
       return {
-        background: 'linear-gradient(135deg, #061d45, #330855)',
+        background: 'linear-gradient(135deg, #07204bff, #8947c7ff)',
         color: 'white'
       };
     }
