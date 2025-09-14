@@ -1,6 +1,7 @@
 import React from 'react';
 import DeviceStatistics from './cards/DeviceStatistics';
 import WeatherCard from './cards/WeatherCard';
+import RainwaterCollector from './cards/RainwaterCollector';
 
 const Dashboard = () => {
   // Define deviceStats with default values
@@ -15,6 +16,13 @@ const Dashboard = () => {
     condition: 'Sunny',
     humidity: 65,
     windSpeed: 8,
+  };
+
+  // Define rainwater collector data with default values
+  const rainwaterData = {
+    currentLevel: 65,  // 65% full
+    capacity: 500,     // 500 liters capacity
+    lastCollected: "Sept 12, 2025" 
   };
 
   return (
@@ -40,16 +48,21 @@ const Dashboard = () => {
       <div className="grid grid-cols-1 md:grid-cols-12 gap-4 flex-grow">
         {/* Left column - Rainwater collector and Sensor Dashboard */}
         <div className="md:col-span-4 flex flex-col space-y-4">
-          {/* Rainwater Collector */}
-          <div className="bg-white p-4 rounded-lg shadow-md flex-1">
+          {/* Adjust the flex ratio - Rainwater gets less space, sensors get more */}
+          {/* Rainwater Collector - now with flex-[2] instead of flex-1 */}
+          <div className="bg-white p-4 rounded-lg shadow-md flex-[2]">
             <h2 className="text-lg font-semibold text-gray-700 mb-2">Rainwater Collector</h2>
-            <div className="h-[calc(100%-2rem)] flex items-center justify-center border border-dashed border-gray-300 rounded-md">
-              {/* Rainwater data will go here */}
+            <div className="h-[calc(100%-2rem)]">
+              <RainwaterCollector
+                currentLevel={rainwaterData.currentLevel}
+                capacity={rainwaterData.capacity}
+                lastCollected={rainwaterData.lastCollected}
+              />
             </div>
           </div>
           
-          {/* Sensor Dashboard (no title) */}
-          <div className="bg-white p-4 rounded-lg shadow-md flex-1">
+          {/* Sensor Dashboard - now with flex-[3] to take more space */}
+          <div className="bg-white p-4 rounded-lg shadow-md flex-[3]">
             <div className="grid grid-cols-2 gap-3 h-[calc(100%-1rem)]">
               {/* Plant Health */}
               <div className="border border-gray-200 rounded-md p-3">
