@@ -1,4 +1,5 @@
 import React from 'react';
+import { GoogleMap, useJsApiLoader } from '@react-google-maps/api';
 
 // Define device status type
 type DeviceStatus = 'online' | 'offline' | 'low_battery';
@@ -61,6 +62,31 @@ const FarmMapCard: React.FC<FarmMapCardProps> = ({
     }
   };
 
+  // Parse coordinates from string (assuming format is "lat,lng")
+  const getMapCenter = () => {
+    try {
+      const [lat, lng] = farmInfo.coordinates.split(',').map(coord => parseFloat(coord.trim()));
+      if (!isNaN(lat) && !isNaN(lng)) {
+        return { lat, lng };
+      }
+    } catch (error) {
+      console.error("Error parsing coordinates:", error);
+    }
+    // Default coordinates if parsing fails
+    return { lat: 37.7749, lng: -122.4194 }; // Default to San Francisco
+  };
+
+  // Google Maps integration
+  const { isLoaded } = useJsApiLoader({
+    id: 'google-map-script',
+    googleMapsApiKey: process.env.REACT_APP_GOOGLE_MAPS_API_KEY || ''
+  });
+
+  const mapContainerStyle = {
+    width: '100%',
+    height: '100%',
+  };
+
   return (
     <div className="bg-white p-4 rounded-lg shadow-md w-full h-full flex flex-col">
       {/* Map Header */}
@@ -74,21 +100,34 @@ const FarmMapCard: React.FC<FarmMapCardProps> = ({
         </button>
       </div>
 
-        {/* Map Area */}
-        <div className="h-[350px] w-full bg-gray-100 rounded-md mb-3 overflow-hidden border border-gray-200">
-        {/* Simple placeholder instead of background image */}
-        <div className="h-full w-full flex items-center justify-center bg-gray-50">
+      {/* Map Area */}
+      <div className="h-[350px] w-full bg-gray-100 rounded-md mb-3 overflow-hidden border border-gray-200">
+        {isLoaded ? (
+          <GoogleMap
+            mapContainerStyle={mapContainerStyle}
+            center={getMapCenter()}
+            zoom={14}
+            options={{
+              fullscreenControl: false,
+              mapTypeControl: false,
+              streetViewControl: false,
+            }}
+          >
+            {/* No markers for now */}
+          </GoogleMap>
+        ) : (
+          <div className="h-full w-full flex items-center justify-center bg-gray-50">
             <div className="text-center">
-            <div className="mb-2 text-gray-400">
+              <div className="mb-2 text-gray-400">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
                 </svg>
+              </div>
+              <p className="text-gray-500 font-medium">Loading Map...</p>
             </div>
-            <p className="text-gray-500 font-medium">Map Area</p>
-            <p className="text-gray-400 text-sm mt-1">Google Maps integration pending</p>
-            </div>
-        </div>
-        </div>
+          </div>
+        )}
+      </div>
       
       {/* Farm Info and Active Sensors Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 flex-grow">

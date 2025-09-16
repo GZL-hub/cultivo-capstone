@@ -4,6 +4,7 @@
   "private": true,
   "dependencies": {
     "@paper-design/shaders-react": "^0.0.52",
+    "@react-google-maps/api": "^2.20.7",
     "@tailwindcss/cli": "^4.1.13",
     "@tailwindcss/postcss": "^4.1.13",
     "@testing-library/dom": "^10.4.1",

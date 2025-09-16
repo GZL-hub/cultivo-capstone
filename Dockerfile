@@ -5,6 +5,8 @@ FROM node:18 AS frontend-builder
 WORKDIR /app/frontend
 COPY frontend/package*.json ./
 RUN npm install
+# Copy the .env file that was created in the GitHub workflow
+COPY frontend/.env ./
 COPY frontend/ ./
 RUN npm run build
 
