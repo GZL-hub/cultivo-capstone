@@ -5,8 +5,12 @@ FROM node:18 AS frontend-builder
 WORKDIR /app/frontend
 COPY frontend/package*.json ./
 RUN npm install
-# Copy the .env file that was created in the GitHub workflow
-COPY frontend/.env ./
+
+# Create .env file - We'll use ARG to pass the API key during build
+ARG REACT_APP_GOOGLE_MAPS_API_KEY
+RUN echo "REACT_APP_GOOGLE_MAPS_API_KEY=$REACT_APP_GOOGLE_MAPS_API_KEY" > .env
+
+# Copy the rest of the frontend code
 COPY frontend/ ./
 RUN npm run build
 

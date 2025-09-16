@@ -36,15 +36,12 @@ jobs:
     - name: Authorize Docker push
       run: gcloud auth configure-docker ${{ env.AR_HOSTNAME }} --quiet
       
-    # Create a .env file with the API key
-    - name: Create .env file for frontend
-      run: |
-        echo "REACT_APP_GOOGLE_MAPS_API_KEY=${{ secrets.GOOGLE_MAPS_API_KEY }}" > frontend/.env
-      
-    # Build and push with explicit project ID
+    # Build and push with explicit project ID and build args for the API key
     - name: Build and push to Artifact Registry
       run: |
-        gcloud builds submit --project=${{ secrets.GCP_PROJECT_ID }} --tag ${{ env.AR_HOSTNAME }}/${{ env.PROJECT_ID }}/${{ env.AR_REPOSITORY }}/${{ env.SERVICE_NAME }}:${{ github.sha }}
+        gcloud builds submit --project=${{ secrets.GCP_PROJECT_ID }} \
+          --tag ${{ env.AR_HOSTNAME }}/${{ env.PROJECT_ID }}/${{ env.AR_REPOSITORY }}/${{ env.SERVICE_NAME }}:${{ github.sha }} \
+          --build-arg REACT_APP_GOOGLE_MAPS_API_KEY=${{ secrets.GOOGLE_MAPS_API_KEY }}
     
     - name: Deploy to Cloud Run
       uses: google-github-actions/deploy-cloudrun@v1
