@@ -3,6 +3,7 @@ import DeviceStatistics from './cards/DeviceStatistics';
 import WeatherCard from './cards/WeatherCard';
 import RainwaterCollector from './cards/RainwaterCollector';
 import SensorCard from './cards/SensorCard';
+import FarmMapCard from './cards/FarmMapCard';
 // Import icons
 import { 
   FaSeedling, 
@@ -33,10 +34,34 @@ const Dashboard = () => {
     lastCollected: "Sept 12, 2025" 
   };
 
+  // Define farm info
+  const farmInfo = {
+    name: "Green Valley Orchard",
+    type: "Tree Orchard",
+    operationDate: "March 15, 2022",
+    areaSize: "5.2 hectares",
+    coordinates: "14.5995° N, 120.9842° E"
+  };
+
+  // Define devices
+  const devices = [
+    { id: "1", name: "ESP32-SM01", type: "Soil Moisture Sensor", status: "online" as const },
+    { id: "2", name: "ESP32-PH02", type: "pH Level Sensor", status: "online" as const },
+    { id: "3", name: "ESP32-CAM01", type: "Camera Module", status: "low_battery" as const },
+    { id: "4", name: "ESP32-TEMP03", type: "Temperature Sensor", status: "offline" as const },
+    { id: "5", name: "ESP32-HUM04", type: "Humidity Sensor", status: "online" as const },
+  ];
+
   // Sensor card click handlers
   const handleSensorClick = (sensorName: string) => {
     console.log(`${sensorName} sensor clicked`);
     // You can add navigation or open a modal with detailed information
+  };
+
+  // View full map handler
+  const handleViewFullMap = () => {
+    console.log("View full map clicked");
+    // Navigate to full map view or open a modal
   };
 
   return (
@@ -143,14 +168,13 @@ const Dashboard = () => {
           </div>
         </div>
         
-        {/* Right column - Farm Map (taking full height) */}
+        {/* Right column - Farm Map with Farm Info and Active Devices */}
         <div className="md:col-span-8 flex">
-          {/* Farm Map (no title) */}
-          <div className="bg-white p-4 rounded-lg shadow-md w-full">
-            <div className="h-full flex items-center justify-center border border-dashed border-gray-300 rounded-md">
-              <p className="text-gray-500">Google Map with Farm Info and Active Sensors</p>
-            </div>
-          </div>
+          <FarmMapCard 
+            farmInfo={farmInfo}
+            devices={devices}
+            onViewFullMap={handleViewFullMap}
+          />
         </div>
       </div>
     </div>
