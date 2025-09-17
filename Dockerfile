@@ -6,12 +6,13 @@ WORKDIR /app/frontend
 COPY frontend/package*.json ./
 RUN npm install
 
-# Create .env file - We'll use ARG to pass the API key during build
+# Copy the frontend code first
+COPY frontend/ ./
+
+# Then create .env file to override any committed .env file
 ARG REACT_APP_GOOGLE_MAPS_API_KEY
 RUN echo "REACT_APP_GOOGLE_MAPS_API_KEY=$REACT_APP_GOOGLE_MAPS_API_KEY" > .env
 
-# Copy the rest of the frontend code
-COPY frontend/ ./
 RUN npm run build
 
 # Build backend
