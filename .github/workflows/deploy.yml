@@ -36,19 +36,19 @@ jobs:
     - name: Authorize Docker push
       run: gcloud auth configure-docker ${{ env.AR_HOSTNAME }} --quiet
       
-    # Create a test file to verify API key is being passed correctly
+    # Debug step to verify API key
     - name: Debug API key
       run: |
         echo "REACT_APP_GOOGLE_MAPS_API_KEY starts with: ${GOOGLE_MAPS_API_KEY:0:4}..." >> debug.txt
       env:
         GOOGLE_MAPS_API_KEY: ${{ secrets.GOOGLE_MAPS_API_KEY }}
       
-    # Build and push with explicit project ID and build args for the API key
+    # Build and push using Cloud Build with substitution variables
     - name: Build and push to Artifact Registry
       run: |
         gcloud builds submit --project=${{ secrets.GCP_PROJECT_ID }} \
-          --tag ${{ env.AR_HOSTNAME }}/${{ env.PROJECT_ID }}/${{ env.AR_REPOSITORY }}/${{ env.SERVICE_NAME }}:${{ github.sha }} \
-          --build-arg REACT_APP_GOOGLE_MAPS_API_KEY=${{ secrets.GOOGLE_MAPS_API_KEY }}
+          --config=cloudbuild.yaml \
+          --substitutions=_REACT_APP_GOOGLE_MAPS_API_KEY=${{ secrets.GOOGLE_MAPS_API_KEY }},_AR_HOSTNAME=${{ env.AR_HOSTNAME }},_AR_REPOSITORY=${{ env.AR_REPOSITORY }},_SERVICE_NAME=${{ env.SERVICE_NAME }}
     
     - name: Deploy to Cloud Run
       uses: google-github-actions/deploy-cloudrun@v1
