@@ -11,14 +11,23 @@ COPY frontend/ ./
 
 # Then create .env file to override any committed .env file
 ARG REACT_APP_GOOGLE_MAPS_API_KEY
-# Debug - Print first few characters to verify key is passed
-RUN echo "API Key starts with: ${REACT_APP_GOOGLE_MAPS_API_KEY:0:4}..."
+
+# Debug - Use a safer approach to check if the key exists
+RUN if [ -n "$REACT_APP_GOOGLE_MAPS_API_KEY" ]; then \
+      echo "API Key is present (not showing for security)"; \
+    else \
+      echo "WARNING: API Key is NOT present"; \
+    fi
+
+# Create the .env file
 RUN echo "REACT_APP_GOOGLE_MAPS_API_KEY=$REACT_APP_GOOGLE_MAPS_API_KEY" > .env
-# Debug - Verify .env file was created with content
-RUN cat .env
+
+# Debug - Verify .env file was created without exposing the key
+RUN grep -q "REACT_APP_GOOGLE_MAPS_API_KEY" .env && echo "API key is in .env file" || echo "API key is MISSING from .env file"
 
 RUN npm run build
 
+# Rest of Dockerfile remains unchanged
 # Build backend
 FROM node:18 AS backend-builder
 WORKDIR /app/backend
