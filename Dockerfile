@@ -11,7 +11,11 @@ COPY frontend/ ./
 
 # Then create .env file to override any committed .env file
 ARG REACT_APP_GOOGLE_MAPS_API_KEY
+# Debug - Print first few characters to verify key is passed
+RUN echo "API Key starts with: ${REACT_APP_GOOGLE_MAPS_API_KEY:0:4}..."
 RUN echo "REACT_APP_GOOGLE_MAPS_API_KEY=$REACT_APP_GOOGLE_MAPS_API_KEY" > .env
+# Debug - Verify .env file was created with content
+RUN cat .env
 
 RUN npm run build
 
