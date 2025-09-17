@@ -36,6 +36,13 @@ jobs:
     - name: Authorize Docker push
       run: gcloud auth configure-docker ${{ env.AR_HOSTNAME }} --quiet
       
+    # Create a test file to verify API key is being passed correctly
+    - name: Debug API key
+      run: |
+        echo "REACT_APP_GOOGLE_MAPS_API_KEY starts with: ${GOOGLE_MAPS_API_KEY:0:4}..." >> debug.txt
+      env:
+        GOOGLE_MAPS_API_KEY: ${{ secrets.GOOGLE_MAPS_API_KEY }}
+      
     # Build and push with explicit project ID and build args for the API key
     - name: Build and push to Artifact Registry
       run: |
@@ -49,3 +56,11 @@ jobs:
         service: ${{ env.SERVICE_NAME }}
         region: ${{ env.REGION }}
         image: ${{ env.AR_HOSTNAME }}/${{ env.PROJECT_ID }}/${{ env.AR_REPOSITORY }}/${{ env.SERVICE_NAME }}:${{ github.sha }}
+        # No cache flag to ensure fresh deployment
+        no-traffic: true
+        
+    - name: Migrate traffic to new revision
+      run: |
+        gcloud run services update-traffic ${{ env.SERVICE_NAME }} \
+          --region=${{ env.REGION }} \
+          --to-latest
