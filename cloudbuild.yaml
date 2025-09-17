@@ -3,12 +3,12 @@ steps:
   - name: 'gcr.io/cloud-builders/docker'
     args: ['build', 
            '--build-arg', 'REACT_APP_GOOGLE_MAPS_API_KEY=${_REACT_APP_GOOGLE_MAPS_API_KEY}',
-           '-t', '${_AR_HOSTNAME}/${PROJECT_ID}/${_AR_REPOSITORY}/${_SERVICE_NAME}:${SHORT_SHA}',
+           '-t', '${_AR_HOSTNAME}/${PROJECT_ID}/${_AR_REPOSITORY}/${_SERVICE_NAME}:latest',
            '.']
   
   # Push the container image to Artifact Registry
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['push', '${_AR_HOSTNAME}/${PROJECT_ID}/${_AR_REPOSITORY}/${_SERVICE_NAME}:${SHORT_SHA}']
+    args: ['push', '${_AR_HOSTNAME}/${PROJECT_ID}/${_AR_REPOSITORY}/${_SERVICE_NAME}:latest']
 
 substitutions:
   _AR_HOSTNAME: asia-southeast1-docker.pkg.dev
@@ -16,4 +16,4 @@ substitutions:
   _SERVICE_NAME: cultivo-capstone
 
 images:
-  - '${_AR_HOSTNAME}/${PROJECT_ID}/${_AR_REPOSITORY}/${_SERVICE_NAME}:${SHORT_SHA}'
+  - '${_AR_HOSTNAME}/${PROJECT_ID}/${_AR_REPOSITORY}/${_SERVICE_NAME}:latest'
