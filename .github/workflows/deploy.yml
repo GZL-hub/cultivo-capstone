@@ -49,12 +49,19 @@ jobs:
       env:
         REACT_APP_GOOGLE_MAPS_API_KEY: ${{ secrets.REACT_APP_GOOGLE_MAPS_API_KEY }}
       
-    # Build and push using Cloud Build with quoted substitutions
+    # Build and push using Cloud Build - SIMPLIFIED VERSION
     - name: Build and push to Artifact Registry
       run: |
+        # Create a secure temporary file with the API key
+        echo "${{ secrets.REACT_APP_GOOGLE_MAPS_API_KEY }}" > /tmp/api_key.txt
+        
+        # Use the file content in the substitution
         gcloud builds submit --project=${{ secrets.GCP_PROJECT_ID }} \
           --config=cloudbuild.yaml \
-          --substitutions="_REACT_APP_GOOGLE_MAPS_API_KEY=\"${{ secrets.REACT_APP_GOOGLE_MAPS_API_KEY }}\",_AR_HOSTNAME=${{ env.AR_HOSTNAME }},_AR_REPOSITORY=${{ env.AR_REPOSITORY }},_SERVICE_NAME=${{ env.SERVICE_NAME }}"
+          --substitutions="_REACT_APP_GOOGLE_MAPS_API_KEY=$(cat /tmp/api_key.txt),_AR_HOSTNAME=${{ env.AR_HOSTNAME }},_AR_REPOSITORY=${{ env.AR_REPOSITORY }},_SERVICE_NAME=${{ env.SERVICE_NAME }}"
+        
+        # Clean up
+        rm /tmp/api_key.txt
     
     - name: Deploy to Cloud Run
       uses: google-github-actions/deploy-cloudrun@v1
