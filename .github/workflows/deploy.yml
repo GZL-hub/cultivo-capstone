@@ -36,19 +36,25 @@ jobs:
     - name: Authorize Docker push
       run: gcloud auth configure-docker ${{ env.AR_HOSTNAME }} --quiet
       
-    # Debug step to verify API key - Change the variable reference
+    # Enhanced debug steps to verify API key
     - name: Debug API key
       run: |
-        echo "REACT_APP_GOOGLE_MAPS_API_KEY starts with: ${REACT_APP_GOOGLE_MAPS_API_KEY:0:4}..." >> debug.txt
+        if [[ -n "$REACT_APP_GOOGLE_MAPS_API_KEY" ]]; then
+          echo "✅ API key exists and is not empty"
+          echo "✅ API key length: ${#REACT_APP_GOOGLE_MAPS_API_KEY}"
+          echo "✅ First few characters: ${REACT_APP_GOOGLE_MAPS_API_KEY:0:4}..."
+        else
+          echo "❌ ERROR: API key is empty or not set!"
+        fi
       env:
         REACT_APP_GOOGLE_MAPS_API_KEY: ${{ secrets.REACT_APP_GOOGLE_MAPS_API_KEY }}
       
-    # Build and push using Cloud Build - Change the substitution reference
+    # Build and push using Cloud Build with quoted substitutions
     - name: Build and push to Artifact Registry
       run: |
         gcloud builds submit --project=${{ secrets.GCP_PROJECT_ID }} \
           --config=cloudbuild.yaml \
-          --substitutions=_REACT_APP_GOOGLE_MAPS_API_KEY=${{ secrets.REACT_APP_GOOGLE_MAPS_API_KEY }},_AR_HOSTNAME=${{ env.AR_HOSTNAME }},_AR_REPOSITORY=${{ env.AR_REPOSITORY }},_SERVICE_NAME=${{ env.SERVICE_NAME }}
+          --substitutions="_REACT_APP_GOOGLE_MAPS_API_KEY=\"${{ secrets.REACT_APP_GOOGLE_MAPS_API_KEY }}\",_AR_HOSTNAME=${{ env.AR_HOSTNAME }},_AR_REPOSITORY=${{ env.AR_REPOSITORY }},_SERVICE_NAME=${{ env.SERVICE_NAME }}"
     
     - name: Deploy to Cloud Run
       uses: google-github-actions/deploy-cloudrun@v1
