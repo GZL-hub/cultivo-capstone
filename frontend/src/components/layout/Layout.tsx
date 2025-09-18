@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import Header from './Header';
 import Sidebar from './Sidebar';
+import Header from './Header';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -9,28 +9,22 @@ interface LayoutProps {
 
 const Layout: React.FC<LayoutProps> = ({ children, onLogout }) => {
   const [collapsed, setCollapsed] = useState(false);
-  const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
     <div className="flex h-screen bg-gray-100">
-      <Sidebar 
-        collapsed={collapsed} 
-        mobileOpen={mobileOpen} 
-        setMobileOpen={setMobileOpen} 
-      />
-      
-      <div 
-        className={`flex flex-col flex-1 transition-all duration-300 ${collapsed ? 'ml-0' : 'ml-0 md:ml-64'}`}
+      <Sidebar collapsed={collapsed} setCollapsed={setCollapsed} />
+      <div
+        className={`flex flex-col flex-1 transition-all duration-300 ${
+          collapsed ? 'ml-0' : 'ml-64'
+        }`}
       >
-        <Header 
-          onMenuClick={() => setMobileOpen(true)} 
+        <Header
+          onMenuClick={() => {}} // No mobile
           onToggleCollapse={() => setCollapsed(!collapsed)}
           collapsed={collapsed}
           onLogout={onLogout}
         />
-        <main className="flex-1 p-3 md:p-4 lg:p-5 overflow-auto w-full">
-        {children}
-        </main>
+        <main className="flex-1 overflow-y-auto">{children}</main>
       </div>
     </div>
   );

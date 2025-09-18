@@ -1,18 +1,20 @@
 import React from 'react';
-import { GoogleMap, useJsApiLoader } from '@react-google-maps/api';
+import { GoogleMap as GoogleMapComponent, useJsApiLoader } from '@react-google-maps/api';
 
 const containerStyle = {
   width: '100%',
-  height: '400px'
+  height: '100%'
 };
 
-// Default center location (you can change this to your farm's location)
-const center = {
-  lat: -3.745,
-  lng: -38.523
-};
+interface MapComponentProps {
+  center?: {
+    lat: number;
+    lng: number;
+  };
+  zoom?: number;
+}
 
-function MapComponent() {
+function MapComponent({ center = { lat: -3.745, lng: -38.523 }, zoom = 10 }: MapComponentProps) {
   const { isLoaded } = useJsApiLoader({
     id: 'google-map-script',
     googleMapsApiKey: process.env.REACT_APP_GOOGLE_MAPS_API_KEY || ''
@@ -29,15 +31,15 @@ function MapComponent() {
   }, []);
 
   return isLoaded ? (
-    <GoogleMap
+    <GoogleMapComponent
       mapContainerStyle={containerStyle}
       center={center}
-      zoom={10}
+      zoom={zoom}
       onLoad={onLoad}
       onUnmount={onUnmount}
     >
       {/* No markers or other components yet */}
-    </GoogleMap>
+    </GoogleMapComponent>
   ) : <div>Loading...</div>;
 }
 

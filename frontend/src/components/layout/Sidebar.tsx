@@ -1,149 +1,101 @@
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { 
-  LayoutDashboard, 
-  BarChart3, 
-  BellRing, 
-  Cpu, 
-  Settings, 
-  X,
-  Tractor
+import { NavLink } from 'react-router-dom';
+import {
+  Home,
+  BarChart2,
+  Bell,
+  Server,
+  Settings,
+  Map,
+  Camera,
+  LayoutDashboard,
 } from 'lucide-react';
 
 interface SidebarProps {
   collapsed: boolean;
-  mobileOpen: boolean;
-  setMobileOpen: (open: boolean) => void;
+  setCollapsed: (collapsed: boolean) => void;
 }
 
-interface NavItemProps {
-  icon: React.ReactNode;
-  label: string;
+function NavItem({
+  to,
+  icon: Icon,
+  children,
+}: {
   to: string;
-  active?: boolean;
-  onClick?: () => void;
+  icon: React.ElementType;
+  children: React.ReactNode;
+}) {
+  return (
+    <NavLink
+      to={to}
+      className={({ isActive }) =>
+        `flex items-center px-3 py-2 text-sm rounded-md transition-colors ${
+          isActive
+            ? 'bg-green-100 text-green-700 font-semibold'
+            : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+        }`
+      }
+    >
+      <Icon className="h-5 w-5 mr-3 flex-shrink-0" />
+      {children}
+    </NavLink>
+  );
 }
 
-const NavItem: React.FC<NavItemProps> = ({ icon, label, to, active, onClick }) => {
+const Sidebar: React.FC<SidebarProps> = ({ collapsed }) => {
   return (
-    <Link to={to} className="w-full">
-      <button
-        onClick={onClick}
-        className={`flex items-center w-full p-3 rounded-lg transition-colors ${
-          active
-            ? 'bg-green-600 text-white hover:bg-green-700'
-            : 'text-gray-500 hover:bg-green-50 hover:text-green-600'
-        }`}
-      >
-        <span className="mr-3">{icon}</span>
-        <span className="font-medium">{label}</span>
-      </button>
-    </Link>
-  );
-};
-
-const Sidebar: React.FC<SidebarProps> = ({ collapsed, mobileOpen, setMobileOpen }) => {
-  const location = useLocation();
-  const pathname = location.pathname;
-
-  const handleNavClick = () => {
-    // On mobile, close the sidebar when an item is clicked
-    if (window.innerWidth < 768) {
-      setMobileOpen(false);
-    }
-  };
-
-  return (
-    <>
-      {/* Mobile sidebar backdrop */}
-      {mobileOpen && (
-        <div 
-          className="fixed inset-0 bg-black bg-opacity-50 z-20 md:hidden"
-          onClick={() => setMobileOpen(false)}
-        ></div>
-      )}
-
-      {/* Sidebar */}
-      <aside 
-        className={`
-          fixed top-0 left-0 z-30 h-full bg-white border-r border-gray-200 transition-all duration-300 
-          w-64
-          ${collapsed ? '-translate-x-full' : 'translate-x-0'} 
-          ${mobileOpen ? 'translate-x-0' : '-translate-x-full'} 
-          md:${collapsed ? '-translate-x-full' : 'translate-x-0'}
-        `}
-      >
-        {/* Close button - mobile only */}
-        <button 
-          className="absolute top-4 right-4 md:hidden text-gray-500"
-          onClick={() => setMobileOpen(false)}
-        >
-          <X size={20} />
-        </button>
-
+    <nav
+      className={`
+        fixed inset-y-0 left-0 z-30 bg-white shadow-lg border-r border-gray-200 transition-all duration-300
+        ${collapsed ? '-translate-x-full w-64' : 'translate-x-0 w-64'}
+      `}
+      style={{ willChange: 'transform' }}
+    >
+      <div className="h-full flex flex-col">
         {/* Logo */}
-        <div className="flex items-center p-4 px-6">
-          <img 
-            src="/Cultivo2.png" 
-            alt="Cultivo Logo" 
-            className="h-8" 
-          />
-          <span className="ml-3 text-lg font-semibold text-green-800">Cultivo</span>
+        <div className="h-16 px-6 flex items-center border-b border-gray-200">
+          <img src="/Cultivo2.png" alt="Cultivo Logo" className="h-10 w-10" />
+          {!collapsed && (
+            <span className="ml-3 text-lg font-semibold text-green-800">
+              Cultivo
+            </span>
+          )}
         </div>
 
-        {/* Navigation */}
-        <nav className="mt-8 px-4">
-          <ul className="space-y-2">
-            <NavItem 
-              icon={<LayoutDashboard size={20} />} 
-              label="Dashboard" 
-              to="/"
-              active={pathname === '/'}
-              onClick={handleNavClick}
-            />
-            <NavItem 
-              icon={<BarChart3 size={20} />} 
-              label="Analytics" 
-              to="/analytics"
-              active={pathname === '/analytics'}
-              onClick={handleNavClick}
-            />
-            <NavItem 
-              icon={<BellRing size={20} />} 
-              label="Alerts" 
-              to="/alerts"
-              active={pathname === '/alerts'}
-              onClick={handleNavClick}
-            />
-            <NavItem 
-              icon={<Cpu size={20} />} 
-              label="Devices" 
-              to="/devices"
-              active={pathname === '/devices'}
-              onClick={handleNavClick}
-            />
-            <NavItem 
-              icon={<Tractor size={20} />} 
-              label="Farm Management" 
-              to="/farm"
-              active={pathname === '/farm'}
-              onClick={handleNavClick}
-            />
-          </ul>
-        </nav>
+        <div className="flex-1 overflow-y-auto py-4 px-2">
+          <div className="space-y-6">
+            <div>
+              <div className="px-3 mb-2 text-xs font-semibold uppercase tracking-wider text-gray-500">
+                Overview
+              </div>
+              <div className="space-y-1">
+                <NavItem to="/" icon={Home}>Dashboard</NavItem>
+                <NavItem to="/analytics" icon={BarChart2}>Analytics</NavItem>
+                <NavItem to="/alerts" icon={Bell}>Alerts</NavItem>
+                <NavItem to="/devices" icon={Server}>Devices</NavItem>
+              </div>
+            </div>
 
-        {/* Bottom Settings Item */}
-        <div className="absolute bottom-4 w-full px-4">
-          <NavItem 
-            icon={<Settings size={20} />} 
-            label="Settings" 
-            to="/settings"
-            active={pathname === '/settings'}
-            onClick={handleNavClick}
-          />
+            <div>
+              <div className="px-3 mb-2 text-xs font-semibold uppercase tracking-wider text-gray-500">
+                Farm Management
+              </div>
+              <div className="space-y-1">
+                <NavItem to="/farm/overview" icon={LayoutDashboard}>Overview</NavItem>
+                <NavItem to="/farm/map" icon={Map}>Map</NavItem>
+                <NavItem to="/farm/cctv" icon={Camera}>CCTV</NavItem>
+              </div>
+            </div>
+          </div>
         </div>
-      </aside>
-    </>
+
+        <div className="px-4 py-4 border-t border-gray-200">
+          <div className="space-y-1">
+            <NavItem to="/settings" icon={Settings}>Settings</NavItem>
+          </div>
+        </div>
+      </div>
+    </nav>
   );
 };
 
