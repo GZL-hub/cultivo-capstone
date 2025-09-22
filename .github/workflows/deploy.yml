@@ -57,8 +57,8 @@ jobs:
         
         # Use the file content in the substitution
         gcloud builds submit --project=${{ secrets.GCP_PROJECT_ID }} \
-          --config=cloudbuild.yaml \
-          --substitutions="_REACT_APP_GOOGLE_MAPS_API_KEY=$(cat /tmp/api_key.txt),_AR_HOSTNAME=${{ env.AR_HOSTNAME }},_AR_REPOSITORY=${{ env.AR_REPOSITORY }},_SERVICE_NAME=${{ env.SERVICE_NAME }}"
+        --config=cloudbuild.yaml \
+        --substitutions="_REACT_APP_GOOGLE_MAPS_API_KEY=$(cat /tmp/api_key.txt),_MONGODB_URI=${{ secrets.MONGODB_URI }},_AR_HOSTNAME=${{ env.AR_HOSTNAME }},_AR_REPOSITORY=${{ env.AR_REPOSITORY }},_SERVICE_NAME=${{ env.SERVICE_NAME }}"
         
         # Clean up
         rm /tmp/api_key.txt

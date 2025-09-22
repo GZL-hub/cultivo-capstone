@@ -1,10 +1,18 @@
 import express from 'express';
 import cors from 'cors';
-import path from 'path';
+import dotenv from 'dotenv';
+import connectDB from './config/database';
+import farmRoutes from './routes/farmRoutes';
+
+// Load environment variables
+dotenv.config();
 
 const app = express();
 // Use the PORT environment variable that Cloud Run provides (defaults to 8080)
 const PORT = process.env.PORT || 8080;
+
+// Connect to MongoDB
+connectDB();
 
 // CORS setup
 app.use(cors());
@@ -13,17 +21,19 @@ app.use(cors());
 app.use(express.json());
 
 // API routes
+app.use('/api/farms', farmRoutes);
+
 app.get('/api/message', (req, res) => {
   console.log('Message endpoint accessed');
   res.status(200).json({ message: 'ok', success: true });
 });
 
-// Serve static frontend files (if this is a combined service)
-app.use(express.static(path.join(__dirname, '../public')));
-
-// Serve index.html for all other routes (SPA support)
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, '../public/index.html'));
+// API fallback route
+app.use('*', (req, res) => {
+  res.status(404).json({ 
+    success: false, 
+    message: 'API endpoint not found' 
+  });
 });
 
 // Start server

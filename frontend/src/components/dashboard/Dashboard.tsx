@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import DeviceStatistics from './cards/DeviceStatistics';
 import WeatherCard from './cards/WeatherCard';
 import RainwaterCollector from './cards/RainwaterCollector';
 import SensorCard from './cards/SensorCard';
 import FarmMapCard from './cards/FarmMapCard';
+import axios from 'axios';
 // Import icons
 import { 
   FaSeedling, 
@@ -12,7 +13,69 @@ import {
   FaTint 
 } from 'react-icons/fa';
 
+// API URL
+const API_URL = 'http://localhost:8080/api';
+
+// Farm interface
+interface Farm {
+  _id: string;
+  name: string;
+  type: string;
+  operationDate: string;
+  areaSize: string;
+  coordinates: string;
+}
+
 const Dashboard = () => {
+  // Add state for farm data
+  const [farmInfo, setFarmInfo] = useState({
+    name: "Loading...",
+    type: "Loading...",
+    operationDate: "Loading...",
+    areaSize: "Loading...",
+    coordinates: "0, 0"
+  });
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Fetch farm data on component mount
+  useEffect(() => {
+    const fetchFarmData = async () => {
+      try {
+        setIsLoading(true);
+        const response = await axios.get(`${API_URL}/farms`);
+        const farms = response.data.data;
+        
+        if (farms && farms.length > 0) {
+          setFarmInfo({
+            name: farms[0].name,
+            type: farms[0].type,
+            operationDate: farms[0].operationDate,
+            areaSize: farms[0].areaSize,
+            coordinates: farms[0].coordinates
+          });
+        } else {
+          // If no farms found, keep default values
+          setFarmInfo({
+            name: "Green Valley Orchard",
+            type: "Tree Orchard",
+            operationDate: "March 15, 2022",
+            areaSize: "5.2 hectares",
+            coordinates: "14.5995° N, 120.9842° E"
+          });
+        }
+      } catch (err) {
+        console.error('Error fetching farm data:', err);
+        setError('Failed to load farm data. Using default values.');
+        // Keep default values on error
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchFarmData();
+  }, []);
+
   // Define deviceStats with default values
   const deviceStats = {
     totalRegistered: 0,
@@ -32,15 +95,6 @@ const Dashboard = () => {
     currentLevel: 65,  // 65% full
     capacity: 500,     // 500 liters capacity
     lastCollected: "Sept 12, 2025" 
-  };
-
-  // Define farm info
-  const farmInfo = {
-    name: "Green Valley Orchard",
-    type: "Tree Orchard",
-    operationDate: "March 15, 2022",
-    areaSize: "5.2 hectares",
-    coordinates: "14.5995° N, 120.9842° E"
   };
 
   // Define devices
@@ -170,11 +224,22 @@ const Dashboard = () => {
         
         {/* Right column - Farm Map with Farm Info and Active Devices */}
         <div className="md:col-span-8 flex">
-          <FarmMapCard 
-            farmInfo={farmInfo}
-            devices={devices}
-            onViewFullMap={handleViewFullMap}
-          />
+          {isLoading ? (
+            <div className="bg-white p-4 rounded-lg shadow-md w-full flex items-center justify-center">
+              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-500"></div>
+            </div>
+          ) : (
+            <FarmMapCard 
+              farmInfo={farmInfo}
+              devices={devices}
+              onViewFullMap={handleViewFullMap}
+            />
+          )}
+          {error && (
+            <div className="absolute top-2 right-2 bg-red-100 text-red-700 px-4 py-2 rounded">
+              {error}
+            </div>
+          )}
         </div>
       </div>
     </div>
