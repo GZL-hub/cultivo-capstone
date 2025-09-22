@@ -27,22 +27,42 @@ RUN grep -q "REACT_APP_GOOGLE_MAPS_API_KEY" .env && echo "API key is in .env fil
 
 RUN npm run build
 
-# Rest of Dockerfile remains unchanged
 # Build backend
 FROM node:18 AS backend-builder
 WORKDIR /app/backend
+
+# Add MongoDB URI as build argument
+ARG MONGODB_URI
+ENV MONGODB_URI=$MONGODB_URI
+
 COPY backend/package*.json ./
 RUN npm install
 COPY backend/ ./
+
+# Create .env file for backend with MongoDB URI
+RUN echo "MONGODB_URI=$MONGODB_URI" > .env
+
+# Debug - Verify MongoDB URI is set (safely)
+RUN if grep -q "MONGODB_URI=" .env; then \
+      echo "MongoDB URI is in .env file"; \
+    else \
+      echo "WARNING: MongoDB URI is MISSING from .env file"; \
+    fi
+
 RUN npm run build
 
 # Final image
 FROM node:18-slim
 WORKDIR /app
 
+# Pass the MongoDB URI to the final image
+ARG MONGODB_URI
+ENV MONGODB_URI=$MONGODB_URI
+
 # Copy backend build
 COPY --from=backend-builder /app/backend/dist ./dist
 COPY --from=backend-builder /app/backend/package*.json ./
+COPY --from=backend-builder /app/backend/.env ./
 
 # Install production dependencies only
 RUN npm install --only=production
