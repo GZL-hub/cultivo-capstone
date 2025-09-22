@@ -14,7 +14,7 @@ import {
 } from 'react-icons/fa';
 
 // API URL
-const API_URL = 'http://localhost:8080/api';
+const API_URL = '/api';
 
 // Farm interface
 interface Farm {
