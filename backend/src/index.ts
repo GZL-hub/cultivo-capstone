@@ -1,5 +1,6 @@
 import express from 'express';
 import cors from 'cors';
+import path from 'path';
 import dotenv from 'dotenv';
 import connectDB from './config/database';
 import farmRoutes from './routes/farmRoutes';
@@ -28,12 +29,12 @@ app.get('/api/message', (req, res) => {
   res.status(200).json({ message: 'ok', success: true });
 });
 
-// API fallback route
-app.use('*', (req, res) => {
-  res.status(404).json({ 
-    success: false, 
-    message: 'API endpoint not found' 
-  });
+// IMPORTANT: Serve static frontend files from public directory
+app.use(express.static(path.join(__dirname, '../public')));
+
+// Serve index.html for all other routes (SPA support)
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, '../public/index.html'));
 });
 
 // Start server
