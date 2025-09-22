@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { GoogleMap, useJsApiLoader } from '@react-google-maps/api';
+import axios from 'axios';
 
 // Define device status type
 type DeviceStatus = 'online' | 'offline' | 'low_battery';
@@ -21,17 +22,70 @@ interface FarmInfo {
   coordinates: string;
 }
 
+// Backend farm data interface
+interface BackendFarm {
+  _id: string;
+  name: string;
+  type: string;
+  operationSince: string;
+  areaSize: string;
+  coordinates: {
+    lat: number;
+    lng: number;
+  };
+  coordinatesText: string;
+}
+
 interface FarmMapCardProps {
-  farmInfo: FarmInfo;
+  farmInfo?: FarmInfo;
   devices: Device[];
   onViewFullMap?: () => void;
 }
 
 const FarmMapCard: React.FC<FarmMapCardProps> = ({
-  farmInfo,
+  farmInfo: propsFarmInfo,
   devices,
   onViewFullMap
 }) => {
+  // State for API data
+  const [farmInfo, setFarmInfo] = useState<FarmInfo | null>(propsFarmInfo || null);
+  const [loading, setLoading] = useState(!propsFarmInfo);
+  const [error, setError] = useState<string | null>(null);
+
+  // Fetch farm data from API if not provided via props
+  useEffect(() => {
+    const fetchFarmData = async () => {
+      try {
+        setLoading(true);
+        const response = await axios.get<BackendFarm[]>('/api/farms');
+        
+        if (response.data && response.data.length > 0) {
+          const farm = response.data[0]; // Assuming we're using the first farm
+          
+          setFarmInfo({
+            name: farm.name,
+            type: farm.type,
+            operationDate: farm.operationSince,
+            areaSize: farm.areaSize,
+            coordinates: farm.coordinatesText
+          });
+        } else {
+          setError('No farm data available');
+        }
+      } catch (err) {
+        console.error('Error fetching farm data:', err);
+        setError('Failed to load farm information');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    // Only fetch if farmInfo is not provided as prop
+    if (!propsFarmInfo) {
+      fetchFarmData();
+    }
+  }, [propsFarmInfo]);
+
   // Helper function to get status styles
   const getStatusStyles = (status: DeviceStatus) => {
     switch (status) {
@@ -65,6 +119,10 @@ const FarmMapCard: React.FC<FarmMapCardProps> = ({
   // Parse coordinates from string (assuming format is "lat,lng")
   const getMapCenter = () => {
     try {
+      if (!farmInfo?.coordinates) {
+        return { lat: 37.7749, lng: -122.4194 }; // Default
+      }
+      
       const [lat, lng] = farmInfo.coordinates.split(',').map(coord => parseFloat(coord.trim()));
       if (!isNaN(lat) && !isNaN(lng)) {
         return { lat, lng };
@@ -102,7 +160,7 @@ const FarmMapCard: React.FC<FarmMapCardProps> = ({
 
       {/* Map Area */}
       <div className="h-[350px] w-full bg-gray-100 rounded-md mb-3 overflow-hidden border border-gray-200">
-        {isLoaded ? (
+        {isLoaded && farmInfo ? (
           <GoogleMap
             mapContainerStyle={mapContainerStyle}
             center={getMapCenter()}
@@ -123,7 +181,9 @@ const FarmMapCard: React.FC<FarmMapCardProps> = ({
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
                 </svg>
               </div>
-              <p className="text-gray-500 font-medium">Loading Map...</p>
+              <p className="text-gray-500 font-medium">
+                {loading ? "Loading Map..." : error ? "Map unavailable" : "Loading Map..."}
+              </p>
             </div>
           </div>
         )}
@@ -136,28 +196,46 @@ const FarmMapCard: React.FC<FarmMapCardProps> = ({
           <h3 className="text-sm font-medium text-gray-700 border-b border-gray-200 pb-2 mb-2">
             Farm Information
           </h3>
-          <div className="space-y-2">
-            <div className="flex items-start">
-              <span className="text-xs font-medium text-gray-500 w-28">Farm Name:</span>
-              <span className="text-sm text-gray-700">{farmInfo.name}</span>
+          {loading ? (
+            <div className="py-8 flex justify-center">
+              <div className="animate-pulse text-gray-400">Loading farm data...</div>
             </div>
-            <div className="flex items-start">
-              <span className="text-xs font-medium text-gray-500 w-28">Type:</span>
-              <span className="text-sm text-gray-700">{farmInfo.type}</span>
+          ) : error ? (
+            <div className="py-8 text-center">
+              <p className="text-red-500">{error}</p>
+              <button 
+                onClick={() => window.location.reload()}
+                className="mt-2 text-blue-500 text-sm hover:underline"
+              >
+                Retry
+              </button>
             </div>
-            <div className="flex items-start">
-              <span className="text-xs font-medium text-gray-500 w-28">Operation Since:</span>
-              <span className="text-sm text-gray-700">{farmInfo.operationDate}</span>
+          ) : farmInfo ? (
+            <div className="space-y-2">
+              <div className="flex items-start">
+                <span className="text-xs font-medium text-gray-500 w-28">Farm Name:</span>
+                <span className="text-sm text-gray-700">{farmInfo.name}</span>
+              </div>
+              <div className="flex items-start">
+                <span className="text-xs font-medium text-gray-500 w-28">Type:</span>
+                <span className="text-sm text-gray-700">{farmInfo.type}</span>
+              </div>
+              <div className="flex items-start">
+                <span className="text-xs font-medium text-gray-500 w-28">Operation Since:</span>
+                <span className="text-sm text-gray-700">{farmInfo.operationDate}</span>
+              </div>
+              <div className="flex items-start">
+                <span className="text-xs font-medium text-gray-500 w-28">Area Size:</span>
+                <span className="text-sm text-gray-700">{farmInfo.areaSize}</span>
+              </div>
+              <div className="flex items-start">
+                <span className="text-xs font-medium text-gray-500 w-28">Coordinates:</span>
+                <span className="text-sm text-gray-700">{farmInfo.coordinates}</span>
+              </div>
             </div>
-            <div className="flex items-start">
-              <span className="text-xs font-medium text-gray-500 w-28">Area Size:</span>
-              <span className="text-sm text-gray-700">{farmInfo.areaSize}</span>
-            </div>
-            <div className="flex items-start">
-              <span className="text-xs font-medium text-gray-500 w-28">Coordinates:</span>
-              <span className="text-sm text-gray-700">{farmInfo.coordinates}</span>
-            </div>
-          </div>
+          ) : (
+            <div className="py-8 text-center text-gray-500">No farm data available</div>
+          )}
         </div>
         
         {/* Active Sensors/Devices */}

@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import DeviceStatistics from './cards/DeviceStatistics';
 import WeatherCard from './cards/WeatherCard';
 import RainwaterCollector from './cards/RainwaterCollector';
 import SensorCard from './cards/SensorCard';
 import FarmMapCard from './cards/FarmMapCard';
+import axios from 'axios';
 // Import icons
 import { 
   FaSeedling, 
@@ -13,10 +14,14 @@ import {
 } from 'react-icons/fa';
 
 const Dashboard = () => {
+  // State for API data
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  
   // Define deviceStats with default values
   const deviceStats = {
-    totalRegistered: 0,
-    totalOnline: 0
+    totalRegistered: 5,
+    totalOnline: 3
   };
 
   // Define weather data with default values
@@ -32,15 +37,6 @@ const Dashboard = () => {
     currentLevel: 65,  // 65% full
     capacity: 500,     // 500 liters capacity
     lastCollected: "Sept 12, 2025" 
-  };
-
-  // Define farm info
-  const farmInfo = {
-    name: "Green Valley Orchard",
-    type: "Tree Orchard",
-    operationDate: "March 15, 2022",
-    areaSize: "5.2 hectares",
-    coordinates: "14.5995° N, 120.9842° E"
   };
 
   // Define devices
@@ -63,6 +59,11 @@ const Dashboard = () => {
     console.log("View full map clicked");
     // Navigate to full map view or open a modal
   };
+
+  useEffect(() => {
+    // Update device statistics when the component mounts
+    setLoading(false);
+  }, []);
 
   return (
     <div className="w-full h-full flex flex-col px-4 py-4">    
@@ -170,11 +171,20 @@ const Dashboard = () => {
         
         {/* Right column - Farm Map with Farm Info and Active Devices */}
         <div className="md:col-span-8 flex">
-          <FarmMapCard 
-            farmInfo={farmInfo}
-            devices={devices}
-            onViewFullMap={handleViewFullMap}
-          />
+          {loading ? (
+            <div className="bg-white p-4 rounded-lg shadow-md w-full flex items-center justify-center">
+              <div className="animate-pulse text-gray-400">Loading dashboard data...</div>
+            </div>
+          ) : error ? (
+            <div className="bg-white p-4 rounded-lg shadow-md w-full flex items-center justify-center">
+              <div className="text-red-500">{error}</div>
+            </div>
+          ) : (
+            <FarmMapCard 
+              devices={devices}
+              onViewFullMap={handleViewFullMap}
+            />
+          )}
         </div>
       </div>
     </div>

@@ -12,9 +12,16 @@ interface MapComponentProps {
     lng: number;
   };
   zoom?: number;
+  mapTypeId?: 'roadmap' | 'satellite' | 'hybrid' | 'terrain';
+  showDefaultUI?: boolean;
 }
 
-function MapComponent({ center = { lat: -3.745, lng: -38.523 }, zoom = 10 }: MapComponentProps) {
+function MapComponent({
+  center = { lat: -3.745, lng: -38.523 },
+  zoom = 10,
+  mapTypeId = 'roadmap',
+  showDefaultUI = true
+}: MapComponentProps) {
   const { isLoaded } = useJsApiLoader({
     id: 'google-map-script',
     googleMapsApiKey: process.env.REACT_APP_GOOGLE_MAPS_API_KEY || ''
@@ -35,6 +42,14 @@ function MapComponent({ center = { lat: -3.745, lng: -38.523 }, zoom = 10 }: Map
       mapContainerStyle={containerStyle}
       center={center}
       zoom={zoom}
+      mapTypeId={mapTypeId}
+      options={{
+        disableDefaultUI: !showDefaultUI,
+        mapTypeControl: true, // Always show map type control
+        zoomControl: true,
+        streetViewControl: true,
+        fullscreenControl: true,
+      }}
       onLoad={onLoad}
       onUnmount={onUnmount}
     >
