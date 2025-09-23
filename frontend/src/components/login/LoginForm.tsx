@@ -1,12 +1,14 @@
-import React, { useState } from 'react';
-import { Eye, EyeOff, ArrowLeft } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Eye, EyeOff, ArrowLeft, AlertCircle } from 'lucide-react';
 
 interface LoginFormProps {
   onLogin: (email: string, password: string) => void;
+  onRegister: (name: string, email: string, password: string) => void;
   loading?: boolean;
+  error?: string | null;
 }
 
-const LoginForm: React.FC<LoginFormProps> = ({ onLogin, loading = false }) => {
+const LoginForm: React.FC<LoginFormProps> = ({ onLogin, onRegister, loading = false, error = null }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
@@ -14,19 +16,61 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLogin, loading = false }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [currentView, setCurrentView] = useState<"login" | "register" | "forgot">("login");
+  const [formError, setFormError] = useState<string | null>(null);
+
+  // Update local error state when prop changes
+  useEffect(() => {
+    setFormError(error);
+  }, [error]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setFormError(null);
     
     if (currentView === "login") {
+      // Validate login fields
+      if (!email || !password) {
+        setFormError('Please enter both email and password');
+        return;
+      }
       onLogin(email, password);
     } else if (currentView === "register") {
-      // Handle registration - in a real app you would call an API
-      console.log("Register with:", { name, email, password });
+      // Validate registration fields
+      if (!name) {
+        setFormError('Please enter your name');
+        return;
+      }
+      if (!email) {
+        setFormError('Please enter your email');
+        return;
+      }
+      if (!password) {
+        setFormError('Please enter a password');
+        return;
+      }
+      if (password !== confirmPassword) {
+        setFormError('Passwords do not match');
+        return;
+      }
+      if (password.length < 6) {
+        setFormError('Password must be at least 6 characters');
+        return;
+      }
+      
+      onRegister(name, email, password);
     } else if (currentView === "forgot") {
       // Handle password reset - in a real app you would call an API
+      if (!email) {
+        setFormError('Please enter your email');
+        return;
+      }
       console.log("Reset password for:", email);
     }
+  };
+
+  const handleViewChange = (view: "login" | "register" | "forgot") => {
+    setCurrentView(view);
+    setFormError(null);  // Clear errors when changing views
   };
 
   return (
@@ -43,7 +87,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLogin, loading = false }) => {
           {currentView === "forgot" && (
             <button
               type="button"
-              onClick={() => setCurrentView("login")}
+              onClick={() => handleViewChange("login")}
               className="absolute left-8 top-8 p-2 hover:bg-gray-100 rounded-full cursor-pointer"
             >
               <ArrowLeft className="h-4 w-4" />
@@ -60,6 +104,13 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLogin, loading = false }) => {
             {currentView === "forgot" && "Enter your email address and we'll send you a reset link."}
           </p>
         </div>
+
+        {formError && (
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-start">
+            <AlertCircle className="h-5 w-5 mr-2 mt-0.5 flex-shrink-0" />
+            <span>{formError}</span>
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {currentView === "register" && (
@@ -165,7 +216,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLogin, loading = false }) => {
               <button
                 type="button"
                 className="text-sm text-green-600 hover:text-green-700 cursor-pointer font-noto-sans"
-                onClick={() => setCurrentView("forgot")}
+                onClick={() => handleViewChange("forgot")}
               >
                 Forgot Your Password?
               </button>
@@ -202,7 +253,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLogin, loading = false }) => {
               <button
                 type="button"
                 className="w-full h-11 text-sm font-medium text-green-700 border border-green-600 rounded-lg hover:bg-green-50"
-                onClick={() => setCurrentView("register")}
+                onClick={() => handleViewChange("register")}
               >
                 Register Now
               </button>
@@ -214,7 +265,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLogin, loading = false }) => {
               <button
                 type="button"
                 className="w-full h-11 text-sm font-medium text-green-700 border border-green-600 rounded-lg hover:bg-green-50"
-                onClick={() => setCurrentView("login")}
+                onClick={() => handleViewChange("login")}
               >
                 Sign In
               </button>
@@ -226,7 +277,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLogin, loading = false }) => {
               <button
                 type="button"
                 className="w-full h-11 text-sm font-medium text-green-700 border border-green-600 rounded-lg hover:bg-green-50"
-                onClick={() => setCurrentView("login")}
+                onClick={() => handleViewChange("login")}
               >
                 Back to Login
               </button>
