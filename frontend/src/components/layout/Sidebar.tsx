@@ -81,9 +81,9 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed }) => {
                 Farm Management
               </div>
               <div className="space-y-1">
-                <NavItem to="/farm/overview" icon={LayoutDashboard}>Overview</NavItem>
-                <NavItem to="/farm/map" icon={Map}>Map</NavItem>
-                <NavItem to="/farm/cctv" icon={Camera}>CCTV</NavItem>
+                <NavItem to="/farm/overview" icon={LayoutDashboard}>Farm Overview</NavItem>
+                <NavItem to="/farm/map" icon={Map}>Farm Map</NavItem>
+                <NavItem to="/farm/cctv" icon={Camera}>Farm CCTV</NavItem>
               </div>
             </div>
           </div>

@@ -79,7 +79,8 @@ const FarmMapCard: React.FC<FarmMapCardProps> = ({
   // Google Maps integration
   const { isLoaded } = useJsApiLoader({
     id: 'google-map-script',
-    googleMapsApiKey: process.env.REACT_APP_GOOGLE_MAPS_API_KEY || ''
+    googleMapsApiKey: process.env.REACT_APP_GOOGLE_MAPS_API_KEY || '',
+    libraries: ['places', 'drawing'], // Always include 'places'
   });
 
   const mapContainerStyle = {
