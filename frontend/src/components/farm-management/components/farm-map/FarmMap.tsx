@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import GoogleMap from '../../../googlemap/GoogleMap';
-import { DrawingManager, Polygon, Marker } from '@react-google-maps/api';
+import { DrawingManager, Polygon } from '@react-google-maps/api';
 import FarmMapToolbar from './FarmMapToolBar';
 
 interface FarmMapProps {
@@ -22,19 +22,15 @@ const FarmMap: React.FC<FarmMapProps> = ({ coordinates }) => {
   const [search, setSearch] = useState('');
   const [activeToolbar, setActiveToolbar] = useState<string | null>("map");
   const [showMapTypes, setShowMapTypes] = useState(false);
-  const [searchResults, setSearchResults] = useState<google.maps.places.PlaceResult | null>(null);
   
   // Reference to map
   const mapRef = useRef<google.maps.Map | null>(null);
   // Reference to DrawingManager
   const drawingManagerRef = useRef<google.maps.drawing.DrawingManager | null>(null);
-  // Reference to Geocoder
-  const geocoderRef = useRef<google.maps.Geocoder | null>(null);
   
   // Handler for map load
   const handleMapLoad = (map: google.maps.Map) => {
     mapRef.current = map;
-    geocoderRef.current = new google.maps.Geocoder();
   };
   
   // Force drawing off when active toolbar changes
@@ -112,55 +108,10 @@ const FarmMap: React.FC<FarmMapProps> = ({ coordinates }) => {
     }
   };
 
-  // Implement search handler using Geocoder
+  // Placeholder for search handler
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Clear previous search result
-    setSearchResults(null);
-    
-    if (!search.trim() || !geocoderRef.current || !mapRef.current) return;
-    
-    // Check if input is coordinates (simple regex for "lat,lng" format)
-    const coordsRegex = /^(-?\d+(\.\d+)?),\s*(-?\d+(\.\d+)?)$/;
-    const coordsMatch = search.match(coordsRegex);
-    
-    if (coordsMatch) {
-      // Parse as coordinates
-      const lat = parseFloat(coordsMatch[1]);
-      const lng = parseFloat(coordsMatch[3]);
-      
-      if (!isNaN(lat) && !isNaN(lng)) {
-        const location = new google.maps.LatLng(lat, lng);
-        mapRef.current.panTo(location);
-        mapRef.current.setZoom(17);
-        
-        // Create a fake place result for marker
-        setSearchResults({
-          geometry: {
-            location,
-          },
-          name: `${lat}, ${lng}`,
-          formatted_address: `Coordinates: ${lat}, ${lng}`,
-        } as google.maps.places.PlaceResult);
-        
-        return;
-      }
-    }
-    
-    // Otherwise search by address
-    geocoderRef.current.geocode({ address: search }, (results, status) => {
-      if (status === google.maps.GeocoderStatus.OK && results && results[0]) {
-        const location = results[0].geometry.location;
-        mapRef.current?.panTo(location);
-        mapRef.current?.setZoom(17);
-        setSearchResults(results[0]);
-      } else {
-        // Handle error - could show a toast notification here
-        console.error("Geocode was not successful for the following reason:", status);
-        alert("Location not found. Please try a different search term.");
-      }
-    });
+    // Implement search logic here (e.g., geocode and pan map)
   };
 
   const handleToolbarItemClick = (itemId: string) => {
@@ -225,18 +176,6 @@ const FarmMap: React.FC<FarmMapProps> = ({ coordinates }) => {
           }}
           onLoad={handleMapLoad}
         >          
-          {/* Render search result marker */}
-            {searchResults && searchResults.geometry && searchResults.geometry.location && (
-              <Marker
-                position={{
-                  lat: searchResults.geometry.location.lat(),
-                  lng: searchResults.geometry.location.lng()
-                }}
-                title={searchResults.name || "Search Result"}
-                animation={google.maps.Animation.DROP}
-              />
-            )}
-                      
           {/* Render the perimeter polygon if drawn */}
           {paths.length > 0 && (
             <Polygon
