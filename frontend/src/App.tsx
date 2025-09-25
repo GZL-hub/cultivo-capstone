@@ -8,7 +8,7 @@ import Alerts from './components/alerts/Alerts';
 import Devices from './components/devices/Devices';
 import FarmManagement from './components/farm-management/FarmManagement';
 import FarmOverview from './components/farm-management/components/FarmOverview';
-import FarmMap from './components/farm-management/components/FarmMap';
+import FarmMap from './components/farm-management/components/farm-map/FarmMap';
 import FarmCCTV from './components/farm-management/components/FarmCCTV';
 import Settings from './components/settings/Settings';
 import authService from './services/authService';

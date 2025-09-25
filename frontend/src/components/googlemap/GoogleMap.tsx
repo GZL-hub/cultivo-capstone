@@ -13,7 +13,9 @@ interface MapComponentProps {
   };
   zoom?: number;
   children?: React.ReactNode;
-  mapType?: 'roadmap' | 'satellite' | 'terrain' | 'hybrid'; // <-- Add this line
+  mapType?: 'roadmap' | 'satellite' | 'terrain' | 'hybrid';
+  options?: google.maps.MapOptions;
+  onLoad?: (map: google.maps.Map) => void;
 }
 
 function MapComponent({
@@ -21,6 +23,8 @@ function MapComponent({
   zoom = 10,
   children,
   mapType = 'roadmap', // <-- Use prop, default to 'roadmap'
+  options = {},
+  onLoad: customOnLoad,
 }: MapComponentProps) {
   const { isLoaded } = useJsApiLoader({
     id: 'google-map-script',
@@ -36,7 +40,8 @@ function MapComponent({
 
   const onLoad = React.useCallback(function callback(map: google.maps.Map) {
     setMap(map);
-  }, []);
+    if (customOnLoad) customOnLoad(map); // Call the custom onLoad if provided
+  }, [customOnLoad]); // Add customOnLoad as a dependency
 
   const onUnmount = React.useCallback(function callback() {
     setMap(null);
@@ -77,6 +82,7 @@ function MapComponent({
           zoomControl: true,
           streetViewControl: true,
           fullscreenControl: true,
+          ...options,
         }}
       >
         {children}
