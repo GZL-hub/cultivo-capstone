@@ -1,10 +1,15 @@
 import React, { useState, useRef } from 'react';
-import { GoogleMap as GoogleMapComponent, useJsApiLoader, TrafficLayer, StandaloneSearchBox } from '@react-google-maps/api';
+import { GoogleMap as GoogleMapComponent, useJsApiLoader, TrafficLayer, StandaloneSearchBox, Libraries } from '@react-google-maps/api';
 
 const containerStyle = {
   width: '100%',
   height: '100%'
 };
+
+// Define consistent loader options to avoid conflicts
+const GOOGLE_MAPS_LIBRARIES: Libraries = ['places', 'drawing'];
+// TODO: REMOVE HARDCODED KEY BEFORE COMMITTING - FOR TESTING ONLY
+const GOOGLE_MAPS_API_KEY = 'AIzaSyCbm1EvVKsQYwCytjLX2DoeIanXZZgZ_pE'; 
 
 interface MapComponentProps {
   center?: {
@@ -22,15 +27,18 @@ function MapComponent({
   center = { lat: -3.745, lng: -38.523 },
   zoom = 10,
   children,
-  mapType = 'roadmap', // <-- Use prop, default to 'roadmap'
+  mapType = 'roadmap',
   options = {},
   onLoad: customOnLoad,
 }: MapComponentProps) {
   const { isLoaded } = useJsApiLoader({
-    id: 'google-map-script',
-    googleMapsApiKey: process.env.REACT_APP_GOOGLE_MAPS_API_KEY || '',
-    libraries: ['places', 'drawing'],
+    id: 'google-map-script', // Use consistent ID
+    googleMapsApiKey: GOOGLE_MAPS_API_KEY,
+    libraries: GOOGLE_MAPS_LIBRARIES,
   });
+
+  // Log the API key to verify it's being used (redacted for security)
+  console.log('Using Google Maps API Key:', GOOGLE_MAPS_API_KEY ? '(API key is set)' : '(API key is missing)');
 
   const [map, setMap] = useState<google.maps.Map | null>(null);
   const [showTraffic, setShowTraffic] = useState(false);
@@ -40,8 +48,8 @@ function MapComponent({
 
   const onLoad = React.useCallback(function callback(map: google.maps.Map) {
     setMap(map);
-    if (customOnLoad) customOnLoad(map); // Call the custom onLoad if provided
-  }, [customOnLoad]); // Add customOnLoad as a dependency
+    if (customOnLoad) customOnLoad(map);
+  }, [customOnLoad]);
 
   const onUnmount = React.useCallback(function callback() {
     setMap(null);
@@ -78,7 +86,7 @@ function MapComponent({
         onUnmount={onUnmount}
         options={{
           mapTypeId: mapType,
-          mapTypeControl: false, // Hide built-in map type control, use your own in toolbar
+          mapTypeControl: false,
           zoomControl: true,
           streetViewControl: true,
           fullscreenControl: true,
