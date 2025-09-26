@@ -2,6 +2,8 @@ import React, { useState, useRef, useCallback } from 'react';
 import MapComponent from '../../../googlemap/GoogleMap';
 import FarmMapToolbar, { MapType } from './FarmMapToolBar';
 import { DrawingManager } from '@react-google-maps/api';
+import PolygonDataPanel from './polygon/PolygonDataPanel';
+import { calculatePolygonArea, calculatePolygonPerimeter } from './polygon/Polygon-Utils';
 
 const mapTypes: MapType[] = [
   { label: 'Roadmap', value: 'roadmap' },
@@ -27,7 +29,13 @@ const FarmMap: React.FC<FarmMapProps> = ({ coordinates }) => {
   const [showMapTypes, setShowMapTypes] = useState(false);
   const [center, setCenter] = useState(coordinates);
   const [isDarkMode, setIsDarkMode] = useState(false);
-
+  const [isPanelVisible, setIsPanelVisible] = useState(true);
+  
+  // New state for polygon data
+  const [polygonCoords, setPolygonCoords] = useState<Array<{lat: number, lng: number}>>([]);
+  const [polygonArea, setPolygonArea] = useState<number | undefined>(undefined);
+  const [polygonPerimeter, setPolygonPerimeter] = useState<number | undefined>(undefined);
+  const [activePolygon, setActivePolygon] = useState<google.maps.Polygon | null>(null);
 
   const searchBoxRef = useRef<google.maps.places.SearchBox | null>(null);
 
@@ -49,9 +57,9 @@ const FarmMap: React.FC<FarmMapProps> = ({ coordinates }) => {
       map?.setZoom(15); // Zoom in on the selected location
     }
   }, [map]);
+
   const handleToggleTheme = useCallback(() => {
     setIsDarkMode(prev => !prev);
-    // Dark mode is now applied through the MapComponent props
   }, []);
 
   const handleToolbarItemClick = (itemId: string) => {
@@ -76,8 +84,6 @@ const FarmMap: React.FC<FarmMapProps> = ({ coordinates }) => {
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    // This function can be used for custom search logic if needed,
-    // but autocomplete handles most cases.
     console.log('Search submitted:', search);
   };
 
@@ -89,12 +95,45 @@ const FarmMap: React.FC<FarmMapProps> = ({ coordinates }) => {
     setDrawing(prev => !prev);
   };
 
-  const onPolygonComplete = (polygon: google.maps.Polygon) => {
-    console.log('Polygon drawn:', polygon);
-    // You can get coordinates like this:
+  // Function to toggle the visibility of the polygon data panel
+  const handleTogglePanel = useCallback(() => {
+    setIsPanelVisible(prev => !prev);
+  }, []);
+  
+  // Function to update polygon data when it's edited
+  const updatePolygonData = (polygon: google.maps.Polygon) => {
     const path = polygon.getPath();
     const coords = path.getArray().map(p => ({ lat: p.lat(), lng: p.lng() }));
+    
+    setPolygonCoords(coords);
+    setPolygonArea(calculatePolygonArea(coords));
+    setPolygonPerimeter(calculatePolygonPerimeter(coords));
+  };
+
+  const onPolygonComplete = (polygon: google.maps.Polygon) => {
+    // Store reference to active polygon
+    setActivePolygon(polygon);
+    
+    // Extract coordinates
+    const path = polygon.getPath();
+    const coords = path.getArray().map(p => ({ lat: p.lat(), lng: p.lng() }));
+    
+    // Set coordinates and calculate metrics
+    setPolygonCoords(coords);
+    setPolygonArea(calculatePolygonArea(coords));
+    setPolygonPerimeter(calculatePolygonPerimeter(coords));
+    
+    // Add listeners for when polygon is edited
+    google.maps.event.addListener(polygon.getPath(), 'set_at', () => {
+      updatePolygonData(polygon);
+    });
+    google.maps.event.addListener(polygon.getPath(), 'insert_at', () => {
+      updatePolygonData(polygon);
+    });
+    
+    console.log('Polygon drawn:', polygon);
     console.log('Coordinates:', coords);
+    
     // Disable drawing mode after completion
     setDrawing(false);
     setActiveToolbar(null);
@@ -112,6 +151,7 @@ const FarmMap: React.FC<FarmMapProps> = ({ coordinates }) => {
           showMapTypes={showMapTypes}
           mapTypes={mapTypes}
           isDarkMode={isDarkMode}
+          isPanelVisible={isPanelVisible}
           onToolbarItemClick={handleToolbarItemClick}
           onMapTypeSelect={handleMapTypeSelect}
           onToggleLock={handleToggleLock}
@@ -122,8 +162,19 @@ const FarmMap: React.FC<FarmMapProps> = ({ coordinates }) => {
           onSearchBoxLoad={handleSearchBoxLoad}
           onPlacesChanged={handlePlacesChanged}
           onToggleTheme={handleToggleTheme}
+          onTogglePanel={handleTogglePanel}
         />
       </div>
+      
+      {/* Polygon Data Panel - shown when polygon exists */}
+      {polygonCoords.length > 0 && isPanelVisible && (
+        <PolygonDataPanel 
+          coordinates={polygonCoords}
+          area={polygonArea}
+          perimeter={polygonPerimeter}
+        />
+      )}
+      
       <MapComponent
         center={center}
         zoom={12}
@@ -148,7 +199,7 @@ const FarmMap: React.FC<FarmMapProps> = ({ coordinates }) => {
                 fillOpacity: 0.3,
                 strokeWeight: 2,
                 strokeColor: '#4CAF50',
-                clickable: false,
+                clickable: true, // Changed to true to allow interaction
                 editable: true,
                 zIndex: 1,
               },

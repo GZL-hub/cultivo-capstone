@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Map, Pencil, Search, Lock, Unlock, ChevronDown, X, Sun, Moon } from 'lucide-react';
+import { Map, Pencil, Search, Lock, Unlock, ChevronDown, X, Sun, Moon, LayoutPanelLeft } from 'lucide-react';
 import { StandaloneSearchBox } from '@react-google-maps/api';
 
 export interface MapType {
@@ -17,6 +17,7 @@ interface FarmMapToolbarProps {
   showMapTypes: boolean;
   mapTypes: MapType[];
   isDarkMode: boolean;
+  isPanelVisible: boolean;
   onToolbarItemClick: (itemId: string) => void;
   onMapTypeSelect: (value: 'roadmap' | 'satellite' | 'terrain' | 'hybrid') => void;
   onToggleLock: () => void;
@@ -27,6 +28,7 @@ interface FarmMapToolbarProps {
   onSearchBoxLoad: (ref: google.maps.places.SearchBox) => void;
   onPlacesChanged: () => void;
   onToggleTheme: () => void;
+  onTogglePanel: () => void;
 }
 
 const buttonVariants = {
@@ -68,6 +70,7 @@ const FarmMapToolbar: React.FC<FarmMapToolbarProps> = ({
   showMapTypes,
   mapTypes,
   isDarkMode,
+  isPanelVisible,
   onToolbarItemClick,
   onMapTypeSelect,
   onToggleLock,
@@ -78,6 +81,7 @@ const FarmMapToolbar: React.FC<FarmMapToolbarProps> = ({
   onSearchBoxLoad,
   onPlacesChanged,
   onToggleTheme,
+  onTogglePanel,
 }) => {
   const [showSearchInput, setShowSearchInput] = useState(false);
   const isMapSelected = activeToolbar === "map";
@@ -295,6 +299,21 @@ const FarmMapToolbar: React.FC<FarmMapToolbarProps> = ({
               className="text-yellow-500" // Yellow for light mode
             />
           )}
+        </motion.button>
+
+        {/* Data Panel Toggle Button */}
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={onTogglePanel}
+          className={`flex items-center justify-center h-10 w-10 rounded-lg transition-colors ${
+            isPanelVisible
+              ? "bg-green-100 text-green-700 hover:bg-green-200" 
+              : "text-gray-700 hover:bg-gray-50"
+          }`}
+          aria-label="Toggle data panel"
+        >
+          <LayoutPanelLeft size={18} />
         </motion.button>
 
         {/* Lock/Unlock Toggle */}
