@@ -25,12 +25,9 @@ function App() {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
-  // REMOVE IN PRODUCTION: Hardcoded API key for development
-  const devApiKey = 'AIzaSyCbm1EvVKsQYwCytjLX2DoeIanXZZgZ_pE';
-
   const { isLoaded, loadError } = useJsApiLoader({
     id: 'google-map-script',
-    googleMapsApiKey: process.env.REACT_APP_GOOGLE_MAPS_API_KEY || devApiKey,
+    googleMapsApiKey: process.env.REACT_APP_GOOGLE_MAPS_API_KEY || "",
     libraries: libraries,
   });
 
