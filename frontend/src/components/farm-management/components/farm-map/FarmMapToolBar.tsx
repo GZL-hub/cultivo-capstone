@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Map, Pencil, Search, Lock, Unlock, ChevronDown, X } from 'lucide-react';
+import { Map, Pencil, Search, Lock, Unlock, ChevronDown, X, Sun, Moon } from 'lucide-react';
 import { StandaloneSearchBox } from '@react-google-maps/api';
 
 export interface MapType {
@@ -16,6 +16,7 @@ interface FarmMapToolbarProps {
   activeToolbar: string | null;
   showMapTypes: boolean;
   mapTypes: MapType[];
+  isDarkMode: boolean;
   onToolbarItemClick: (itemId: string) => void;
   onMapTypeSelect: (value: 'roadmap' | 'satellite' | 'terrain' | 'hybrid') => void;
   onToggleLock: () => void;
@@ -25,6 +26,7 @@ interface FarmMapToolbarProps {
   onStartDrawing: () => void;
   onSearchBoxLoad: (ref: google.maps.places.SearchBox) => void;
   onPlacesChanged: () => void;
+  onToggleTheme: () => void;
 }
 
 const buttonVariants = {
@@ -65,6 +67,7 @@ const FarmMapToolbar: React.FC<FarmMapToolbarProps> = ({
   activeToolbar,
   showMapTypes,
   mapTypes,
+  isDarkMode,
   onToolbarItemClick,
   onMapTypeSelect,
   onToggleLock,
@@ -74,10 +77,12 @@ const FarmMapToolbar: React.FC<FarmMapToolbarProps> = ({
   onStartDrawing,
   onSearchBoxLoad,
   onPlacesChanged,
+  onToggleTheme,
 }) => {
   const [showSearchInput, setShowSearchInput] = useState(false);
   const isMapSelected = activeToolbar === "map";
-  
+  const isThemeSelected = activeToolbar === "theme";
+
   const handleMapIconClick = () => {
     onToolbarItemClick("map");
   };
@@ -110,6 +115,11 @@ const FarmMapToolbar: React.FC<FarmMapToolbarProps> = ({
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     onSearch(e);
+  };
+
+  const handleThemeToggle = () => {
+    onToggleTheme();
+    onToolbarItemClick("theme");
   };
 
   return (
@@ -267,6 +277,26 @@ const FarmMapToolbar: React.FC<FarmMapToolbarProps> = ({
           </motion.div>
         </div>
 
+        {/* Theme Toggle Button */}
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={handleThemeToggle}
+          className="flex items-center justify-center h-10 w-10 rounded-lg transition-colors text-gray-700 hover:bg-gray-50"
+        >
+          {isDarkMode ? (
+            <Moon 
+              size={18} 
+              className="text-indigo-700" // Midnight blue for dark mode
+            />
+          ) : (
+            <Sun 
+              size={20} 
+              className="text-yellow-500" // Yellow for light mode
+            />
+          )}
+        </motion.button>
+
         {/* Lock/Unlock Toggle */}
         <motion.button
           whileHover={{ scale: 1.05 }}
@@ -279,7 +309,7 @@ const FarmMapToolbar: React.FC<FarmMapToolbarProps> = ({
           }`}
         >
           {locked ? <Lock size={16} /> : <Unlock size={16} />}
-          <span className="text-sm font-medium">{locked ? "Unlock" : "Lock"}</span>
+          <span className="px-2 text-sm font-medium">{locked ? "Unlock" : "Lock"}</span>
         </motion.button>
       </div>
     </div>

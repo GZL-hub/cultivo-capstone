@@ -26,6 +26,8 @@ const FarmMap: React.FC<FarmMapProps> = ({ coordinates }) => {
   const [activeToolbar, setActiveToolbar] = useState<string | null>(null);
   const [showMapTypes, setShowMapTypes] = useState(false);
   const [center, setCenter] = useState(coordinates);
+  const [isDarkMode, setIsDarkMode] = useState(false);
+
 
   const searchBoxRef = useRef<google.maps.places.SearchBox | null>(null);
 
@@ -47,6 +49,10 @@ const FarmMap: React.FC<FarmMapProps> = ({ coordinates }) => {
       map?.setZoom(15); // Zoom in on the selected location
     }
   }, [map]);
+  const handleToggleTheme = useCallback(() => {
+    setIsDarkMode(prev => !prev);
+    // Dark mode is now applied through the MapComponent props
+  }, []);
 
   const handleToolbarItemClick = (itemId: string) => {
     setActiveToolbar(prev => (prev === itemId ? null : itemId));
@@ -105,16 +111,17 @@ const FarmMap: React.FC<FarmMapProps> = ({ coordinates }) => {
           activeToolbar={activeToolbar}
           showMapTypes={showMapTypes}
           mapTypes={mapTypes}
+          isDarkMode={isDarkMode}
           onToolbarItemClick={handleToolbarItemClick}
           onMapTypeSelect={handleMapTypeSelect}
           onToggleLock={handleToggleLock}
-  
           onSearchChange={handleSearchChange}
           onSearch={handleSearch}
           onToggleMapTypes={handleToggleMapTypes}
           onStartDrawing={handleStartDrawing}
           onSearchBoxLoad={handleSearchBoxLoad}
           onPlacesChanged={handlePlacesChanged}
+          onToggleTheme={handleToggleTheme}
         />
       </div>
       <MapComponent
@@ -122,6 +129,7 @@ const FarmMap: React.FC<FarmMapProps> = ({ coordinates }) => {
         zoom={12}
         mapType={mapType}
         onLoad={handleMapLoad}
+        isDarkMode={isDarkMode}
         options={{
           zoomControl: false,
           streetViewControl: false,
