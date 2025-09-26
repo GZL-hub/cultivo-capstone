@@ -19,3 +19,46 @@ body {
   font-family: var(--font-figtree);
   /* Your existing body styles */
 }
+
+/* --- Google Maps Autocomplete Styles --- */
+
+/* The main dropdown container */
+.pac-container {
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  border: 1px solid #e2e8f0;
+  z-index: 1000; /* Ensure it's above other elements */
+  margin-top: 4px;
+  width: 240px !important; /* Match the expanded search bar width */
+  box-sizing: border-box;
+}
+
+/* Each suggestion item */
+.pac-item {
+  padding: 10px 12px;
+  font-size: 14px;
+  color: #1e293b;
+  cursor: pointer;
+  border-top: 1px solid #f1f5f9;
+}
+
+.pac-item:first-child {
+  border-top: none;
+}
+
+/* The bolded part of the suggestion (e.g., "New York") */
+.pac-item-query {
+  font-size: 14px;
+  color: #1e293b;
+}
+
+/* Hover state for a suggestion */
+.pac-item:hover {
+  background-color: #f7fafc; /* A light green like your hover:bg-green-50 */
+}
+
+/* The "powered by Google" logo */
+.hdpi.pac-logo:after {
+  background-image: none !important; /* Optional: hide the Google logo */
+}

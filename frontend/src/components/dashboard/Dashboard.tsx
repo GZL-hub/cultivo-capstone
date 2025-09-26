@@ -26,7 +26,11 @@ interface Farm {
   coordinates: string;
 }
 
-const Dashboard = () => {
+interface DashboardProps {
+  isLoaded: boolean;
+}
+
+const Dashboard: React.FC<DashboardProps> = ({ isLoaded }) => {
   // Add state for farm data
   const [farmInfo, setFarmInfo] = useState({
     name: "Loading...",
@@ -233,6 +237,7 @@ const Dashboard = () => {
               farmInfo={farmInfo}
               devices={devices}
               onViewFullMap={handleViewFullMap}
+              isLoaded={isLoaded}
             />
           )}
           {error && (

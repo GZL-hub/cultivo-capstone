@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Map, Pencil, Search, Lock, Unlock, ChevronDown, X } from 'lucide-react';
+import { StandaloneSearchBox } from '@react-google-maps/api';
 
 export interface MapType {
   label: string;
@@ -22,6 +23,8 @@ interface FarmMapToolbarProps {
   onSearch: (e: React.FormEvent) => void;
   onToggleMapTypes: () => void;
   onStartDrawing: () => void;
+  onSearchBoxLoad: (ref: google.maps.places.SearchBox) => void;
+  onPlacesChanged: () => void;
 }
 
 const buttonVariants = {
@@ -69,6 +72,8 @@ const FarmMapToolbar: React.FC<FarmMapToolbarProps> = ({
   onSearch,
   onToggleMapTypes,
   onStartDrawing,
+  onSearchBoxLoad,
+  onPlacesChanged,
 }) => {
   const [showSearchInput, setShowSearchInput] = useState(false);
   const isMapSelected = activeToolbar === "map";
@@ -82,38 +87,29 @@ const FarmMapToolbar: React.FC<FarmMapToolbarProps> = ({
     onToggleMapTypes();
   };
 
-  // Drawing tool now directly toggles drawing mode
   const handleDrawingClick = () => {
-    // If drawing is already active, cancel it
     if (drawing) {
-      onStartDrawing(); // This will toggle drawing off
+      onStartDrawing(); 
     } else if (activeToolbar === "draw") {
-      // If tool is selected but not drawing, toggle it off and cancel drawing
-      onToolbarItemClick("draw"); // This will deselect the toolbar
-      onStartDrawing(); // This will ensure drawing is off
+      onToolbarItemClick("draw"); 
+      onStartDrawing(); 
     } else {
-      // Otherwise, turn on drawing and select the tool
-      onStartDrawing(); // This will toggle drawing on
-      onToolbarItemClick("draw"); // This will select the toolbar
+      onStartDrawing(); 
+      onToolbarItemClick("draw"); 
     }
   };
 
   const toggleSearchInput = () => {
     setShowSearchInput(!showSearchInput);
-    // When toggling the search bar off, clear the toolbar selection if it was "search"
     if (showSearchInput && activeToolbar === "search") {
       onToolbarItemClick(activeToolbar);
     } else if (!showSearchInput) {
-      // When opening search, make it the active toolbar
       onToolbarItemClick("search");
     }
   };
 
-  // Handle search submission
   const handleSearchSubmit = (e: React.FormEvent) => {
     onSearch(e);
-    // Optionally close the search bar after submission
-    // setShowSearchInput(false);
   };
 
   return (
@@ -155,7 +151,6 @@ const FarmMapToolbar: React.FC<FarmMapToolbarProps> = ({
             )}
           </AnimatePresence>
           
-          {/* Map Type Dropdown */}
           <AnimatePresence>
             {isMapSelected && showMapTypes && (
               <motion.div
@@ -215,57 +210,61 @@ const FarmMapToolbar: React.FC<FarmMapToolbarProps> = ({
             )}
           </AnimatePresence>
         </motion.button>
+
         {/* Search Button / Input */}
         <div className="relative">
-        <motion.div
-            initial="closed"
-            animate={showSearchInput ? "open" : "closed"}
-            variants={searchBarVariants}
-            transition={{ type: "spring", stiffness: 300, damping: 25 }}
-            className={`flex items-center rounded-lg h-10 ${
-            showSearchInput 
-                ? `border ${activeToolbar === "search" ? "border-green-500 ring-1 ring-green-500" : "border-gray-300"}` 
-                : ""
-            }`}
-        >
-            {/* Search Icon Button */}
-            <motion.button
-            type="button"
-            onClick={toggleSearchInput}
-            className={`flex items-center justify-center h-10 min-w-[40px] rounded-lg ${
-                activeToolbar === "search"
-                ? "bg-green-600 text-white" 
-                : "text-gray-600 hover:bg-green-50 hover:text-green-700"
-            }`}
-            >
-            <Search size={16} />
-            </motion.button>
-            
-            {showSearchInput && (
-            <form 
-                onSubmit={handleSearchSubmit} 
-                className="flex-grow pr-8"
-            >
-                <input
-                type="text"
-                className="w-full h-10 px-2 py-2 text-sm focus:outline-none bg-transparent"
-                placeholder="Search address or coordinates"
-                value={search}
-                onChange={onSearchChange}
-                disabled={locked}
-                autoFocus
-                />
-                
-                <button
+          <motion.div
+              initial="closed"
+              animate={showSearchInput ? "open" : "closed"}
+              variants={searchBarVariants}
+              transition={{ type: "spring", stiffness: 300, damping: 25 }}
+              className={`flex items-center rounded-lg h-10 ${
+              showSearchInput 
+                  ? `border ${activeToolbar === "search" ? "border-green-500 ring-1 ring-green-500" : "border-gray-300"}` 
+                  : ""
+              }`}
+          >
+              <motion.button
                 type="button"
                 onClick={toggleSearchInput}
-                className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center justify-center w-6 h-6 text-gray-400 hover:text-gray-600"
+                className={`flex items-center justify-center h-10 min-w-[40px] rounded-lg ${
+                    activeToolbar === "search"
+                    ? "bg-green-600 text-white" 
+                    : "text-gray-600 hover:bg-green-50 hover:text-green-700"
+                }`}
+              >
+                <Search size={16} />
+              </motion.button>
+              
+              {showSearchInput && (
+                <StandaloneSearchBox
+                  onLoad={onSearchBoxLoad}
+                  onPlacesChanged={onPlacesChanged}
                 >
-                <X size={14} />
-                </button>
-            </form>
-            )}
-        </motion.div>
+                  <form 
+                      onSubmit={handleSearchSubmit} 
+                      className="flex-grow pr-8"
+                  >
+                      <input
+                        type="text"
+                        className="w-full h-10 px-2 py-2 text-sm focus:outline-none bg-transparent"
+                        placeholder="Search address or coordinates"
+                        value={search}
+                        onChange={onSearchChange}
+                        disabled={locked}
+                        autoFocus
+                      />
+                      <button
+                        type="button"
+                        onClick={toggleSearchInput}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center justify-center w-6 h-6 text-gray-400 hover:text-gray-600"
+                      >
+                        <X size={14} />
+                      </button>
+                  </form>
+                </StandaloneSearchBox>
+              )}
+          </motion.div>
         </div>
 
         {/* Lock/Unlock Toggle */}

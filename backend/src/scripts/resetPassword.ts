@@ -18,6 +18,7 @@ const resetUserPassword = async () => {
     
     // Connect to the users collection directly
     const db = mongoose.connection.db;
+    console.log(`Connected to database: ${db.databaseName}`);
     const usersCollection = db.collection('users');
     
     // New password to set

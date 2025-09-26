@@ -1,5 +1,5 @@
 import React from 'react';
-import { GoogleMap, useJsApiLoader } from '@react-google-maps/api';
+import { GoogleMap } from '@react-google-maps/api';
 
 // Define device status type
 type DeviceStatus = 'online' | 'offline' | 'low_battery';
@@ -24,12 +24,14 @@ interface FarmInfo {
 interface FarmMapCardProps {
   farmInfo: FarmInfo;
   devices: Device[];
+  isLoaded: boolean; // Add isLoaded to the props interface
   onViewFullMap?: () => void;
 }
 
 const FarmMapCard: React.FC<FarmMapCardProps> = ({
   farmInfo,
   devices,
+  isLoaded, // Destructure isLoaded from props
   onViewFullMap
 }) => {
   // Helper function to get status styles
@@ -76,12 +78,7 @@ const FarmMapCard: React.FC<FarmMapCardProps> = ({
     return { lat: 37.7749, lng: -122.4194 }; // Default to San Francisco
   };
 
-  // Google Maps integration
-  const { isLoaded } = useJsApiLoader({
-    id: 'google-map-script',
-    googleMapsApiKey: process.env.REACT_APP_GOOGLE_MAPS_API_KEY || '',
-    libraries: ['places', 'drawing'], // Always include 'places'
-  });
+  // The useJsApiLoader hook is removed from here.
 
   const mapContainerStyle = {
     width: '100%',

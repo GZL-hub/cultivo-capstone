@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { useJsApiLoader } from '@react-google-maps/api';
 import Login from './components/login/Login';
 import Layout from './components/layout/Layout';
 import Dashboard from './components/dashboard/Dashboard';
@@ -16,10 +17,22 @@ import authService from './services/authService';
 // Dummy Data
 import { farm, weather, workers } from './components/farm-management/farmDummyData';
 
+// Define libraries outside the component to prevent re-creation
+const libraries: ('places' | 'drawing')[] = ['places', 'drawing'];
+
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+
+  // REMOVE IN PRODUCTION: Hardcoded API key for development
+  const devApiKey = 'AIzaSyCbm1EvVKsQYwCytjLX2DoeIanXZZgZ_pE';
+
+  const { isLoaded, loadError } = useJsApiLoader({
+    id: 'google-map-script',
+    googleMapsApiKey: process.env.REACT_APP_GOOGLE_MAPS_API_KEY || devApiKey,
+    libraries: libraries,
+  });
 
   // Check if user is already logged in
   useEffect(() => {
@@ -75,6 +88,10 @@ function App() {
     setIsLoggedIn(false);
   };
 
+  if (loadError) {
+    return <div>Error loading maps. Please check the API key and network connection.</div>;
+  }
+
   return (
     <Router>
       {!isLoggedIn ? (
@@ -84,10 +101,12 @@ function App() {
           loading={loading}
           error={error}
         />
+      ) : !isLoaded ? (
+        <div>Loading...</div> // Show a loading screen while the map script loads
       ) : (
         <Layout onLogout={handleLogout}>
           <Routes>
-            <Route path="/" element={<Dashboard />} />
+            <Route path="/" element={<Dashboard isLoaded={isLoaded} />} />
             <Route path="/analytics" element={<Analytics />} />
             <Route path="/alerts" element={<Alerts />} />
             <Route path="/devices" element={<Devices />} />

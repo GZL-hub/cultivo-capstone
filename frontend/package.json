@@ -2,6 +2,7 @@
   "name": "frontend",
   "version": "0.1.0",
   "private": true,
+  "proxy": "http://localhost:8080",
   "dependencies": {
     "@paper-design/shaders-react": "^0.0.52",
     "@react-google-maps/api": "^2.20.7",

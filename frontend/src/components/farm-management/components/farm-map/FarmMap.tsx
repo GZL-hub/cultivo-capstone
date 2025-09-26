@@ -1,143 +1,58 @@
-// Restore Back
-import React, { useState, useEffect, useRef } from 'react';
-import GoogleMap from '../../../googlemap/GoogleMap';
-import { DrawingManager, Polygon } from '@react-google-maps/api';
-import FarmMapToolbar from './FarmMapToolBar';
+import React, { useState, useRef, useCallback } from 'react';
+import MapComponent from '../../../googlemap/GoogleMap';
+import FarmMapToolbar, { MapType } from './FarmMapToolBar';
+import { DrawingManager } from '@react-google-maps/api';
 
-interface FarmMapProps {
-  coordinates: { lat: number; lng: number };
-}
-
-const mapTypes: Array<{ label: string; value: 'roadmap' | 'satellite' | 'terrain' | 'hybrid' }> = [
+const mapTypes: MapType[] = [
   { label: 'Roadmap', value: 'roadmap' },
   { label: 'Satellite', value: 'satellite' },
   { label: 'Terrain', value: 'terrain' },
   { label: 'Hybrid', value: 'hybrid' },
 ];
 
+interface FarmMapProps {
+  coordinates: {
+    lat: number;
+    lng: number;
+  };
+}
+
 const FarmMap: React.FC<FarmMapProps> = ({ coordinates }) => {
-  const [drawing, setDrawing] = useState(false);
-  const [paths, setPaths] = useState<google.maps.LatLngLiteral[]>([]);
+  const [map, setMap] = useState<google.maps.Map | null>(null);
   const [mapType, setMapType] = useState<'roadmap' | 'satellite' | 'terrain' | 'hybrid'>('roadmap');
+  const [drawing, setDrawing] = useState(false);
   const [locked, setLocked] = useState(false);
   const [search, setSearch] = useState('');
-  const [activeToolbar, setActiveToolbar] = useState<string | null>("map");
+  const [activeToolbar, setActiveToolbar] = useState<string | null>(null);
   const [showMapTypes, setShowMapTypes] = useState(false);
-  
-  // Reference to map
-  const mapRef = useRef<google.maps.Map | null>(null);
-  // Reference to DrawingManager
-  const drawingManagerRef = useRef<google.maps.drawing.DrawingManager | null>(null);
-  
-  // Handler for map load
-  const handleMapLoad = (map: google.maps.Map) => {
-    mapRef.current = map;
-  };
-  
-  // Force drawing off when active toolbar changes
-  useEffect(() => {
-    if (activeToolbar !== 'draw') {
-      setDrawing(false);
-      stopDrawing();
-    }
-  }, [activeToolbar]);
+  const [center, setCenter] = useState(coordinates);
 
-  // Handler for completed polygon
-  const handlePolygonComplete = (polygon: google.maps.Polygon) => {
-    const path = polygon.getPath();
-    const coords: google.maps.LatLngLiteral[] = [];
-    for (let i = 0; i < path.getLength(); i++) {
-      const point = path.getAt(i);
-      coords.push({ lat: point.lat(), lng: point.lng() });
-    }
-    setPaths(coords);
-    setDrawing(false);
-    stopDrawing();
-    polygon.setMap(null); // Remove the drawn polygon, we will render our own
-  };
-  
-  // Start drawing mode
-  const startDrawing = () => {
-    if (!mapRef.current) return;
-    
-    // Create a new DrawingManager if none exists
-    if (!drawingManagerRef.current) {
-      drawingManagerRef.current = new google.maps.drawing.DrawingManager({
-        drawingMode: google.maps.drawing.OverlayType.POLYGON,
-        drawingControl: false,
-        polygonOptions: {
-          fillColor: '#22c55e',
-          fillOpacity: 0.2,
-          strokeColor: '#16a34a',
-          strokeWeight: 2,
-          clickable: false,
-          editable: false,
-          zIndex: 1,
-        },
-      });
-      
-      // Add listener for polygon completion
-      google.maps.event.addListener(
-        drawingManagerRef.current, 
-        'polygoncomplete', 
-        handlePolygonComplete
-      );
-    }
-    
-    // Set drawing mode and attach to map
-    drawingManagerRef.current.setOptions({
-      drawingMode: google.maps.drawing.OverlayType.POLYGON
-    });
-    drawingManagerRef.current.setMap(mapRef.current);
-    setDrawing(true);
-  };
-  
-  // Stop drawing mode
-  const stopDrawing = () => {
-    if (drawingManagerRef.current) {
-      drawingManagerRef.current.setMap(null);
-    }
-    setDrawing(false);
-  };
+  const searchBoxRef = useRef<google.maps.places.SearchBox | null>(null);
 
-  // Toggle drawing mode
-  const handleStartDrawing = () => {
-    if (drawing) {
-      stopDrawing();
-    } else {
-      startDrawing();
-    }
-  };
+  const handleMapLoad = useCallback((mapInstance: google.maps.Map) => {
+    setMap(mapInstance);
+  }, []);
 
-  // Placeholder for search handler
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    // Implement search logic here (e.g., geocode and pan map)
-  };
+  const handleSearchBoxLoad = useCallback((ref: google.maps.places.SearchBox) => {
+    searchBoxRef.current = ref;
+  }, []);
+
+  const handlePlacesChanged = useCallback(() => {
+    const places = searchBoxRef.current?.getPlaces();
+    if (places && places.length > 0 && places[0].geometry?.location) {
+      const location = places[0].geometry.location;
+      const newCenter = { lat: location.lat(), lng: location.lng() };
+      setCenter(newCenter);
+      map?.panTo(newCenter);
+      map?.setZoom(15); // Zoom in on the selected location
+    }
+  }, [map]);
 
   const handleToolbarItemClick = (itemId: string) => {
-    // If switching to a different tool, disable drawing mode
-    if (itemId !== "draw") {
-      stopDrawing();
-    }
-    
-    // When selecting the draw tool, enable drawing
-    if (itemId === "draw" && activeToolbar !== "draw") {
-      startDrawing();
-    }
-    
-    // When deselecting the draw tool, disable drawing
-    if (itemId === "draw" && activeToolbar === "draw") {
-      stopDrawing();
-    }
-    
-    // If clicking on a different tool, close map types dropdown
-    if (activeToolbar !== itemId) {
+    setActiveToolbar(prev => (prev === itemId ? null : itemId));
+    if (itemId !== 'map') {
       setShowMapTypes(false);
     }
-    
-    // Toggle active toolbar or set new one
-    setActiveToolbar(activeToolbar === itemId ? null : itemId);
   };
 
   const handleMapTypeSelect = (value: 'roadmap' | 'satellite' | 'terrain' | 'hybrid') => {
@@ -145,57 +60,96 @@ const FarmMap: React.FC<FarmMapProps> = ({ coordinates }) => {
     setShowMapTypes(false);
   };
 
+  const handleToggleLock = () => {
+    setLocked(prev => !prev);
+  };
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearch(e.target.value);
+  };
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    // This function can be used for custom search logic if needed,
+    // but autocomplete handles most cases.
+    console.log('Search submitted:', search);
+  };
+
+  const handleToggleMapTypes = () => {
+    setShowMapTypes(prev => !prev);
+  };
+
+  const handleStartDrawing = () => {
+    setDrawing(prev => !prev);
+  };
+
+  const onPolygonComplete = (polygon: google.maps.Polygon) => {
+    console.log('Polygon drawn:', polygon);
+    // You can get coordinates like this:
+    const path = polygon.getPath();
+    const coords = path.getArray().map(p => ({ lat: p.lat(), lng: p.lng() }));
+    console.log('Coordinates:', coords);
+    // Disable drawing mode after completion
+    setDrawing(false);
+    setActiveToolbar(null);
+  };
+
   return (
-    <div className="flex flex-col w-full space-y-2">
-      {/* Toolbar Component */}
-      <FarmMapToolbar 
-        mapType={mapType}
-        drawing={drawing}
-        locked={locked}
-        search={search}
-        activeToolbar={activeToolbar}
-        showMapTypes={showMapTypes}
-        mapTypes={mapTypes}
-        onToolbarItemClick={handleToolbarItemClick}
-        onMapTypeSelect={handleMapTypeSelect}
-        onToggleLock={() => setLocked(!locked)}
-        onSearchChange={(e) => setSearch(e.target.value)}
-        onSearch={handleSearch}
-        onToggleMapTypes={() => setShowMapTypes(!showMapTypes)}
-        onStartDrawing={handleStartDrawing}
-      />
-      
-      {/* Map Container */}
-      <div className="relative h-[500px] w-full bg-gray-100 rounded-lg overflow-hidden">
-        <GoogleMap 
-          center={coordinates} 
-          zoom={17} 
+    <div className="relative w-full h-full">
+      <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 w-full px-4">
+        <FarmMapToolbar
           mapType={mapType}
-          options={{
-            disableDoubleClickZoom: true,
-            clickableIcons: false,
-          }}
-          onLoad={handleMapLoad}
-        >          
-          {/* Render the perimeter polygon if drawn */}
-          {paths.length > 0 && (
-            <Polygon
-              path={paths}
-              options={{
-                fillColor: '#22c55e',
-                fillOpacity: 0.2,
-                strokeColor: '#16a34a',
-                strokeWeight: 2,
-                clickable: false,
-                editable: false,
-                zIndex: 2,
-              }}
-            />
-          )}
-        </GoogleMap>
+          drawing={drawing}
+          locked={locked}
+          search={search}
+          activeToolbar={activeToolbar}
+          showMapTypes={showMapTypes}
+          mapTypes={mapTypes}
+          onToolbarItemClick={handleToolbarItemClick}
+          onMapTypeSelect={handleMapTypeSelect}
+          onToggleLock={handleToggleLock}
+  
+          onSearchChange={handleSearchChange}
+          onSearch={handleSearch}
+          onToggleMapTypes={handleToggleMapTypes}
+          onStartDrawing={handleStartDrawing}
+          onSearchBoxLoad={handleSearchBoxLoad}
+          onPlacesChanged={handlePlacesChanged}
+        />
       </div>
+      <MapComponent
+        center={center}
+        zoom={12}
+        mapType={mapType}
+        onLoad={handleMapLoad}
+        options={{
+          zoomControl: false,
+          streetViewControl: false,
+          fullscreenControl: false,
+          mapTypeControl: false,
+        }}
+      >
+        {drawing && (
+          <DrawingManager
+            onPolygonComplete={onPolygonComplete}
+            options={{
+              drawingControl: false,
+              drawingMode: google.maps.drawing.OverlayType.POLYGON,
+              polygonOptions: {
+                fillColor: '#4CAF50',
+                fillOpacity: 0.3,
+                strokeWeight: 2,
+                strokeColor: '#4CAF50',
+                clickable: false,
+                editable: true,
+                zIndex: 1,
+              },
+            }}
+          />
+        )}
+      </MapComponent>
     </div>
   );
 };
-  
+
 export default FarmMap;

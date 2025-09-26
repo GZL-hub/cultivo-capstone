@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { GoogleMap as GoogleMapComponent, useJsApiLoader, TrafficLayer, StandaloneSearchBox } from '@react-google-maps/api';
+import { GoogleMap as GoogleMapComponent, TrafficLayer } from '@react-google-maps/api';
 
 const containerStyle = {
   width: '100%',
@@ -22,44 +22,27 @@ function MapComponent({
   center = { lat: -3.745, lng: -38.523 },
   zoom = 10,
   children,
-  mapType = 'roadmap', // <-- Use prop, default to 'roadmap'
+  mapType = 'roadmap',
   options = {},
   onLoad: customOnLoad,
 }: MapComponentProps) {
-  const { isLoaded } = useJsApiLoader({
-    id: 'google-map-script',
-    googleMapsApiKey: process.env.REACT_APP_GOOGLE_MAPS_API_KEY || '',
-    libraries: ['places', 'drawing'],
-  });
-
+  // The useJsApiLoader hook must be removed from this file.
+  
   const [map, setMap] = useState<google.maps.Map | null>(null);
   const [showTraffic, setShowTraffic] = useState(false);
-  const [mapCenter, setMapCenter] = useState(center);
-
-  const searchBoxRef = useRef<google.maps.places.SearchBox | null>(null);
 
   const onLoad = React.useCallback(function callback(map: google.maps.Map) {
     setMap(map);
-    if (customOnLoad) customOnLoad(map); // Call the custom onLoad if provided
-  }, [customOnLoad]); // Add customOnLoad as a dependency
+    if (customOnLoad) customOnLoad(map);
+  }, [customOnLoad]);
 
   const onUnmount = React.useCallback(function callback() {
     setMap(null);
   }, []);
 
-  const onPlacesChanged = () => {
-    const places = searchBoxRef.current?.getPlaces();
-    if (places && places.length > 0 && places[0].geometry?.location) {
-      const location = places[0].geometry.location;
-      setMapCenter({ lat: location.lat(), lng: location.lng() });
-      map?.panTo(location);
-    }
-  };
-
-  return isLoaded ? (
+  return (
     <div className="relative w-full h-full">
-      {/* Traffic control */}
-      <div className="absolute top-2 left-2 z-10 bg-white rounded shadow p-2 flex flex-col gap-2">
+      <div className="absolute top-2 left-2 z-30 bg-white rounded shadow p-2 flex flex-col gap-2">
         <label className="text-xs font-semibold">
           <input
             type="checkbox"
@@ -72,16 +55,12 @@ function MapComponent({
       </div>
       <GoogleMapComponent
         mapContainerStyle={containerStyle}
-        center={mapCenter}
+        center={center}
         zoom={zoom}
         onLoad={onLoad}
         onUnmount={onUnmount}
         options={{
           mapTypeId: mapType,
-          mapTypeControl: false, // Hide built-in map type control, use your own in toolbar
-          zoomControl: true,
-          streetViewControl: true,
-          fullscreenControl: true,
           ...options,
         }}
       >
@@ -89,7 +68,7 @@ function MapComponent({
         {showTraffic && <TrafficLayer />}
       </GoogleMapComponent>
     </div>
-  ) : <div>Loading...</div>;
+  );
 }
 
 export default React.memo(MapComponent);
