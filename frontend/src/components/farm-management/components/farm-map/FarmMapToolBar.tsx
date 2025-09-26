@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Map, Pencil, Search, Lock, Unlock, ChevronDown, X, Sun, Moon, LayoutPanelLeft } from 'lucide-react';
+import { Map, Pencil, Search, Lock, Unlock, ChevronDown, X, Sun, Moon, LayoutPanelLeft, Trash2 } from 'lucide-react';
 import { StandaloneSearchBox } from '@react-google-maps/api';
 
 export interface MapType {
@@ -18,6 +18,7 @@ interface FarmMapToolbarProps {
   mapTypes: MapType[];
   isDarkMode: boolean;
   isPanelVisible: boolean;
+  hasPolygon: boolean;
   onToolbarItemClick: (itemId: string) => void;
   onMapTypeSelect: (value: 'roadmap' | 'satellite' | 'terrain' | 'hybrid') => void;
   onToggleLock: () => void;
@@ -29,6 +30,7 @@ interface FarmMapToolbarProps {
   onPlacesChanged: () => void;
   onToggleTheme: () => void;
   onTogglePanel: () => void;
+  onDeletePolygon?: () => void;
 }
 
 const buttonVariants = {
@@ -71,6 +73,7 @@ const FarmMapToolbar: React.FC<FarmMapToolbarProps> = ({
   mapTypes,
   isDarkMode,
   isPanelVisible,
+  hasPolygon,
   onToolbarItemClick,
   onMapTypeSelect,
   onToggleLock,
@@ -82,6 +85,7 @@ const FarmMapToolbar: React.FC<FarmMapToolbarProps> = ({
   onPlacesChanged,
   onToggleTheme,
   onTogglePanel,
+  onDeletePolygon,
 }) => {
   const [showSearchInput, setShowSearchInput] = useState(false);
   const isMapSelected = activeToolbar === "map";
@@ -194,19 +198,23 @@ const FarmMapToolbar: React.FC<FarmMapToolbarProps> = ({
           </AnimatePresence>
         </motion.button>
 
-        {/* Draw Button */}
+        {/* Draw Button - now disabled when hasPolygon is true */}
         <motion.button
           variants={buttonVariants}
           initial={false}
           animate="animate"
           custom={drawing || activeToolbar === "draw"}
           onClick={handleDrawingClick}
+          disabled={hasPolygon && !drawing}
           transition={transition}
           className={`flex items-center rounded-lg px-3 py-2 text-sm font-medium ${
             drawing || activeToolbar === "draw"
               ? "bg-green-600 text-white" 
-              : "text-gray-600 hover:bg-green-50 hover:text-green-700"
+              : hasPolygon 
+                ? "text-gray-400 cursor-not-allowed" // Disabled state
+                : "text-gray-600 hover:bg-green-50 hover:text-green-700"
           }`}
+          title={hasPolygon ? "Delete existing polygon to draw a new one" : "Draw polygon"}
         >
           <Pencil size={16} className={(drawing || activeToolbar === "draw") ? "text-white" : ""} />
           <AnimatePresence initial={false}>
@@ -224,6 +232,19 @@ const FarmMapToolbar: React.FC<FarmMapToolbarProps> = ({
             )}
           </AnimatePresence>
         </motion.button>
+
+        {/* Add Delete Button when hasPolygon is true */}
+        {hasPolygon && onDeletePolygon && (
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={onDeletePolygon}
+            className="flex items-center justify-center h-10 w-10 rounded-lg text-red-500 hover:bg-red-50 transition-colors"
+            title="Delete polygon"
+          >
+            <Trash2 size={16} />
+          </motion.button>
+        )}
 
         {/* Search Button / Input */}
         <div className="relative">

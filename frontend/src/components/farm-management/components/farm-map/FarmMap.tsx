@@ -1,9 +1,10 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import MapComponent from '../../../googlemap/GoogleMap';
 import FarmMapToolbar, { MapType } from './FarmMapToolBar';
 import { DrawingManager } from '@react-google-maps/api';
 import PolygonDataPanel from './polygon/PolygonDataPanel';
 import { calculatePolygonArea, calculatePolygonPerimeter } from './polygon/Polygon-Utils';
+import { toast } from 'react-hot-toast';
 
 const mapTypes: MapType[] = [
   { label: 'Roadmap', value: 'roadmap' },
@@ -20,6 +21,7 @@ interface FarmMapProps {
 }
 
 const FarmMap: React.FC<FarmMapProps> = ({ coordinates }) => {
+  // State declarations
   const [map, setMap] = useState<google.maps.Map | null>(null);
   const [mapType, setMapType] = useState<'roadmap' | 'satellite' | 'terrain' | 'hybrid'>('roadmap');
   const [drawing, setDrawing] = useState(false);
@@ -31,16 +33,35 @@ const FarmMap: React.FC<FarmMapProps> = ({ coordinates }) => {
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [isPanelVisible, setIsPanelVisible] = useState(true);
   
-  // New state for polygon data
+  // Polygon data state
   const [polygonCoords, setPolygonCoords] = useState<Array<{lat: number, lng: number}>>([]);
   const [polygonArea, setPolygonArea] = useState<number | undefined>(undefined);
   const [polygonPerimeter, setPolygonPerimeter] = useState<number | undefined>(undefined);
   const [activePolygon, setActivePolygon] = useState<google.maps.Polygon | null>(null);
-
+  
+  // Drawing manager ref
+  const drawingManagerRef = useRef<google.maps.drawing.DrawingManager | null>(null);
   const searchBoxRef = useRef<google.maps.places.SearchBox | null>(null);
+  
+  // This effect will ensure drawing mode is properly disabled when the drawing state changes
+  useEffect(() => {
+    if (!drawing && drawingManagerRef.current) {
+      drawingManagerRef.current.setDrawingMode(null);
+      // Set the map to null to completely disable the drawing manager
+      drawingManagerRef.current.setMap(null);
+    } else if (drawing && drawingManagerRef.current && map) {
+      // Re-enable the drawing manager
+      drawingManagerRef.current.setMap(map);
+      drawingManagerRef.current.setDrawingMode(google.maps.drawing.OverlayType.POLYGON);
+    }
+  }, [drawing, map]);
 
   const handleMapLoad = useCallback((mapInstance: google.maps.Map) => {
     setMap(mapInstance);
+  }, []);
+  
+  const handleDrawingManagerLoad = useCallback((drawingManager: google.maps.drawing.DrawingManager) => {
+    drawingManagerRef.current = drawingManager;
   }, []);
 
   const handleSearchBoxLoad = useCallback((ref: google.maps.places.SearchBox) => {
@@ -54,7 +75,7 @@ const FarmMap: React.FC<FarmMapProps> = ({ coordinates }) => {
       const newCenter = { lat: location.lat(), lng: location.lng() };
       setCenter(newCenter);
       map?.panTo(newCenter);
-      map?.setZoom(15); // Zoom in on the selected location
+      map?.setZoom(15);
     }
   }, [map]);
 
@@ -63,7 +84,20 @@ const FarmMap: React.FC<FarmMapProps> = ({ coordinates }) => {
   }, []);
 
   const handleToolbarItemClick = (itemId: string) => {
+    // If we're switching to draw mode but already have a polygon
+    if (itemId === "draw" && activePolygon) {
+      // Prevent enabling drawing mode
+      toast.error('Only one polygon allowed. Delete existing polygon to draw a new one.');
+      return;
+    }
+    
+    // If we're switching from drawing mode to another tool, disable drawing
+    if ((activeToolbar === "draw" || drawing) && itemId !== "draw") {
+      setDrawing(false);
+    }
+    
     setActiveToolbar(prev => (prev === itemId ? null : itemId));
+    
     if (itemId !== 'map') {
       setShowMapTypes(false);
     }
@@ -88,19 +122,44 @@ const FarmMap: React.FC<FarmMapProps> = ({ coordinates }) => {
   };
 
   const handleToggleMapTypes = () => {
+    // When toggling map types, ensure drawing is disabled
+    if (drawing) {
+      setDrawing(false);
+    }
     setShowMapTypes(prev => !prev);
   };
 
   const handleStartDrawing = () => {
-    setDrawing(prev => !prev);
+    // Check if we already have a polygon
+    if (activePolygon) {
+      // Provide feedback to the user
+      toast.error('Only one polygon allowed. Delete existing polygon to draw a new one.');
+      return;
+    }
+    
+    // Toggle drawing state
+    setDrawing(!drawing);
   };
 
-  // Function to toggle the visibility of the polygon data panel
   const handleTogglePanel = useCallback(() => {
     setIsPanelVisible(prev => !prev);
   }, []);
   
-  // Function to update polygon data when it's edited
+  const handleDeletePolygon = useCallback(() => {
+    if (activePolygon) {
+      // Remove the polygon from the map
+      activePolygon.setMap(null);
+      
+      // Clear polygon data
+      setActivePolygon(null);
+      setPolygonCoords([]);
+      setPolygonArea(undefined);
+      setPolygonPerimeter(undefined);
+      
+      toast.success('Polygon deleted');
+    }
+  }, [activePolygon]);
+  
   const updatePolygonData = (polygon: google.maps.Polygon) => {
     const path = polygon.getPath();
     const coords = path.getArray().map(p => ({ lat: p.lat(), lng: p.lng() }));
@@ -152,6 +211,7 @@ const FarmMap: React.FC<FarmMapProps> = ({ coordinates }) => {
           mapTypes={mapTypes}
           isDarkMode={isDarkMode}
           isPanelVisible={isPanelVisible}
+          hasPolygon={!!activePolygon}
           onToolbarItemClick={handleToolbarItemClick}
           onMapTypeSelect={handleMapTypeSelect}
           onToggleLock={handleToggleLock}
@@ -163,15 +223,17 @@ const FarmMap: React.FC<FarmMapProps> = ({ coordinates }) => {
           onPlacesChanged={handlePlacesChanged}
           onToggleTheme={handleToggleTheme}
           onTogglePanel={handleTogglePanel}
+          onDeletePolygon={handleDeletePolygon}
         />
       </div>
       
-      {/* Polygon Data Panel - shown when polygon exists */}
+      {/* Polygon Data Panel */}
       {polygonCoords.length > 0 && isPanelVisible && (
         <PolygonDataPanel 
           coordinates={polygonCoords}
           area={polygonArea}
           perimeter={polygonPerimeter}
+          onDelete={handleDeletePolygon}
         />
       )}
       
@@ -188,18 +250,19 @@ const FarmMap: React.FC<FarmMapProps> = ({ coordinates }) => {
           mapTypeControl: false,
         }}
       >
-        {drawing && (
+        {map && (
           <DrawingManager
+            onLoad={handleDrawingManagerLoad}
             onPolygonComplete={onPolygonComplete}
             options={{
               drawingControl: false,
-              drawingMode: google.maps.drawing.OverlayType.POLYGON,
+              drawingMode: drawing ? google.maps.drawing.OverlayType.POLYGON : null,
               polygonOptions: {
                 fillColor: '#4CAF50',
                 fillOpacity: 0.3,
                 strokeWeight: 2,
                 strokeColor: '#4CAF50',
-                clickable: true, // Changed to true to allow interaction
+                clickable: true,
                 editable: true,
                 zIndex: 1,
               },

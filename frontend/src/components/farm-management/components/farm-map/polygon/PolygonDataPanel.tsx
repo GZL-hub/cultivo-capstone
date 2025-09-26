@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ChevronDown, ChevronUp } from 'lucide-react';
+import { ChevronDown, ChevronUp, Trash2 } from 'lucide-react';
 
 export interface PolygonCoordinate {
   lat: number;
@@ -10,12 +10,14 @@ interface PolygonDataPanelProps {
   coordinates: PolygonCoordinate[];
   area?: number;
   perimeter?: number;
+  onDelete?: () => void;
 }
 
 const PolygonDataPanel: React.FC<PolygonDataPanelProps> = ({ 
   coordinates, 
   area, 
-  perimeter 
+  perimeter,
+  onDelete
 }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
 
@@ -23,7 +25,7 @@ const PolygonDataPanel: React.FC<PolygonDataPanelProps> = ({
 
   return (
     <div className="absolute bottom-4 right-4 z-20 bg-white p-4 rounded-lg shadow-lg overflow-visible w-80">
-      {/* Panel header with collapse control only */}
+      {/* Panel header with collapse control and delete button */}
       <div className="flex justify-between items-center mb-3">
         <div className="flex items-center">
           <h4 className="font-medium text-gray-800 text-base">Plot Data</h4>
@@ -37,6 +39,16 @@ const PolygonDataPanel: React.FC<PolygonDataPanelProps> = ({
             }
           </button>
         </div>
+        
+        {onDelete && (
+          <button
+            onClick={onDelete}
+            className="p-1 rounded-full hover:bg-red-50 text-red-500 hover:text-red-600 transition-colors"
+            title="Delete polygon"
+          >
+            <Trash2 size={16} />
+          </button>
+        )}
       </div>
       
       {!isCollapsed && (
