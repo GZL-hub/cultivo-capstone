@@ -1,21 +1,32 @@
 import express from 'express';
-import {
-  getFarms,
-  getFarm,
-  createFarm,
-  updateFarm,
-  deleteFarm
+import { 
+  getAllFarms, 
+  getFarmById, 
+  createFarm, 
+  updateFarm, 
+  deleteFarm,
+  getFarmBoundary,
+  updateFarmBoundary
 } from '../controllers/farmController';
 
 const router = express.Router();
 
+// Protect all routes
+// router.use(protect);
+
+// Farm CRUD routes
 router.route('/')
-  .get(getFarms)
+  .get(getAllFarms)
   .post(createFarm);
 
 router.route('/:id')
-  .get(getFarm)
+  .get(getFarmById)
   .put(updateFarm)
   .delete(deleteFarm);
+
+// Farm boundary polygon routes
+router.route('/:id/boundary')
+  .get(getFarmBoundary)
+  .put(updateFarmBoundary);
 
 export default router;

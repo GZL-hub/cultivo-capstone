@@ -70,7 +70,7 @@ const Dashboard: React.FC<DashboardProps> = ({ isLoaded }) => {
         }
       } catch (err) {
         console.error('Error fetching farm data:', err);
-        setError('Failed to load farm data. Using default values.');
+        // setError('Failed to load farm data. Using default values.');
         // Keep default values on error
       } finally {
         setIsLoading(false);

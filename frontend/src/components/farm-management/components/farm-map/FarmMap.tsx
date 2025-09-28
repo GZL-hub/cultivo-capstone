@@ -5,6 +5,7 @@ import { DrawingManager } from '@react-google-maps/api';
 import PolygonDataPanel from './polygon/PolygonDataPanel';
 import { calculatePolygonArea, calculatePolygonPerimeter } from './polygon/Polygon-Utils';
 import { toast } from 'react-hot-toast';
+import axios from 'axios';
 
 const mapTypes: MapType[] = [
   { label: 'Roadmap', value: 'roadmap' },
@@ -18,9 +19,10 @@ interface FarmMapProps {
     lat: number;
     lng: number;
   };
+  farmId?: string; // Add farmId as an optional prop
 }
 
-const FarmMap: React.FC<FarmMapProps> = ({ coordinates }) => {
+const FarmMap: React.FC<FarmMapProps> = ({ coordinates, farmId }) => {
   // State declarations
   const [map, setMap] = useState<google.maps.Map | null>(null);
   const [mapType, setMapType] = useState<'roadmap' | 'satellite' | 'terrain' | 'hybrid'>('roadmap');
@@ -43,6 +45,42 @@ const FarmMap: React.FC<FarmMapProps> = ({ coordinates }) => {
   const drawingManagerRef = useRef<google.maps.drawing.DrawingManager | null>(null);
   const searchBoxRef = useRef<google.maps.places.SearchBox | null>(null);
   
+  // Function to calculate center of polygon
+  const calculatePolygonCenter = useCallback((coords: Array<{lat: number, lng: number}>) => {
+    if (coords.length === 0) return coordinates;
+    
+    let totalLat = 0;
+    let totalLng = 0;
+    
+    coords.forEach(point => {
+      totalLat += point.lat;
+      totalLng += point.lng;
+    });
+    
+    return {
+      lat: totalLat / coords.length,
+      lng: totalLng / coords.length
+    };
+  }, [coordinates]);
+  
+  // Function to fit map to polygon bounds
+  const fitMapToPolygon = useCallback(() => {
+    if (!map || polygonCoords.length === 0) return;
+    
+    const bounds = new google.maps.LatLngBounds();
+    
+    polygonCoords.forEach(point => {
+      bounds.extend(new google.maps.LatLng(point.lat, point.lng));
+    });
+    
+    // Fit map to these bounds with some padding
+    map.fitBounds(bounds, 50);
+    
+    // Update center state
+    const newCenter = calculatePolygonCenter(polygonCoords);
+    setCenter(newCenter);
+  }, [map, polygonCoords, calculatePolygonCenter]);
+  
   // This effect will ensure drawing mode is properly disabled when the drawing state changes
   useEffect(() => {
     if (!drawing && drawingManagerRef.current) {
@@ -55,6 +93,13 @@ const FarmMap: React.FC<FarmMapProps> = ({ coordinates }) => {
       drawingManagerRef.current.setDrawingMode(google.maps.drawing.OverlayType.POLYGON);
     }
   }, [drawing, map]);
+  
+  // Effect to fit map to polygon when coords change
+  useEffect(() => {
+    if (polygonCoords.length > 0 && map) {
+      fitMapToPolygon();
+    }
+  }, [polygonCoords, map, fitMapToPolygon]);
 
   const handleMapLoad = useCallback((mapInstance: google.maps.Map) => {
     setMap(mapInstance);
@@ -159,6 +204,106 @@ const FarmMap: React.FC<FarmMapProps> = ({ coordinates }) => {
       toast.success('Polygon deleted');
     }
   }, [activePolygon]);
+
+  // Add save polygon functionality
+  const handleSavePolygon = useCallback(async () => {
+    if (activePolygon && polygonCoords.length > 0) {
+      try {
+        // Use the farmId prop or default to the fallback ID
+        const currentFarmId = farmId || '68d18a709f69d8c82056758c';
+        
+        const response = await axios.put(
+          `/api/farms/${currentFarmId}/boundary`,
+          {
+            coordinates: polygonCoords,
+            area: polygonArea,
+            perimeter: polygonPerimeter
+          },
+          {
+            headers: {
+              'Content-Type': 'application/json',
+            }
+          }
+        );
+        
+        if (response.data.success) {
+          toast.success('Polygon saved successfully');
+          console.log('Saved polygon data:', response.data.data);
+        } else {
+          toast.error('Failed to save polygon');
+        }
+      } catch (error) {
+        console.error('Error saving polygon:', error);
+        toast.error('Error saving polygon');
+      }
+    }
+  }, [activePolygon, polygonCoords, polygonArea, polygonPerimeter, farmId]);
+
+  // Add a function to fetch existing farm boundary when component mounts
+  useEffect(() => {
+    const fetchFarmBoundary = async () => {
+      try {
+        // Use the farmId prop or default to the fallback ID
+        const currentFarmId = farmId || '68d18a709f69d8c82056758c';
+        
+        const response = await axios.get(`/api/farms/${currentFarmId}/boundary`, {
+          headers: {
+            // Add authentication header if needed
+            // 'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+        
+        if (response.data.success && response.data.data && map) {
+          const boundary = response.data.data;
+          
+          // Convert GeoJSON coordinates to Google Maps LatLng objects
+          if (boundary.coordinates && boundary.coordinates.length > 0) {
+            const paths = boundary.coordinates[0].map((coord: number[]) => ({
+              lat: coord[1], // GeoJSON format is [lng, lat]
+              lng: coord[0]
+            }));
+            
+            // Create a new polygon and add it to the map
+            const polygon = new google.maps.Polygon({
+              paths,
+              fillColor: '#4CAF50',
+              fillOpacity: 0.3,
+              strokeWeight: 2,
+              strokeColor: '#4CAF50',
+              clickable: true,
+              editable: true,
+            });
+            
+            polygon.setMap(map);
+            setActivePolygon(polygon);
+            
+            // Update the polygon data in state
+            setPolygonCoords(paths);
+            setPolygonArea(calculatePolygonArea(paths));
+            setPolygonPerimeter(calculatePolygonPerimeter(paths));
+            
+            // Add listeners for editing
+            google.maps.event.addListener(polygon.getPath(), 'set_at', () => {
+              updatePolygonData(polygon);
+            });
+            google.maps.event.addListener(polygon.getPath(), 'insert_at', () => {
+              updatePolygonData(polygon);
+            });
+            
+            // Fit map to the loaded polygon
+            // The useEffect will handle this when polygonCoords changes
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching farm boundary:', error);
+        toast.error('Error loading farm boundary');
+      }
+    };
+    
+    if (map) {
+      fetchFarmBoundary();
+    }
+  }, [map, farmId]);
   
   const updatePolygonData = (polygon: google.maps.Polygon) => {
     const path = polygon.getPath();
@@ -167,6 +312,8 @@ const FarmMap: React.FC<FarmMapProps> = ({ coordinates }) => {
     setPolygonCoords(coords);
     setPolygonArea(calculatePolygonArea(coords));
     setPolygonPerimeter(calculatePolygonPerimeter(coords));
+    
+    // Map will be updated by the useEffect that watches polygonCoords
   };
 
   const onPolygonComplete = (polygon: google.maps.Polygon) => {
@@ -224,6 +371,7 @@ const FarmMap: React.FC<FarmMapProps> = ({ coordinates }) => {
           onToggleTheme={handleToggleTheme}
           onTogglePanel={handleTogglePanel}
           onDeletePolygon={handleDeletePolygon}
+          onSavePolygon={handleSavePolygon}
         />
       </div>
       

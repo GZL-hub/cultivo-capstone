@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Map, Pencil, Search, Lock, Unlock, ChevronDown, X, Sun, Moon, LayoutPanelLeft, Trash2 } from 'lucide-react';
+import { Map, Pencil, Search, Lock, Unlock, ChevronDown, X, Sun, Moon, LayoutPanelLeft, Trash2, Save } from 'lucide-react';
 import { StandaloneSearchBox } from '@react-google-maps/api';
 
 export interface MapType {
@@ -19,6 +19,7 @@ interface FarmMapToolbarProps {
   isDarkMode: boolean;
   isPanelVisible: boolean;
   hasPolygon: boolean;
+  showSaveButton?:boolean;
   onToolbarItemClick: (itemId: string) => void;
   onMapTypeSelect: (value: 'roadmap' | 'satellite' | 'terrain' | 'hybrid') => void;
   onToggleLock: () => void;
@@ -31,6 +32,7 @@ interface FarmMapToolbarProps {
   onToggleTheme: () => void;
   onTogglePanel: () => void;
   onDeletePolygon?: () => void;
+  onSavePolygon?:() => void;
 }
 
 const buttonVariants = {
@@ -74,6 +76,7 @@ const FarmMapToolbar: React.FC<FarmMapToolbarProps> = ({
   isDarkMode,
   isPanelVisible,
   hasPolygon,
+  showSaveButton = false,
   onToolbarItemClick,
   onMapTypeSelect,
   onToggleLock,
@@ -86,6 +89,7 @@ const FarmMapToolbar: React.FC<FarmMapToolbarProps> = ({
   onToggleTheme,
   onTogglePanel,
   onDeletePolygon,
+  onSavePolygon
 }) => {
   const [showSearchInput, setShowSearchInput] = useState(false);
   const isMapSelected = activeToolbar === "map";
@@ -243,6 +247,19 @@ const FarmMapToolbar: React.FC<FarmMapToolbarProps> = ({
             title="Delete polygon"
           >
             <Trash2 size={16} />
+          </motion.button>
+        )}
+
+        {/* Add Save Button when hasPolygon is true */}
+        {hasPolygon && onSavePolygon && (
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={onSavePolygon}
+            className="flex items-center justify-center h-10 w-10 rounded-lg text-green-500 hover:bg-green-50 transition-colors"
+            title="Save polygon"
+          >
+            <Save size={16} />
           </motion.button>
         )}
 
