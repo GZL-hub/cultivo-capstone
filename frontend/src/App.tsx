@@ -14,8 +14,8 @@ import FarmCCTV from './components/farm-management/components/FarmCCTV';
 import Settings from './components/settings/Settings';
 import authService from './services/authService';
 
-// Dummy Data
-import { farm, weather, workers } from './components/farm-management/farmDummyData';
+// Only import the worker and weather dummy data - not the farm data
+import { weather, workers } from './components/farm-management/farmDummyData';
 
 // Define libraries outside the component to prevent re-creation
 const libraries: ('places' | 'drawing')[] = ['places', 'drawing'];
@@ -111,11 +111,11 @@ function App() {
             <Route path="/farm" element={<FarmManagement />}>
               <Route
                 path="overview"
-                element={<FarmOverview farm={farm} workers={workers} weather={weather} />}
+                element={<FarmOverview workers={workers} weather={weather} />}
               />
               <Route
                 path="map"
-                element={<FarmMap coordinates={farm.coordinates} />}
+                element={<FarmMap />}
               />
               <Route path="cctv" element={<FarmCCTV />} />
               <Route index element={<Navigate to="overview" replace />} />

@@ -23,7 +23,10 @@ interface Farm {
   type: string;
   operationDate: string;
   areaSize: string;
-  coordinates: string;
+  farmBoundary: {
+    type: string;
+    coordinates: number[][][];
+  };
 }
 
 interface DashboardProps {
@@ -37,7 +40,10 @@ const Dashboard: React.FC<DashboardProps> = ({ isLoaded }) => {
     type: "Loading...",
     operationDate: "Loading...",
     areaSize: "Loading...",
-    coordinates: "0, 0"
+    farmBoundary: {
+      type: "Polygon",
+      coordinates: [[[0, 0], [0, 0], [0, 0], [0, 0]]]
+    }
   });
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -56,21 +62,33 @@ const Dashboard: React.FC<DashboardProps> = ({ isLoaded }) => {
             type: farms[0].type,
             operationDate: farms[0].operationDate,
             areaSize: farms[0].areaSize,
-            coordinates: farms[0].coordinates
+            farmBoundary: farms[0].farmBoundary || {
+              type: "Polygon",
+              coordinates: [[[0, 0], [0, 0], [0, 0], [0, 0]]]
+            }
           });
         } else {
-          // If no farms found, keep default values
+          // If no farms found, use default values
           setFarmInfo({
             name: "Green Valley Orchard",
             type: "Tree Orchard",
             operationDate: "March 15, 2022",
-            areaSize: "5.2 hectares",
-            coordinates: "14.5995° N, 120.9842° E"
+            areaSize: "2.2 hectares",
+            farmBoundary: {
+              type: "Polygon",
+              coordinates: [
+                [
+                  [0, 0],
+                  [0, 0],
+                  [0, 0],
+                  [0, 0]
+                ]
+              ]
+            }
           });
         }
       } catch (err) {
         console.error('Error fetching farm data:', err);
-        // setError('Failed to load farm data. Using default values.');
         // Keep default values on error
       } finally {
         setIsLoading(false);

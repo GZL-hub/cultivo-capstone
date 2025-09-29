@@ -15,7 +15,7 @@ const mapTypes: MapType[] = [
 ];
 
 interface FarmMapProps {
-  coordinates: {
+  coordinates?: {
     lat: number;
     lng: number;
   };

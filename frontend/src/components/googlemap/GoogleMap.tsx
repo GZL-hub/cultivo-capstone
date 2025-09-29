@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { GoogleMap as GoogleMapComponent, TrafficLayer } from '@react-google-maps/api';
+import { GoogleMap as GoogleMapComponent, TrafficLayer, Polygon, Marker } from '@react-google-maps/api';
 
 const containerStyle = {
   width: '100%',
@@ -179,7 +179,8 @@ interface MapComponentProps {
   mapType?: 'roadmap' | 'satellite' | 'terrain' | 'hybrid';
   options?: google.maps.MapOptions;
   onLoad?: (map: google.maps.Map) => void;
-  isDarkMode?: boolean;  // Add this prop to accept dark mode state
+  isDarkMode?: boolean;
+  polygonPath?: { lat: number; lng: number }[];
 }
 
 function MapComponent({
@@ -189,7 +190,8 @@ function MapComponent({
   mapType = 'roadmap',
   options = {},
   onLoad: customOnLoad,
-  isDarkMode = false,  // Set default value
+  isDarkMode = false,
+  polygonPath,
 }: MapComponentProps) {
   const [map, setMap] = useState<google.maps.Map | null>(null);
   const [showTraffic, setShowTraffic] = useState(false);
@@ -213,6 +215,15 @@ function MapComponent({
       }
     }
   }, [isDarkMode, map, mapType]);
+
+  // Polygon options
+  const polygonOptions = {
+    fillColor: "rgba(76, 175, 80, 0.3)",
+    fillOpacity: 0.5,
+    strokeColor: "#4CAF50",
+    strokeOpacity: 1,
+    strokeWeight: 2,
+  };
 
   // Combine the user's options with dark mode styles when dark mode is enabled
   const mapOptions = {
@@ -242,6 +253,19 @@ function MapComponent({
         onUnmount={onUnmount}
         options={mapOptions}
       >
+        {/* Show marker if no polygon */}
+        {(!polygonPath || polygonPath.length === 0) && (
+          <Marker position={center} />
+        )}
+        
+        {/* Show polygon if available */}
+        {polygonPath && polygonPath.length > 0 && (
+          <Polygon
+            paths={polygonPath}
+            options={polygonOptions}
+          />
+        )}
+        
         {children}
         {showTraffic && <TrafficLayer />}
       </GoogleMapComponent>

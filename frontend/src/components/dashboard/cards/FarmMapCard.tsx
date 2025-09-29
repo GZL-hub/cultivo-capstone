@@ -1,5 +1,5 @@
 import React from 'react';
-import { GoogleMap } from '@react-google-maps/api';
+import { GoogleMap, Polygon } from '@react-google-maps/api';
 
 // Define device status type
 type DeviceStatus = 'online' | 'offline' | 'low_battery';
@@ -18,20 +18,23 @@ interface FarmInfo {
   type: string;
   operationDate: string;
   areaSize: string;
-  coordinates: string;
+  farmBoundary: {
+    type: string;
+    coordinates: number[][][];
+  };
 }
 
 interface FarmMapCardProps {
   farmInfo: FarmInfo;
   devices: Device[];
-  isLoaded: boolean; // Add isLoaded to the props interface
+  isLoaded: boolean;
   onViewFullMap?: () => void;
 }
 
 const FarmMapCard: React.FC<FarmMapCardProps> = ({
   farmInfo,
   devices,
-  isLoaded, // Destructure isLoaded from props
+  isLoaded,
   onViewFullMap
 }) => {
   // Helper function to get status styles
@@ -64,25 +67,65 @@ const FarmMapCard: React.FC<FarmMapCardProps> = ({
     }
   };
 
-  // Parse coordinates from string (assuming format is "lat,lng")
+  // Get map center from farm boundary
   const getMapCenter = () => {
     try {
-      const [lat, lng] = farmInfo.coordinates.split(',').map(coord => parseFloat(coord.trim()));
-      if (!isNaN(lat) && !isNaN(lng)) {
-        return { lat, lng };
+      if (farmInfo.farmBoundary && 
+          farmInfo.farmBoundary.coordinates && 
+          farmInfo.farmBoundary.coordinates.length > 0 && 
+          farmInfo.farmBoundary.coordinates[0].length > 0) {
+        
+        // Calculate center from polygon points
+        const points = farmInfo.farmBoundary.coordinates[0];
+        const lats = points.map(p => p[1]);
+        const lngs = points.map(p => p[0]);
+        
+        const minLat = Math.min(...lats);
+        const maxLat = Math.max(...lats);
+        const minLng = Math.min(...lngs);
+        const maxLng = Math.max(...lngs);
+        
+        return {
+          lat: (minLat + maxLat) / 2,
+          lng: (minLng + maxLng) / 2
+        };
       }
     } catch (error) {
-      console.error("Error parsing coordinates:", error);
+      console.error("Error calculating map center:", error);
     }
     // Default coordinates if parsing fails
     return { lat: 37.7749, lng: -122.4194 }; // Default to San Francisco
   };
 
-  // The useJsApiLoader hook is removed from here.
+  // Convert boundary coordinates to Google Maps LatLngLiteral format
+  const getBoundaryPath = () => {
+    try {
+      if (farmInfo.farmBoundary && 
+          farmInfo.farmBoundary.coordinates && 
+          farmInfo.farmBoundary.coordinates.length > 0) {
+        
+        return farmInfo.farmBoundary.coordinates[0].map(point => ({
+          lat: point[1],
+          lng: point[0]
+        }));
+      }
+    } catch (error) {
+      console.error("Error parsing boundary coordinates:", error);
+    }
+    return [];
+  };
 
   const mapContainerStyle = {
     width: '100%',
     height: '100%',
+  };
+
+  const polygonOptions = {
+    fillColor: "rgba(76, 175, 80, 0.3)",
+    fillOpacity: 0.5,
+    strokeColor: "#4CAF50",
+    strokeOpacity: 1,
+    strokeWeight: 2,
   };
 
   return (
@@ -104,14 +147,18 @@ const FarmMapCard: React.FC<FarmMapCardProps> = ({
           <GoogleMap
             mapContainerStyle={mapContainerStyle}
             center={getMapCenter()}
-            zoom={14}
+            zoom={15}
             options={{
               fullscreenControl: false,
               mapTypeControl: false,
               streetViewControl: false,
             }}
           >
-            {/* No markers for now */}
+            {/* Farm Boundary Polygon */}
+            <Polygon
+              paths={getBoundaryPath()}
+              options={polygonOptions}
+            />
           </GoogleMap>
         ) : (
           <div className="h-full w-full flex items-center justify-center bg-gray-50">
@@ -152,8 +199,8 @@ const FarmMapCard: React.FC<FarmMapCardProps> = ({
               <span className="text-sm text-gray-700">{farmInfo.areaSize}</span>
             </div>
             <div className="flex items-start">
-              <span className="text-xs font-medium text-gray-500 w-28">Coordinates:</span>
-              <span className="text-sm text-gray-700">{farmInfo.coordinates}</span>
+              <span className="text-xs font-medium text-gray-500 w-28">Boundary Type:</span>
+              <span className="text-sm text-gray-700">{farmInfo.farmBoundary.type}</span>
             </div>
           </div>
         </div>
