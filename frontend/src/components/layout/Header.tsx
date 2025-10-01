@@ -12,6 +12,8 @@ interface HeaderProps {
 const routeTitles: { [key: string]: string } = {
   '/': 'Dashboard',
   '/analytics': 'Analytics',
+  '/analytics/farm': 'Farm Analytics',
+  '/analytics/weather': 'Weather Analytics',
   '/alerts': 'Alerts',
   '/devices': 'Devices',
   '/farm/overview': 'Farm Overview',

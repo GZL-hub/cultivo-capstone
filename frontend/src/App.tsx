@@ -5,6 +5,8 @@ import Login from './components/login/Login';
 import Layout from './components/layout/Layout';
 import Dashboard from './components/dashboard/Dashboard';
 import Analytics from './components/analytics/Analytics';
+import FarmAnalytics from './components/analytics/FarmAnalytics';
+import WeatherAnalytics from './components/analytics/WeatherAnalytics';
 import Alerts from './components/alerts/Alerts';
 import Devices from './components/devices/Devices';
 import FarmManagement from './components/farm-management/FarmManagement';
@@ -104,9 +106,17 @@ function App() {
         <Layout onLogout={handleLogout}>
           <Routes>
             <Route path="/" element={<Dashboard isLoaded={isLoaded} />} />
-            <Route path="/analytics" element={<Analytics />} />
+            
+            {/* Analytics Nested Routes - similar to Farm Management */}
+            <Route path="/analytics" element={<Analytics />}>
+              <Route path="farm" element={<FarmAnalytics />} />
+              <Route path="weather" element={<WeatherAnalytics />} />
+              <Route index element={<Navigate to="farm" replace />} />
+            </Route>
+            
             <Route path="/alerts" element={<Alerts />} />
             <Route path="/devices" element={<Devices />} />
+            
             {/* Farm Management Nested Routes */}
             <Route path="/farm" element={<FarmManagement />}>
               <Route
@@ -120,6 +130,7 @@ function App() {
               <Route path="cctv" element={<FarmCCTV />} />
               <Route index element={<Navigate to="overview" replace />} />
             </Route>
+            
             <Route path="/settings" element={<Settings />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
