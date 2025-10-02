@@ -254,7 +254,7 @@ export const fetchWeeklyForecast = async (API_KEY: string): Promise<DailyForecas
     const latitude = 3.1390;
     const longitude = 101.6869;
     
-    // Updated Google Weather API endpoint for daily forecast
+    // Google Weather API endpoint for daily forecast
     const url = `https://weather.googleapis.com/v1/forecast/days:lookup?key=${API_KEY}&location.latitude=${latitude}&location.longitude=${longitude}`;
     
     console.log("Fetching daily forecast data from:", url);
@@ -265,14 +265,37 @@ export const fetchWeeklyForecast = async (API_KEY: string): Promise<DailyForecas
       
       // Process the daily data - limit to 7 days
       const dailyData = response.data.forecastDays.slice(0, 7).map((day: any) => {
-        // Extract precipitation chance from the probability object if available
-        const precipChance = day.precipitation?.probability?.percent || 0;
+        // Get the appropriate weather condition (prioritize daytime)
+        const weatherCondition = 
+          day.daytimeForecast?.weatherCondition?.type || 
+          day.nighttimeForecast?.weatherCondition?.type || 
+          'UNKNOWN';
+        
+        // Extract precipitation chance prioritizing daytime forecast
+        const precipChance = 
+          (day.daytimeForecast?.precipitation?.probability?.percent) || 
+          (day.nighttimeForecast?.precipitation?.probability?.percent) || 
+          // Fallback to thunderstorm probability if precipitation isn't available
+          (day.daytimeForecast?.thunderstormProbability) ||
+          (day.nighttimeForecast?.thunderstormProbability) || 
+          0;
+        
+        // Format the date properly
+        let dateStr = '';
+        if (day.displayDate) {
+          const { year, month, day: dayNum } = day.displayDate;
+          dateStr = new Date(year, month - 1, dayNum).toLocaleDateString([], { weekday: 'short' });
+        } else if (day.interval?.startTime) {
+          dateStr = formatDate(day.interval.startTime);
+        } else {
+          dateStr = 'Unknown';
+        }
         
         return {
-          date: formatDate(day.interval?.startTime || day.displayDateTime),
-          weatherCondition: day.weatherCondition?.type || 'UNKNOWN',
-          tempMax: day.temperature?.maxDegrees || 0,
-          tempMin: day.temperature?.minDegrees || 0,
+          date: dateStr,
+          weatherCondition: weatherCondition,
+          tempMax: day.maxTemperature?.degrees || 0,
+          tempMin: day.minTemperature?.degrees || 0,
           precipitationChance: precipChance
         };
       });

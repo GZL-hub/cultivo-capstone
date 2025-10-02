@@ -174,8 +174,7 @@ const CurrentWeather: React.FC<CurrentWeatherProps> = ({
   if (data.isLoading) {
     return (
       <div className={`${theme.bg} p-8 rounded-xl shadow-lg flex items-center justify-center h-96`}>
-        <div className="h-12 w-12 border-4 border-green-500 border-t-transparent rounded-full animate-spin mr-3" />
-        <p className={theme.text}>Loading current weather data for Malaysia...</p>
+        <div className="h-12 w-12 border-4 border-blue-300 border-t-transparent rounded-full animate-spin mr-3" />
       </div>
     );
   }
