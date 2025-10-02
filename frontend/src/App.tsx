@@ -6,7 +6,7 @@ import Layout from './components/layout/Layout';
 import Dashboard from './components/dashboard/Dashboard';
 import Analytics from './components/analytics/Analytics';
 import FarmAnalytics from './components/analytics/FarmAnalytics';
-import WeatherAnalytics from './components/analytics/WeatherAnalytics';
+import WeatherAnalytics from './components/analytics/weather/WeatherAnalytics';
 import Alerts from './components/alerts/Alerts';
 import Devices from './components/devices/Devices';
 import FarmManagement from './components/farm-management/FarmManagement';

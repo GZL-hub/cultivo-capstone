@@ -7,7 +7,7 @@ const Analytics: React.FC = () => {
     <div className="h-full flex flex-col">      
       {/* Analytics Navigation */}
       <div className="bg-white border-b">
-        <div className="container mx-auto px-4">
+        <div className="container px-4">
           <div className="flex space-x-4 overflow-x-auto">
             <NavLink
               to="/analytics/farm"
