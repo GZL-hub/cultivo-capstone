@@ -112,8 +112,12 @@ export const fetchWeatherData = async (API_KEY: string): Promise<WeatherData> =>
     const url = `https://weather.googleapis.com/v1/currentConditions:lookup?key=${API_KEY}&location.latitude=${latitude}&location.longitude=${longitude}`;
     
     console.log("Fetching weather data from:", url);
-    const response = await axios.get(url);
-    
+    const response = await axios.get(url, {
+      headers: {
+        'X-Goog-Api-Key': API_KEY,  // Add API key in header as well
+        'Content-Type': 'application/json',
+      }
+    });
     if (response.data) {
       const data = response.data;
       console.log("Weather API Response:", data);
@@ -202,8 +206,12 @@ export const fetchTodayForecast = async (API_KEY: string): Promise<HourlyForecas
     const url = `https://weather.googleapis.com/v1/forecast/hours:lookup?key=${API_KEY}&location.latitude=${latitude}&location.longitude=${longitude}`;
     
     console.log("Fetching hourly forecast data from:", url);
-    const response = await axios.get(url);
-    
+    const response = await axios.get(url, {
+      headers: {
+        'X-Goog-Api-Key': API_KEY,  // Add API key in header as well
+        'Content-Type': 'application/json',
+      }
+    });
     if (response.data && response.data.forecastHours) {
       console.log("Hourly Forecast Response:", response.data);
       
@@ -258,8 +266,12 @@ export const fetchWeeklyForecast = async (API_KEY: string): Promise<DailyForecas
     const url = `https://weather.googleapis.com/v1/forecast/days:lookup?key=${API_KEY}&location.latitude=${latitude}&location.longitude=${longitude}`;
     
     console.log("Fetching daily forecast data from:", url);
-    const response = await axios.get(url);
-    
+    const response = await axios.get(url, {
+      headers: {
+        'X-Goog-Api-Key': API_KEY,  // Add API key in header as well
+        'Content-Type': 'application/json',
+      }
+    });
     if (response.data && response.data.forecastDays) {
       console.log("Daily Forecast Response:", response.data);
       
