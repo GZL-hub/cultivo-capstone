@@ -1,0 +1,276 @@
+import React from 'react';
+import { Cloud, CloudRain, Sun, Droplet, ChevronLeft, ChevronRight } from 'lucide-react';
+import WeatherIcon from './icons/WeatherIcons';
+
+interface HourlyForecast {
+  time: string;
+  temperature: number;
+  weatherCondition: string;
+  precipitationChance: number;
+}
+
+// New interface for daily forecast data
+interface DailyForecast {
+  interval: {
+    startTime: string;
+    endTime: string;
+  };
+  displayDate: {
+    year: number;
+    month: number;
+    day: number;
+  };
+  maxTemperature: {
+    degrees: number;
+    unit: string;
+  };
+  minTemperature: {
+    degrees: number;
+    unit: string;
+  };
+  daytimeForecast: {
+    relativeHumidity: number;
+    uvIndex: number;
+    thunderstormProbability: number;
+    weatherCondition?: string;
+    precipitation?: {
+      probability?: {
+        percent?: number;
+      };
+    };
+  };
+  nighttimeForecast: {
+    relativeHumidity: number;
+    uvIndex: number;
+    thunderstormProbability: number;
+    weatherCondition?: string;
+  };
+  sunEvents: {
+    sunriseTime: string;
+    sunsetTime: string;
+  };
+}
+
+interface TodayForecastProps {
+  data: HourlyForecast[] | DailyForecast[];
+  isLoading: boolean;
+  error: string | null;
+  isDaily?: boolean; // Flag to indicate if data is daily forecast
+}
+
+const TodayForecast: React.FC<TodayForecastProps> = ({ data, isLoading, error, isDaily = false }) => {
+  // Reference for the scroll container
+  const scrollContainerRef = React.useRef<HTMLDivElement>(null);
+  
+  // Scroll functions
+  const scrollLeft = () => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollBy({ left: -400, behavior: 'smooth' });
+    }
+  };
+  
+  const scrollRight = () => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollBy({ left: 400, behavior: 'smooth' });
+    }
+  };
+
+  // Determine the time of day for styling
+  const getTimeOfDay = () => {
+    const hour = new Date().getHours();
+    if (hour >= 5 && hour < 12) return 'morning';
+    if (hour >= 12 && hour < 18) return 'afternoon';
+    return 'night';
+  };
+  
+  const timeOfDay = getTimeOfDay();
+  
+  // Define theme colors based on time of day
+  const getThemeColors = () => {
+    switch(timeOfDay) {
+      case 'morning':
+        return {
+          bg: 'bg-gradient-to-br from-blue-500 to-amber-400',
+          text: 'text-white',
+          card: 'bg-white/10',
+          highlight: 'bg-amber-700/40',
+          icon: 'text-amber-300'
+        };
+      case 'afternoon':
+        return {
+          bg: 'bg-gradient-to-br from-blue-600 to-blue-400',
+          text: 'text-white',
+          card: 'bg-white/10',
+          highlight: 'bg-blue-700/40',
+          icon: 'text-blue-300'
+        };
+      case 'night':
+        return {
+          bg: 'bg-gradient-to-br from-slate-900 to-blue-900',
+          text: 'text-white',
+          card: 'bg-white/10',
+          highlight: 'bg-slate-700/60',
+          icon: 'text-blue-300'
+        };
+    }
+  };
+  
+  const theme = getThemeColors();
+  
+  // Process daily forecast data into a format compatible with our display
+  const processedData = React.useMemo(() => {
+    if (!isDaily) return data as HourlyForecast[];
+    
+    return (data as DailyForecast[]).map(day => {
+      // Format the date as a string (e.g., "Mon, Oct 2")
+      const date = new Date(day.interval.startTime);
+      const formattedDate = date.toLocaleDateString('en-US', { 
+        weekday: 'short', 
+        month: 'short', 
+        day: 'numeric' 
+      });
+      
+      // Get the weather condition from daytime forecast
+      const weatherCondition = day.daytimeForecast.weatherCondition || 'UNKNOWN';
+      
+      // Calculate precipitation chance
+      const precipChance = day.daytimeForecast.precipitation?.probability?.percent || 
+                          day.daytimeForecast.thunderstormProbability || 0;
+      
+      return {
+        time: formattedDate,
+        temperature: day.maxTemperature.degrees,
+        minTemperature: day.minTemperature.degrees,
+        weatherCondition: weatherCondition,
+        precipitationChance: precipChance,
+        uvIndex: day.daytimeForecast.uvIndex,
+        humidity: day.daytimeForecast.relativeHumidity
+      };
+    });
+  }, [data, isDaily]);
+  
+  if (isLoading) {
+    return (
+      <div className={`${theme.bg} rounded-xl shadow-lg overflow-hidden p-4`}>
+        <div className="flex items-center mb-4">
+          <Cloud className="h-5 w-5 mr-2" />
+          <h2 className="text-xl font-bold text-white">
+            {isDaily ? '5-Day Forecast' : 'Today\'s Forecast'}
+          </h2>
+        </div>
+        <div className="flex justify-center py-10">
+          <div className="h-8 w-8 border-4 border-blue-300 border-t-transparent rounded-full animate-spin" />
+        </div>
+      </div>
+    );
+  }
+  
+  if (error) {
+    return (
+      <div className={`${theme.bg} rounded-xl shadow-lg overflow-hidden p-6`}>
+        <div className="flex items-center mb-4">
+          <Cloud className="h-5 w-5 mr-2" />
+          <h2 className="text-xl font-bold text-white">
+            {isDaily ? '5-Day Forecast' : 'Today\'s Forecast'}
+          </h2>
+        </div>
+        <div className="text-center py-6 text-white/80">
+          <p>Unable to load forecast data.</p>
+          <p className="text-sm text-white/60 mt-1">{error}</p>
+        </div>
+      </div>
+    );
+  }
+  
+  return (
+    <div className={`${theme.bg} rounded-xl shadow-xl overflow-hidden`}>
+      <div className="p-6">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center">
+            <Sun className="h-5 w-5 mr-2 text-white" />
+            <h2 className="text-xl font-bold text-white">
+              {isDaily ? '5-Day Forecast' : 'Today\'s Forecast'}
+            </h2>
+          </div>
+          
+          {/* Scroll controls */}
+          <div className="flex space-x-2">
+            <button 
+              onClick={scrollLeft} 
+              className="p-1 rounded-full bg-white/20 hover:bg-white/30 text-white transition-colors"
+              aria-label="Scroll left"
+            >
+              <ChevronLeft size={16} />
+            </button>
+            <button 
+              onClick={scrollRight} 
+              className="p-1 rounded-full bg-white/20 hover:bg-white/30 text-white transition-colors"
+              aria-label="Scroll right"
+            >
+              <ChevronRight size={16} />
+            </button>
+          </div>
+        </div>
+        
+        {/* Horizontal scrollable container with only 4 cards visible */}
+        <div 
+          ref={scrollContainerRef}
+          className="overflow-x-scroll pb-6" 
+        >
+          <div className="grid grid-flow-col auto-cols-[22%] md:auto-cols-[23%] lg:auto-cols-[23%] gap-3 py-2">
+            {processedData.map((item, index) => {
+              // For daily forecast, show min/max temperature
+              const isDay = (item as any).minTemperature !== undefined;
+              
+              return (
+                <div 
+                  key={index} 
+                  className="bg-white/10 backdrop-blur-md rounded-lg p-4 flex flex-col items-center shadow-md border border-white/20 transition-transform hover:scale-105"
+                >
+                  <p className="text-base font-medium text-white/90 mb-1">{item.time}</p>
+                  <div className="my-2">
+                    <WeatherIcon 
+                      condition={item.weatherCondition} 
+                      isDay={timeOfDay !== 'night' || isDaily} 
+                      size={40} 
+                    />
+                  </div>
+                  
+                  {isDaily ? (
+                    // Display for daily forecast
+                    <div className="flex items-center space-x-2 mb-1">
+                      <p className="text-xl font-bold text-white">{Math.round((item as any).temperature)}°</p>
+                      <span className="text-white/50">/</span>
+                      <p className="text-sm text-white/70">{Math.round((item as any).minTemperature)}°</p>
+                    </div>
+                  ) : (
+                    // Display for hourly forecast
+                    <p className="text-xl font-bold text-white mb-1">{Math.round(item.temperature)}°C</p>
+                  )}
+                  
+                  <div className="flex items-center mt-1 text-white/80">
+                    <Droplet className="h-3 w-3 mr-1 text-blue-300" />
+                    <p className="text-xs">{item.precipitationChance}%</p>
+                  </div>
+                  
+                  {isDaily && (item as any).uvIndex !== undefined && (
+                    <div className="flex items-center mt-1 text-white/80">
+                      <Sun className="h-3 w-3 mr-1 text-yellow-300" />
+                      <p className="text-xs">UV: {(item as any).uvIndex}</p>
+                    </div>
+                  )}
+                  
+                  <p className="text-xs mt-1 text-white/70 text-center">
+                    {item.weatherCondition.replace(/_/g, ' ').toLowerCase()}
+                  </p>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default TodayForecast;

@@ -89,27 +89,27 @@ const CurrentWeather: React.FC<CurrentWeatherProps> = ({
     switch(timeOfDay) {
       case 'morning':
         return {
-          bg: 'bg-gradient-to-br from-blue-100 to-yellow-100',
-          text: 'text-gray-800',
-          card: 'bg-white/90',
-          highlight: 'bg-yellow-100',
-          icon: 'text-yellow-500'
+          bg: 'bg-gradient-to-br from-blue-500 to-amber-400',
+          text: 'text-white',
+          card: 'bg-white/10',
+          highlight: 'bg-amber-700/40',
+          icon: 'text-amber-300'
         };
       case 'afternoon':
         return {
-          bg: 'bg-gradient-to-br from-blue-400 to-cyan-200',
-          text: 'text-gray-800',
-          card: 'bg-white/90',
-          highlight: 'bg-blue-100',
-          icon: 'text-blue-600'
+          bg: 'bg-gradient-to-br from-blue-600 to-blue-400',
+          text: 'text-white',
+          card: 'bg-white/10',
+          highlight: 'bg-blue-700/40',
+          icon: 'text-blue-300'
         };
       case 'night':
         return {
           bg: 'bg-gradient-to-br from-slate-900 to-blue-900',
           text: 'text-white',
-          card: 'bg-slate-800/90',
-          highlight: 'bg-slate-700',
-          icon: 'text-blue-400'
+          card: 'bg-white/10',
+          highlight: 'bg-slate-700/60',
+          icon: 'text-blue-300'
         };
     }
   };
@@ -243,7 +243,7 @@ const CurrentWeather: React.FC<CurrentWeatherProps> = ({
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 p-6 backdrop-blur-lg">
         {/* Temperature */}
         <div className="bg-white/10 backdrop-blur-md rounded-lg p-4 flex flex-col items-center shadow-md hover:bg-white/20 transition-all">
-          <Thermometer className="h-8 w-8 text-red-300 mb-2" />
+          <Thermometer className="h-8 w-8 text-white mb-2" />
           <p className="text-xs uppercase tracking-wide text-white/80">Temperature</p>
           <p className="text-xl font-bold text-white">{data.temperature.toFixed(1)}°C</p>
           <p className="text-xs text-white/70">Feels: {data.feelsLike.toFixed(1)}°C</p>
@@ -251,7 +251,7 @@ const CurrentWeather: React.FC<CurrentWeatherProps> = ({
         
         {/* Humidity */}
         <div className="bg-white/10 backdrop-blur-md rounded-lg p-4 flex flex-col items-center shadow-md hover:bg-white/20 transition-all">
-          <CloudRain className="h-8 w-8 text-blue-300 mb-2" />
+          <CloudRain className="h-8 w-8 text-white mb-2" />
           <p className="text-xs uppercase tracking-wide text-white/80">Humidity</p>
           <p className="text-xl font-bold text-white">{data.humidity.toFixed(0)}%</p>
           <p className="text-xs text-white/70">Cloud: {data.cloudCover}%</p>
@@ -262,12 +262,12 @@ const CurrentWeather: React.FC<CurrentWeatherProps> = ({
           <Wind className="h-8 w-8 text-gray-300 mb-2" />
           <p className="text-xs uppercase tracking-wide text-white/80">Wind</p>
           <p className="text-xl font-bold text-white">{getFormattedWindSpeed()}</p>
-          <p className="text-xs text-white/70">Dir: {data.windDirection}</p>
+          <p className="text-xs text-white/70"> {data.windDirection}</p>
         </div>
 
         {/* Visibility */}
         <div className="bg-white/10 backdrop-blur-md rounded-lg p-4 flex flex-col items-center shadow-md hover:bg-white/20 transition-all">
-          <Eye className="h-8 w-8 text-green-300 mb-2" />
+          <Eye className="h-8 w-8 text-white mb-2" />
           <p className="text-xs uppercase tracking-wide text-white/80">Visibility</p>
           <p className="text-xl font-bold text-white">{data.visibility} km</p>
           <p className="text-xs text-white/70">{data.visibility > 10 ? 'Clear' : 'Limited'}</p>
@@ -275,7 +275,7 @@ const CurrentWeather: React.FC<CurrentWeatherProps> = ({
         
         {/* Pressure */}
         <div className="bg-white/10 backdrop-blur-md rounded-lg p-4 flex flex-col items-center shadow-md hover:bg-white/20 transition-all">
-          <Gauge className="h-8 w-8 text-amber-300 mb-2" />
+          <Gauge className="h-8 w-8 text-white mb-2" />
           <p className="text-xs uppercase tracking-wide text-white/80">Pressure</p>
           <p className="text-xl font-bold text-white">{data.pressure.toFixed(0)}</p>
           <p className="text-xs text-white/70">millibars</p>
@@ -283,7 +283,7 @@ const CurrentWeather: React.FC<CurrentWeatherProps> = ({
         
         {/* UV Index */}
         <div className="bg-white/10 backdrop-blur-md rounded-lg p-4 flex flex-col items-center shadow-md hover:bg-white/20 transition-all">
-          <Sun className="h-8 w-8 text-yellow-300 mb-2" />
+          <Sun className="h-8 w-8 text-white mb-2" />
           <p className="text-xs uppercase tracking-wide text-white/80">UV Index</p>
           <p className="text-xl font-bold text-white">{data.uvIndex}</p>
           <p className="text-xs text-white/70">
