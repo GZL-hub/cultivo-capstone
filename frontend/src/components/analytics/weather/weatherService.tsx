@@ -1,6 +1,7 @@
 import axios from 'axios';
+import { getFarms } from '../../../services/farmService';
 
-// WhetherData Interface
+// WeatherData Interface
 export interface WeatherData {
   temperature: number;
   feelsLike: number;
@@ -37,6 +38,53 @@ export interface DailyForecast {
   tempMin: number;
   precipitationChance: number;
 }
+
+/**
+ * Gets coordinates and name from the farm data
+ * @returns Promise with latitude, longitude and farm name
+ */
+export const getFarmCoordinates = async (): Promise<{latitude: number, longitude: number, farmName: string}> => {
+  try {
+    // Get all farms
+    const farms = await getFarms();
+    
+    // Check if we have farms
+    if (!farms || farms.length === 0) {
+      throw new Error('No farms found in the database');
+    }
+    
+    // Get the first farm boundary
+    const firstFarm = farms[0];
+    
+    if (!firstFarm.farmBoundary || 
+        !firstFarm.farmBoundary.coordinates || 
+        !firstFarm.farmBoundary.coordinates[0] || 
+        !firstFarm.farmBoundary.coordinates[0][0]) {
+      throw new Error('Farm boundary coordinates not available');
+    }
+    
+    // GeoJSON format: coordinates are [longitude, latitude]
+    const firstCoordinate = firstFarm.farmBoundary.coordinates[0][0];
+    const longitude = firstCoordinate[0];
+    const latitude = firstCoordinate[1];
+    
+    // Validate the coordinates
+    if (isNaN(latitude) || isNaN(longitude) || 
+        latitude < -90 || latitude > 90 || 
+        longitude < -180 || longitude > 180) {
+      throw new Error('Invalid farm coordinates');
+    }
+    
+    // Get the farm name
+    const farmName = firstFarm.name || 'My Farm';
+    
+    console.log(`Using farm: "${farmName}" at Lat ${latitude}, Lng ${longitude}`);
+    return { latitude, longitude, farmName };
+  } catch (error) {
+    console.error('Error getting farm coordinates:', error);
+    throw new Error(`Failed to get farm coordinates: ${error instanceof Error ? error.message : String(error)}`);
+  }
+};
 
 // Function to format time from ISO string to readable format
 const formatTime = (isoTime: string): string => {
@@ -104,20 +152,29 @@ export const processWindSpeed = (windData: any): { value: number, unit: string }
 // Function to fetch weather data
 export const fetchWeatherData = async (API_KEY: string): Promise<WeatherData> => {
   try {
-    // Kuala Lumpur coordinates
-    const latitude = 3.1390;
-    const longitude = 101.6869;
+    if (!API_KEY || API_KEY.trim() === '') {
+      throw new Error("API Key is missing or empty");
+    }
+    
+    // Get farm coordinates and name instead of hardcoded values
+    const { latitude, longitude, farmName } = await getFarmCoordinates();
     
     // Google Weather API endpoint for current conditions
-    const url = `https://weather.googleapis.com/v1/currentConditions:lookup?key=${API_KEY}&location.latitude=${latitude}&location.longitude=${longitude}`;
+    const url = `https://weather.googleapis.com/v1/currentConditions:lookup`;
     
-    console.log("Fetching weather data from:", url);
+    console.log(`Fetching weather data for ${farmName}`);
     const response = await axios.get(url, {
       headers: {
-        'X-Goog-Api-Key': API_KEY,  // Add API key in header as well
+        'X-Goog-Api-Key': API_KEY,
         'Content-Type': 'application/json',
+      },
+      params: {
+        'key': API_KEY,
+        'location.latitude': latitude,
+        'location.longitude': longitude
       }
     });
+    
     if (response.data) {
       const data = response.data;
       console.log("Weather API Response:", data);
@@ -147,7 +204,7 @@ export const fetchWeatherData = async (API_KEY: string): Promise<WeatherData> =>
         visibility: data.visibility?.distance || 0,
         pressure: data.airPressure?.meanSeaLevelMillibars || 0,
         uvIndex: data.uvIndex || 0,
-        location: 'Kuala Lumpur, Malaysia',
+        location: farmName, // Use farm name instead of coordinates
         lastUpdated: data.currentTime || new Date().toISOString(),
         isLoading: false,
         error: null,
@@ -156,14 +213,17 @@ export const fetchWeatherData = async (API_KEY: string): Promise<WeatherData> =>
         isDay: isDay
       };
     }
-    throw new Error("Invalid response format");
+    
+    throw new Error("Invalid response format from weather API");
   } catch (error: any) {
     console.error('Error fetching weather data:', error);
     
-    // Check for specific error types
-    let errorMessage = 'Failed to load weather data. Using fallback data.';
+    // Create detailed error message without fallback data
+    let errorMessage = 'Failed to load weather data.';
     
-    if (error.response) {
+    if (error.message && error.message.includes('farm coordinates')) {
+      errorMessage = error.message;
+    } else if (error.response) {
       errorMessage = `API Error: ${error.response.status} - ${error.response.data?.error?.message || 'Unknown error'}`;
       console.error('Error response:', error.response.data);
     } else if (error.request) {
@@ -172,46 +232,55 @@ export const fetchWeatherData = async (API_KEY: string): Promise<WeatherData> =>
       errorMessage = `Request Error: ${error.message}`;
     }
     
-    // Use fallback data if API fails
+    // Return error state
     return {
-      temperature: 28,
-      feelsLike: 31.5,
-      humidity: 75,
-      windSpeed: { value: 6, unit: 'KILOMETERS_PER_HOUR' },
-      windDirection: 'NE',
-      weatherDescription: 'Light Thunderstorm with Rain',
+      temperature: 0,
+      feelsLike: 0,
+      humidity: 0,
+      windSpeed: { value: 0, unit: 'KILOMETERS_PER_HOUR' },
+      windDirection: '',
+      weatherDescription: '',
       weatherIcon: '',
-      visibility: 16,
-      pressure: 1010,
-      uvIndex: 1,
-      location: 'Kuala Lumpur, Malaysia',
+      visibility: 0,
+      pressure: 0,
+      uvIndex: 0,
+      location: 'Unknown Farm Location',
       lastUpdated: new Date().toISOString(),
       isLoading: false,
       error: errorMessage,
-      cloudCover: 100,
-      weatherCondition: 'LIGHT_THUNDERSTORM_RAIN',
+      cloudCover: 0,
+      weatherCondition: 'UNKNOWN',
       isDay: true
     };
   }
 };
 
-// New function to fetch today's hourly forecast
+// Function to fetch today's hourly forecast
 export const fetchTodayForecast = async (API_KEY: string): Promise<HourlyForecast[]> => {
   try {
-    // Kuala Lumpur coordinates
-    const latitude = 3.1390;
-    const longitude = 101.6869;
+    if (!API_KEY || API_KEY.trim() === '') {
+      throw new Error("API Key is missing or empty");
+    }
+    
+    // Get farm coordinates
+    const { latitude, longitude, farmName } = await getFarmCoordinates();
     
     // Updated Google Weather API endpoint for hourly forecast
-    const url = `https://weather.googleapis.com/v1/forecast/hours:lookup?key=${API_KEY}&location.latitude=${latitude}&location.longitude=${longitude}`;
+    const url = `https://weather.googleapis.com/v1/forecast/hours:lookup`;
     
-    console.log("Fetching hourly forecast data from:", url);
+    console.log(`Fetching hourly forecast for coordinates: ${latitude}, ${longitude}`);
     const response = await axios.get(url, {
       headers: {
-        'X-Goog-Api-Key': API_KEY,  // Add API key in header as well
+        'X-Goog-Api-Key': API_KEY,
         'Content-Type': 'application/json',
+      },
+      params: {
+        'key': API_KEY,
+        'location.latitude': latitude,
+        'location.longitude': longitude
       }
     });
+    
     if (response.data && response.data.forecastHours) {
       console.log("Hourly Forecast Response:", response.data);
       
@@ -233,45 +302,49 @@ export const fetchTodayForecast = async (API_KEY: string): Promise<HourlyForecas
       return hourlyData;
     }
     
-    throw new Error("Invalid hourly forecast format");
+    throw new Error("Invalid hourly forecast response format");
   } catch (error: any) {
     console.error('Error fetching hourly forecast:', error);
     
-    // Return fallback data if API fails
-    return [
-      { time: '09:00', temperature: 27, weatherCondition: 'CLOUDY', precipitationChance: 10 },
-      { time: '10:00', temperature: 28, weatherCondition: 'PARTLY_CLOUDY', precipitationChance: 20 },
-      { time: '11:00', temperature: 30, weatherCondition: 'SUNNY', precipitationChance: 0 },
-      { time: '12:00', temperature: 31, weatherCondition: 'SUNNY', precipitationChance: 0 },
-      { time: '13:00', temperature: 32, weatherCondition: 'SUNNY', precipitationChance: 10 },
-      { time: '14:00', temperature: 32, weatherCondition: 'PARTLY_CLOUDY', precipitationChance: 20 },
-      { time: '15:00', temperature: 31, weatherCondition: 'CLOUDY', precipitationChance: 30 },
-      { time: '16:00', temperature: 30, weatherCondition: 'LIGHT_RAIN', precipitationChance: 40 },
-      { time: '17:00', temperature: 29, weatherCondition: 'LIGHT_RAIN', precipitationChance: 50 },
-      { time: '18:00', temperature: 28, weatherCondition: 'CLOUDY', precipitationChance: 30 },
-      { time: '19:00', temperature: 27, weatherCondition: 'CLOUDY', precipitationChance: 20 },
-      { time: '20:00', temperature: 27, weatherCondition: 'PARTLY_CLOUDY', precipitationChance: 10 }
-    ];
+    // Create error message
+    let errorMessage = 'Failed to load hourly forecast.';
+    
+    if (error.message && error.message.includes('farm coordinates')) {
+      errorMessage = error.message;
+    } else if (error.response) {
+      errorMessage = `API Error: ${error.response.status} - ${error.response.data?.error?.message || 'Unknown error'}`;
+    }
+    
+    // Throw error with message
+    throw new Error(errorMessage);
   }
 };
 
-// New function to fetch weekly forecast
+// Function to fetch weekly forecast
 export const fetchWeeklyForecast = async (API_KEY: string): Promise<DailyForecast[]> => {
   try {
-    // Kuala Lumpur coordinates
-    const latitude = 3.1390;
-    const longitude = 101.6869;
+    if (!API_KEY || API_KEY.trim() === '') {
+      throw new Error("API Key is missing or empty");
+    }
     
+    // Get farm coordinates
+    const { latitude, longitude, farmName } = await getFarmCoordinates();    
     // Google Weather API endpoint for daily forecast
-    const url = `https://weather.googleapis.com/v1/forecast/days:lookup?key=${API_KEY}&location.latitude=${latitude}&location.longitude=${longitude}`;
+    const url = `https://weather.googleapis.com/v1/forecast/days:lookup`;
     
-    console.log("Fetching daily forecast data from:", url);
+    console.log(`Fetching daily forecast for coordinates: ${latitude}, ${longitude}`);
     const response = await axios.get(url, {
       headers: {
-        'X-Goog-Api-Key': API_KEY,  // Add API key in header as well
+        'X-Goog-Api-Key': API_KEY,
         'Content-Type': 'application/json',
+      },
+      params: {
+        'key': API_KEY,
+        'location.latitude': latitude,
+        'location.longitude': longitude
       }
     });
+    
     if (response.data && response.data.forecastDays) {
       console.log("Daily Forecast Response:", response.data);
       
@@ -315,19 +388,20 @@ export const fetchWeeklyForecast = async (API_KEY: string): Promise<DailyForecas
       return dailyData;
     }
     
-    throw new Error("Invalid daily forecast format");
+    throw new Error("Invalid daily forecast response format");
   } catch (error: any) {
     console.error('Error fetching daily forecast:', error);
     
-    // Return fallback data if API fails
-    return [
-      { date: 'Mon', weatherCondition: 'SUNNY', tempMax: 33, tempMin: 25, precipitationChance: 0 },
-      { date: 'Tue', weatherCondition: 'PARTLY_CLOUDY', tempMax: 32, tempMin: 25, precipitationChance: 20 },
-      { date: 'Wed', weatherCondition: 'RAINY', tempMax: 29, tempMin: 24, precipitationChance: 80 },
-      { date: 'Thu', weatherCondition: 'RAINY', tempMax: 28, tempMin: 24, precipitationChance: 70 },
-      { date: 'Fri', weatherCondition: 'CLOUDY', tempMax: 30, tempMin: 25, precipitationChance: 30 },
-      { date: 'Sat', weatherCondition: 'PARTLY_CLOUDY', tempMax: 31, tempMin: 26, precipitationChance: 10 },
-      { date: 'Sun', weatherCondition: 'SUNNY', tempMax: 32, tempMin: 26, precipitationChance: 0 }
-    ];
+    // Create error message
+    let errorMessage = 'Failed to load weekly forecast.';
+    
+    if (error.message && error.message.includes('farm coordinates')) {
+      errorMessage = error.message;
+    } else if (error.response) {
+      errorMessage = `API Error: ${error.response.status} - ${error.response.data?.error?.message || 'Unknown error'}`;
+    }
+    
+    // Throw error with message
+    throw new Error(errorMessage);
   }
 };

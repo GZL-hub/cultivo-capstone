@@ -217,7 +217,7 @@ const CurrentWeather: React.FC<CurrentWeatherProps> = ({
                     <Moon className="w-5 h-5 mr-2" />
                   )}
                   <span className="text-sm opacity-80">
-                    {timeOfDay === 'morning' ? 'Morning' : timeOfDay === 'afternoon' ? 'Afternoon' : 'Night'} in
+                    {timeOfDay === 'morning' ? 'Morning' : timeOfDay === 'afternoon' ? 'Afternoon' : 'Night'}
                   </span>
                 </div>
                 <h2 className="text-3xl md:text-4xl font-bold mb-2">{data.location}</h2>
