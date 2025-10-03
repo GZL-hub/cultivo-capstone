@@ -121,40 +121,33 @@ const WeatherAnalytics: React.FC = () => {
   }, []);
 
   return (
-    <div className="w-full">
-      {/* Desktop-optimized layout */}
-      <div className="flex flex-col lg:flex-row gap-6">
-        {/* Left side: Current Weather & Today's Forecast (stacked vertically) */}
-        <div className="lg:w-3/4 flex flex-col gap-6">
-          {/* Current Weather - Top */}
-          <div>
-            <CurrentWeather 
-              data={currentWeather} 
-              onRetry={loadWeatherData}
-            />
-          </div>
-          
-          {/* Today's Forecast - Bottom */}
-          <div> {/* Removed fixed height to allow natural sizing */}
-            <TodayForecast 
-              data={todayForecast.data}
-              isLoading={todayForecast.isLoading}
-              error={todayForecast.error}
-            />
-          </div>
+    <div className="w-full max-w-full">
+      {/* Simple stacked layout with each component in its own row */}
+      <div className="flex flex-col gap-6">
+        {/* Current Weather - First row */}
+        <div>
+          <CurrentWeather 
+            data={currentWeather} 
+            onRetry={loadWeatherData}
+          />
         </div>
         
-        {/* Right side: Weekly Forecast (side panel) */}
-        <div className="lg:w-1/4"> 
-          <div className="h-full flex"> {/* Full height container with flex */}
-            <div className="flex-grow"> {/* Make the forecast fill available space */}
-              <WeeklyForecast 
-                data={weeklyForecast.data}
-                isLoading={weeklyForecast.isLoading}
-                error={weeklyForecast.error}
-              />
-            </div>
-          </div>
+        {/* Today's Forecast - Second row */}
+        <div>
+          <TodayForecast 
+            data={todayForecast.data}
+            isLoading={todayForecast.isLoading}
+            error={todayForecast.error}
+          />
+        </div>
+        
+        {/* Weekly Forecast - Third row */}
+        <div>
+          <WeeklyForecast 
+            data={weeklyForecast.data}
+            isLoading={weeklyForecast.isLoading}
+            error={weeklyForecast.error}
+          />
         </div>
       </div>
     </div>
