@@ -90,7 +90,7 @@ const TodayForecast: React.FC<TodayForecastProps> = ({ data, isLoading, error, i
     switch(timeOfDay) {
       case 'morning':
         return {
-          bg: 'bg-gradient-to-br from-blue-500 to-amber-400',
+          bg: 'bg-gradient-to-br from-amber-500 to-orange-600',
           text: 'text-white',
           card: 'bg-white/10',
           highlight: 'bg-amber-700/40',
@@ -98,7 +98,7 @@ const TodayForecast: React.FC<TodayForecastProps> = ({ data, isLoading, error, i
         };
       case 'afternoon':
         return {
-          bg: 'bg-gradient-to-br from-blue-600 to-blue-400',
+          bg: 'bg-gradient-to-br from-blue-700 to-blue-500',
           text: 'text-white',
           card: 'bg-white/10',
           highlight: 'bg-blue-700/40',
@@ -184,7 +184,7 @@ const TodayForecast: React.FC<TodayForecastProps> = ({ data, isLoading, error, i
   
   return (
     <div className={`${theme.bg} rounded-xl shadow-xl overflow-hidden`}>
-      <div className="p-6">
+      <div className="p-4">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center">
             <Sun className="h-5 w-5 mr-2 text-white" />

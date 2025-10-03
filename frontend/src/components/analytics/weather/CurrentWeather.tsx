@@ -89,7 +89,7 @@ const CurrentWeather: React.FC<CurrentWeatherProps> = ({
     switch(timeOfDay) {
       case 'morning':
         return {
-          bg: 'bg-gradient-to-br from-blue-500 to-amber-400',
+          bg: 'bg-gradient-to-br from-amber-500 to-orange-600',
           text: 'text-white',
           card: 'bg-white/10',
           highlight: 'bg-amber-700/40',
@@ -97,7 +97,7 @@ const CurrentWeather: React.FC<CurrentWeatherProps> = ({
         };
       case 'afternoon':
         return {
-          bg: 'bg-gradient-to-br from-blue-600 to-blue-400',
+          bg: 'bg-gradient-to-br from-blue-700 to-blue-500',
           text: 'text-white',
           card: 'bg-white/10',
           highlight: 'bg-blue-700/40',
@@ -182,7 +182,7 @@ const CurrentWeather: React.FC<CurrentWeatherProps> = ({
   return (
     <div className={`${theme.bg} rounded-xl shadow-xl overflow-hidden transition-all duration-500`}>
       {/* Main Hero Section */}
-      <div className="p-6">
+      <div className="p-4">
         {data.error ? (
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="flex items-center">

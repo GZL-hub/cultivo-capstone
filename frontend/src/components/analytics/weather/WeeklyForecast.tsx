@@ -32,7 +32,7 @@ const WeeklyForecast: React.FC<WeeklyForecastProps> = ({ data, isLoading, error 
     switch(timeOfDay) {
       case 'morning':
         return {
-          bg: 'bg-gradient-to-br from-blue-500 to-amber-400',
+          bg: 'bg-gradient-to-br from-amber-500 to-orange-600',
           text: 'text-white',
           card: 'bg-white/10',
           highlight: 'bg-amber-700/40',
@@ -40,7 +40,7 @@ const WeeklyForecast: React.FC<WeeklyForecastProps> = ({ data, isLoading, error 
         };
       case 'afternoon':
         return {
-          bg: 'bg-gradient-to-br from-blue-600 to-blue-400',
+          bg: 'bg-gradient-to-br from-blue-700 to-blue-500',
           text: 'text-white',
           card: 'bg-white/10',
           highlight: 'bg-blue-700/40',

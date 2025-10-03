@@ -110,7 +110,7 @@ const WeatherIcon: React.FC<WeatherIconProps> = ({
   condition, 
   isDay = true, 
   size = 60, 
-  color = '#1565c0',
+  color = '#ffffff',
   className = ''
 }) => {
   const normalizedCondition = condition.toUpperCase().trim();

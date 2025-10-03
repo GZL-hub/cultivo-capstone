@@ -121,19 +121,21 @@ const WeatherAnalytics: React.FC = () => {
   }, []);
 
   return (
-    <div className="space-y-8">
-      {/* Main Weather Content - 65/35 Split */}
+    <div className="w-full">
+      {/* Desktop-optimized layout */}
       <div className="flex flex-col lg:flex-row gap-6">
-        {/* Left Column - 65% - Current Weather */}
-        <div className="w-full lg:w-[65%]">
-          {/* Current Weather */}
-          <CurrentWeather 
-            data={currentWeather} 
-            onRetry={loadWeatherData}
-          />
+        {/* Left side: Current Weather & Today's Forecast (stacked vertically) */}
+        <div className="lg:w-3/4 flex flex-col gap-6">
+          {/* Current Weather - Top */}
+          <div>
+            <CurrentWeather 
+              data={currentWeather} 
+              onRetry={loadWeatherData}
+            />
+          </div>
           
-          {/* Today's Forecast - Below Current Weather */}
-          <div className="mt-6">
+          {/* Today's Forecast - Bottom */}
+          <div> {/* Removed fixed height to allow natural sizing */}
             <TodayForecast 
               data={todayForecast.data}
               isLoading={todayForecast.isLoading}
@@ -142,13 +144,17 @@ const WeatherAnalytics: React.FC = () => {
           </div>
         </div>
         
-        {/* Right Column - 35% - 7-Day Forecast */}
-        <div className="w-full lg:w-[35%]">
-          <WeeklyForecast 
-            data={weeklyForecast.data}
-            isLoading={weeklyForecast.isLoading}
-            error={weeklyForecast.error}
-          />
+        {/* Right side: Weekly Forecast (side panel) */}
+        <div className="lg:w-1/4"> 
+          <div className="h-full flex"> {/* Full height container with flex */}
+            <div className="flex-grow"> {/* Make the forecast fill available space */}
+              <WeeklyForecast 
+                data={weeklyForecast.data}
+                isLoading={weeklyForecast.isLoading}
+                error={weeklyForecast.error}
+              />
+            </div>
+          </div>
         </div>
       </div>
     </div>
