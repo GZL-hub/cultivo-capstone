@@ -1,5 +1,5 @@
 import React from 'react';
-import { Cloud, CloudRain, Sun, Droplet, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Cloud, CloudRain, Sun, Droplet, } from 'lucide-react';
 import WeatherIcon from './icons/WeatherIcons';
 
 interface HourlyForecast {
@@ -192,24 +192,6 @@ const TodayForecast: React.FC<TodayForecastProps> = ({ data, isLoading, error, i
               {isDaily ? '5-Day Forecast' : 'Today\'s Forecast'}
             </h2>
           </div>
-          
-          {/* Scroll controls */}
-          <div className="flex space-x-2">
-            <button 
-              onClick={scrollLeft} 
-              className="p-1 rounded-full bg-white/20 hover:bg-white/30 text-white transition-colors"
-              aria-label="Scroll left"
-            >
-              <ChevronLeft size={16} />
-            </button>
-            <button 
-              onClick={scrollRight} 
-              className="p-1 rounded-full bg-white/20 hover:bg-white/30 text-white transition-colors"
-              aria-label="Scroll right"
-            >
-              <ChevronRight size={16} />
-            </button>
-          </div>
         </div>
         
         {/* Horizontal scrollable container with only 4 cards visible */}
@@ -217,7 +199,7 @@ const TodayForecast: React.FC<TodayForecastProps> = ({ data, isLoading, error, i
           ref={scrollContainerRef}
           className="overflow-x-scroll pb-6" 
         >
-          <div className="grid grid-flow-col auto-cols-[22%] md:auto-cols-[23%] lg:auto-cols-[23%] gap-3 py-2">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 py-2">
             {processedData.map((item, index) => {
               // For daily forecast, show min/max temperature
               const isDay = (item as any).minTemperature !== undefined;

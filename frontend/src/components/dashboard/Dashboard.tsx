@@ -104,14 +104,6 @@ const Dashboard: React.FC<DashboardProps> = ({ isLoaded }) => {
     totalOnline: 0
   };
 
-  // Define weather data with default values
-  const weatherData = {
-    temperature: 24,
-    condition: 'Sunny',
-    humidity: 65,
-    windSpeed: 8,
-  };
-
   // Define rainwater collector data with default values
   const rainwaterData = {
     currentLevel: 65,  // 65% full
@@ -151,12 +143,7 @@ const Dashboard: React.FC<DashboardProps> = ({ isLoaded }) => {
         />
       
         {/* Weather Card Component */}
-        <WeatherCard 
-          temperature={weatherData.temperature}
-          condition={weatherData.condition}
-          humidity={weatherData.humidity}
-          windSpeed={weatherData.windSpeed}
-        />
+        <WeatherCard />
       </div>
       
       {/* Main content area - flex-grow to take remaining height */}

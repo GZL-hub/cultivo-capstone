@@ -1,20 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { WiDaySunny, WiCloudy, WiDayCloudy, WiRain, WiThunderstorm } from 'weather-icons-react';
+import { fetchWeatherData, WeatherData } from '../../../components/analytics/weather/weatherService';
+import WeatherIcon from '../../../components/analytics/weather/icons/WeatherIcons';
 
 interface WeatherCardProps {
-  temperature: number;
-  condition: string;
-  humidity: number;
-  windSpeed: number;
+  apiKey?: string;
 }
 
-const WeatherCard: React.FC<WeatherCardProps> = ({
-  temperature,
-  condition,
-  humidity,
-  windSpeed
-}) => {
-  // State for the current time and date
+const WeatherCard: React.FC<WeatherCardProps> = ({ apiKey }) => {
+  const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
   const [currentTime, setCurrentTime] = useState(new Date());
   
   // Update the time every second
@@ -26,6 +21,36 @@ const WeatherCard: React.FC<WeatherCardProps> = ({
     // Clean up the interval on component unmount
     return () => clearInterval(timer);
   }, []);
+  
+  // Fetch weather data
+  useEffect(() => {
+    const getWeatherData = async () => {
+      try {
+        setLoading(true);
+        // Use environment variable if apiKey is not provided as prop
+        const key = apiKey || process.env.REACT_APP_GOOGLE_MAPS_API_KEY || '';
+        
+        if (!key) {
+          throw new Error('No API key available');
+        }
+        
+        const data = await fetchWeatherData(key);
+        setWeatherData(data);
+        setError(data.error);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to fetch weather data');
+        console.error('Weather fetch error:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    getWeatherData();
+    
+    // Refresh weather data every 30 minutes
+    const refreshInterval = setInterval(getWeatherData, 30 * 60 * 1000);
+    return () => clearInterval(refreshInterval);
+  }, [apiKey]);
   
   // Format date and time
   const dateOptions: Intl.DateTimeFormatOptions = { 
@@ -42,9 +67,6 @@ const WeatherCard: React.FC<WeatherCardProps> = ({
   
   const formattedDate = currentTime.toLocaleDateString('en-US', dateOptions);
   const formattedTime = currentTime.toLocaleTimeString('en-US', timeOptions);
-
-  // Lowercase condition for comparison
-  const lowerCondition = condition.toLowerCase();
   
   // Function to get time-based gradient
   const getTimeBasedStyle = () => {
@@ -75,41 +97,51 @@ const WeatherCard: React.FC<WeatherCardProps> = ({
   
   const timeBasedStyle = getTimeBasedStyle();
 
-  // Function to render the appropriate weather icon
-  const renderWeatherIcon = () => {
-    const iconSize = 48;
-    const iconColor = "#ffffff"; // White for all modes
-    
-    // Use a div wrapper to ensure the icon is properly contained
+  // Loading state
+  if (loading) {
     return (
-      <div className="flex items-center justify-center">
-        {(lowerCondition === 'sunny' || lowerCondition === 'clear') && (
-          <WiDaySunny size={iconSize} color={iconColor} />
-        )}
-        
-        {lowerCondition === 'cloudy' && (
-          <WiCloudy size={iconSize} color={iconColor} />
-        )}
-        
-        {lowerCondition === 'partly cloudy' && (
-          <WiDayCloudy size={iconSize} color={iconColor} />
-        )}
-        
-        {(lowerCondition === 'rainy' || lowerCondition === 'rain') && (
-          <WiRain size={iconSize} color={iconColor} />
-        )}
-        
-        {(lowerCondition === 'stormy' || lowerCondition === 'thunderstorm') && (
-          <WiThunderstorm size={iconSize} color={iconColor} />
-        )}
-        
-        {/* Default icon if no condition matches */}
-        {!['sunny', 'clear', 'cloudy', 'partly cloudy', 'rainy', 'rain', 'stormy', 'thunderstorm'].includes(lowerCondition) && (
-          <WiDaySunny size={iconSize} color={iconColor} />
-        )}
+      <div className="p-4 rounded-2xl shadow-2xl" style={timeBasedStyle}>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold text-white">Weather</h2>
+          <div className="text-sm text-white/80">Loading...</div>
+        </div>
+        <div className="flex justify-center items-center h-16">
+          <div className="animate-spin rounded-full h-8 w-8 border-4 border-white/80 border-t-transparent"></div>
+        </div>
       </div>
     );
-  };
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="p-4 rounded-2xl shadow-2xl" style={timeBasedStyle}>
+        <div className="flex items-center justify-between mb-2">
+          <h2 className="text-lg font-semibold text-white">Weather</h2>
+          <div className="text-sm text-white/80">{formattedDate}</div>
+        </div>
+        <div className="text-center py-2 text-white/80">
+          <p>Unable to load weather data</p>
+          <p className="text-xs mt-1 text-white/60">{error}</p>
+        </div>
+      </div>
+    );
+  }
+
+  // No data state
+  if (!weatherData) {
+    return (
+      <div className="p-4 rounded-2xl shadow-2xl" style={timeBasedStyle}>
+        <div className="flex items-center justify-between mb-2">
+          <h2 className="text-lg font-semibold text-white">Weather</h2>
+          <div className="text-sm text-white/80">{formattedDate}</div>
+        </div>
+        <div className="text-center py-2 text-white/80">
+          <p>No weather data available</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-4 rounded-2xl shadow-2xl transition-all duration-300 hover:-translate-y-2 hover:shadow-sky-500/25" style={timeBasedStyle}>
@@ -126,13 +158,22 @@ const WeatherCard: React.FC<WeatherCardProps> = ({
         <div className="flex items-center flex-1">
           {/* Weather icon */}
           <div className="w-14 h-14 mr-3 flex-shrink-0 flex items-center justify-center">
-            {renderWeatherIcon()}
+            <WeatherIcon 
+              condition={weatherData.weatherCondition || 'CLOUDY'} 
+              isDay={weatherData.isDay !== undefined ? weatherData.isDay : true} 
+              size={48}
+              color="#ffffff"
+            />
           </div>
           
           {/* Temperature and condition */}
           <div>
-            <div className="text-2xl font-bold text-white">{temperature}°C</div>
-            <div className="text-sm text-white/80">{condition}</div>
+            <div className="text-2xl font-bold text-white">
+              {Math.round(weatherData.temperature)}°C
+            </div>
+            <div className="text-sm text-white/80">
+              {weatherData.weatherDescription || weatherData.weatherCondition?.replace(/_/g, ' ').toLowerCase() || 'Unknown'}
+            </div>
           </div>
         </div>
         
@@ -140,13 +181,18 @@ const WeatherCard: React.FC<WeatherCardProps> = ({
         <div className="flex flex-col text-right">
           <div className="flex items-center justify-end mb-1">
             <span className="text-sm text-white/80 mr-1">Humidity:</span>
-            <span className="text-sm font-medium text-white">{humidity}%</span>
+            <span className="text-sm font-medium text-white">{weatherData.humidity}%</span>
           </div>
           <div className="flex items-center justify-end">
             <span className="text-sm text-white/80 mr-1">Wind:</span>
-            <span className="text-sm font-medium text-white">{windSpeed} km/h</span>
+            <span className="text-sm font-medium text-white">{weatherData.windSpeed.value} km/h</span>
           </div>
         </div>
+      </div>
+      
+      {/* Location info */}
+      <div className="mt-2 text-xs text-white/70 text-right">
+        {weatherData.location}
       </div>
     </div>
   );
