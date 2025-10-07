@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import GoogleMap from '../../googlemap/GoogleMap';
 import { User, Users, Wifi, WifiOff, CloudSun, Thermometer, Wind } from 'lucide-react';
-import { IFarm, getFarms } from '../../../services/farmService';
+import { IFarm, getFarms, getFarm } from '../../../services/farmService';
 import axios from 'axios';
 
 // API URL
@@ -29,6 +29,7 @@ interface Weather {
 
 interface FarmOverviewProps {
   farmId?: string; // Optional: if provided, fetch specific farm by ID
+  ownerId: string;
   workers: Worker[];
   weather?: Weather;
 }
@@ -165,7 +166,7 @@ const getBoundaryPolygon = (farmBoundary?: { type: string; coordinates: number[]
   return [];
 };
 
-const FarmOverview: React.FC<FarmOverviewProps> = ({ farmId, workers, weather }) => {
+const FarmOverview: React.FC<FarmOverviewProps> = ({ farmId, ownerId, workers, weather }) => {
   const [farm, setFarm] = useState<ExtendedFarm | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -182,9 +183,8 @@ const FarmOverview: React.FC<FarmOverviewProps> = ({ farmId, workers, weather })
           const response = await axios.get(`${API_URL}/farms/${farmId}`);
           farmData = response.data.data;
         } else {
-          // Otherwise fetch first farm from list
-          const response = await axios.get(`${API_URL}/farms`);
-          const farms = response.data.data;
+          // Fetch farms filtered by owner
+          const farms = await getFarms(ownerId);
           farmData = farms && farms.length > 0 ? farms[0] : null;
         }
         
@@ -197,32 +197,8 @@ const FarmOverview: React.FC<FarmOverviewProps> = ({ farmId, workers, weather })
             lastActivity: new Date().toISOString()
           });
         } else {
-          // Use fallback values if no farm found
-          setFarm({
-            _id: 'default',
-            name: "Green Valley Orchard",
-            type: "Tree Orchard",
-            operationDate: "March 15, 2022",
-            areaSize: "5.2 hectares",
-            farmBoundary: {
-              type: "Polygon",
-              coordinates: [
-                [
-                  [0, 0],
-                  [0, 0],
-                  [0, 0],
-                  [0, 0]
-                ]
-              ]
-            },
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-            activeDevices: 0,
-            inactiveDevices: 0,
-            lastActivity: "No activity recorded"
-          });
-          
-          setError("No farm data found. Using default values.");
+          // Not an error, just no farms yet
+          setFarm(null);
         }
       } catch (err) {
         console.error('Error fetching farm data:', err);
@@ -233,7 +209,7 @@ const FarmOverview: React.FC<FarmOverviewProps> = ({ farmId, workers, weather })
     };
 
     fetchFarmData();
-  }, [farmId]);
+  }, [farmId, ownerId]);
 
   // Render loading state
   if (isLoading) {

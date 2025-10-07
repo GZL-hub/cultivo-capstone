@@ -3,9 +3,20 @@ import MapComponent from '../../../googlemap/GoogleMap';
 import FarmMapToolbar, { MapType } from './FarmMapToolBar';
 import { DrawingManager } from '@react-google-maps/api';
 import PolygonDataPanel from './polygon/PolygonDataPanel';
-import { calculatePolygonArea, calculatePolygonPerimeter } from './polygon/Polygon-Utils';
 import { toast } from 'react-hot-toast';
 import axios from 'axios';
+// Import the polygon service
+import { 
+  getFarmBoundary, 
+  saveFarmBoundary,
+  convertGeoJSONToGoogleMaps,
+  calculatePolygonCenter,
+  updatePolygonMetrics,
+  extractPolygonCoordinates,
+  PolygonCoordinate
+} from '../../../../services/polygonService';
+// Context Hook
+import { useFarmManagement } from '../../FarmManagement';
 
 const mapTypes: MapType[] = [
   { label: 'Roadmap', value: 'roadmap' },
@@ -19,11 +30,18 @@ interface FarmMapProps {
     lat: number;
     lng: number;
   };
-  farmId?: string; // Add farmId as an optional prop
+  farmId?: string;
+  ownerId?: string; // Add ownerId as a required prop
 }
-
-const FarmMap: React.FC<FarmMapProps> = ({ coordinates, farmId }) => {
-  // State declarations
+const FarmMap: React.FC<FarmMapProps> = ({ coordinates, farmId: propFarmId, ownerId: propOwnerId }) => {
+  // Get farmId and ownerId from context if not provided as props
+  const context = useFarmManagement();
+  const farmId = propFarmId || context?.farmId;
+  const ownerId = propOwnerId || context?.ownerId;
+  
+  console.log(`FarmMap rendered with farmId: ${farmId}, ownerId: ${ownerId}`);
+  
+  // State declarations - kept the same
   const [map, setMap] = useState<google.maps.Map | null>(null);
   const [mapType, setMapType] = useState<'roadmap' | 'satellite' | 'terrain' | 'hybrid'>('roadmap');
   const [drawing, setDrawing] = useState(false);
@@ -35,35 +53,22 @@ const FarmMap: React.FC<FarmMapProps> = ({ coordinates, farmId }) => {
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [isPanelVisible, setIsPanelVisible] = useState(true);
   
-  // Polygon data state
-  const [polygonCoords, setPolygonCoords] = useState<Array<{lat: number, lng: number}>>([]);
+  // Polygon data state - kept the same
+  const [polygonCoords, setPolygonCoords] = useState<PolygonCoordinate[]>([]);
   const [polygonArea, setPolygonArea] = useState<number | undefined>(undefined);
   const [polygonPerimeter, setPolygonPerimeter] = useState<number | undefined>(undefined);
   const [activePolygon, setActivePolygon] = useState<google.maps.Polygon | null>(null);
   
-  // Drawing manager ref
+  // Refs
   const drawingManagerRef = useRef<google.maps.drawing.DrawingManager | null>(null);
   const searchBoxRef = useRef<google.maps.places.SearchBox | null>(null);
+
+  // API Handling 
+  const [isAuthorized, setIsAuthorized] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
   
-  // Function to calculate center of polygon
-  const calculatePolygonCenter = useCallback((coords: Array<{lat: number, lng: number}>) => {
-    if (coords.length === 0) return coordinates;
-    
-    let totalLat = 0;
-    let totalLng = 0;
-    
-    coords.forEach(point => {
-      totalLat += point.lat;
-      totalLng += point.lng;
-    });
-    
-    return {
-      lat: totalLat / coords.length,
-      lng: totalLng / coords.length
-    };
-  }, [coordinates]);
-  
-  // Function to fit map to polygon bounds
+  // Function to fit map to polygon bounds - kept the same
   const fitMapToPolygon = useCallback(() => {
     if (!map || polygonCoords.length === 0) return;
     
@@ -77,30 +82,29 @@ const FarmMap: React.FC<FarmMapProps> = ({ coordinates, farmId }) => {
     map.fitBounds(bounds, 50);
     
     // Update center state
-    const newCenter = calculatePolygonCenter(polygonCoords);
+    const newCenter = calculatePolygonCenter(polygonCoords, coordinates);
     setCenter(newCenter);
-  }, [map, polygonCoords, calculatePolygonCenter]);
+  }, [map, polygonCoords, coordinates]);
   
-  // This effect will ensure drawing mode is properly disabled when the drawing state changes
+  // Drawing mode management - kept the same
   useEffect(() => {
     if (!drawing && drawingManagerRef.current) {
       drawingManagerRef.current.setDrawingMode(null);
-      // Set the map to null to completely disable the drawing manager
       drawingManagerRef.current.setMap(null);
     } else if (drawing && drawingManagerRef.current && map) {
-      // Re-enable the drawing manager
       drawingManagerRef.current.setMap(map);
       drawingManagerRef.current.setDrawingMode(google.maps.drawing.OverlayType.POLYGON);
     }
   }, [drawing, map]);
   
-  // Effect to fit map to polygon when coords change
+  // Effect to fit map to polygon - kept the same
   useEffect(() => {
     if (polygonCoords.length > 0 && map) {
       fitMapToPolygon();
     }
   }, [polygonCoords, map, fitMapToPolygon]);
 
+  // Event handlers - kept the same
   const handleMapLoad = useCallback((mapInstance: google.maps.Map) => {
     setMap(mapInstance);
   }, []);
@@ -128,10 +132,50 @@ const FarmMap: React.FC<FarmMapProps> = ({ coordinates, farmId }) => {
     setIsDarkMode(prev => !prev);
   }, []);
 
+  // Check if user is authorized to edit this farm
+  useEffect(() => {
+    const checkAuthorization = async () => {
+      if (!farmId || !ownerId) {
+        // If no farmId, we're creating a new farm, so the user is authorized
+        if (!farmId) {
+          setIsAuthorized(true);
+          return;
+        }
+        
+        setIsAuthorized(false);
+        return;
+      }
+      
+      try {
+        // Fetch the farm to check if it belongs to this owner
+        const response = await fetch(`/api/farms/${farmId}`);
+        const data = await response.json();
+        
+        if (data.success && data.data) {
+          // Check if the farm belongs to the current user
+          setIsAuthorized(data.data.owner === ownerId);
+        } else {
+          setIsAuthorized(false);
+        }
+      } catch (error) {
+        console.error('Error checking farm authorization:', error);
+        setIsAuthorized(false);
+      }
+    };
+    
+    checkAuthorization();
+  }, [farmId, ownerId]);
+
+  // Existing toolbar handler - kept the same
   const handleToolbarItemClick = (itemId: string) => {
+    // If not authorized to edit, prevent drawing
+    if (itemId === "draw" && !isAuthorized) {
+      toast.error('You are not authorized to edit this farm');
+      return;
+    }
+    
     // If we're switching to draw mode but already have a polygon
     if (itemId === "draw" && activePolygon) {
-      // Prevent enabling drawing mode
       toast.error('Only one polygon allowed. Delete existing polygon to draw a new one.');
       return;
     }
@@ -148,6 +192,7 @@ const FarmMap: React.FC<FarmMapProps> = ({ coordinates, farmId }) => {
     }
   };
 
+  // Existing handlers - kept the same
   const handleMapTypeSelect = (value: 'roadmap' | 'satellite' | 'terrain' | 'hybrid') => {
     setMapType(value);
     setShowMapTypes(false);
@@ -174,10 +219,16 @@ const FarmMap: React.FC<FarmMapProps> = ({ coordinates, farmId }) => {
     setShowMapTypes(prev => !prev);
   };
 
+  // Updated to check authorization
   const handleStartDrawing = () => {
+    // Check authorization
+    if (!isAuthorized) {
+      toast.error('You are not authorized to edit this farm');
+      return;
+    }
+    
     // Check if we already have a polygon
     if (activePolygon) {
-      // Provide feedback to the user
       toast.error('Only one polygon allowed. Delete existing polygon to draw a new one.');
       return;
     }
@@ -190,7 +241,13 @@ const FarmMap: React.FC<FarmMapProps> = ({ coordinates, farmId }) => {
     setIsPanelVisible(prev => !prev);
   }, []);
   
+  // Updated to check authorization
   const handleDeletePolygon = useCallback(() => {
+    if (!isAuthorized) {
+      toast.error('You are not authorized to delete this boundary');
+      return;
+    }
+    
     if (activePolygon) {
       // Remove the polygon from the map
       activePolygon.setMap(null);
@@ -203,131 +260,150 @@ const FarmMap: React.FC<FarmMapProps> = ({ coordinates, farmId }) => {
       
       toast.success('Polygon deleted');
     }
-  }, [activePolygon]);
+  }, [activePolygon, isAuthorized]);
 
-  // Add save polygon functionality
+  // Updated to include owner ID and check authorization
   const handleSavePolygon = useCallback(async () => {
+    if (!isAuthorized) {
+      toast.error('You are not authorized to save changes to this farm');
+      return;
+    }
+    
     if (activePolygon && polygonCoords.length > 0) {
       try {
-        // Use the farmId prop or default to the fallback ID
         const currentFarmId = farmId || '68d18a709f69d8c82056758c';
         
-        const response = await axios.put(
-          `/api/farms/${currentFarmId}/boundary`,
-          {
-            coordinates: polygonCoords,
-            area: polygonArea,
-            perimeter: polygonPerimeter
-          },
-          {
-            headers: {
-              'Content-Type': 'application/json',
-            }
-          }
-        );
+        const result = await saveFarmBoundary(currentFarmId, {
+          coordinates: polygonCoords,
+          area: polygonArea,
+          perimeter: polygonPerimeter,
+          ownerId // Include owner ID for verification
+        });
         
-        if (response.data.success) {
-          toast.success('Polygon saved successfully');
-          console.log('Saved polygon data:', response.data.data);
+        if (result.success) {
+          toast.success('Boundary saved successfully');
         } else {
-          toast.error('Failed to save polygon');
+          toast.error('Failed to save boundary: ' + (result.error || 'Unknown error'));
         }
       } catch (error) {
         console.error('Error saving polygon:', error);
-        toast.error('Error saving polygon');
+        toast.error('Error saving boundary');
       }
     }
-  }, [activePolygon, polygonCoords, polygonArea, polygonPerimeter, farmId]);
+  }, [activePolygon, polygonCoords, polygonArea, polygonPerimeter, farmId, ownerId, isAuthorized]);
 
-  // Add a function to fetch existing farm boundary when component mounts
-  useEffect(() => {
-    const fetchFarmBoundary = async () => {
-      try {
-        // Use the farmId prop or default to the fallback ID
-        const currentFarmId = farmId || '68d18a709f69d8c82056758c';
+  // Updated to fetch boundary with owner verification
+// Update the effect that fetches the boundary
+useEffect(() => {
+  const fetchBoundary = async () => {
+    if (!map) return;
+    
+    // Clear previous error
+    setLoadError(null);
+    setIsLoading(true);
+    
+    try {
+      // Only attempt to fetch if we have a farmId
+      if (!farmId) {
+        console.log('No farmId provided, skipping boundary fetch');
+        setIsLoading(false);
+        return;
+      }
+      
+      console.log(`Fetching boundary for farm: ${farmId}, owner: ${ownerId}`);
+      
+      // Direct API call to ensure we're getting the raw response
+      const response = await axios.get(`/api/farms/${farmId}`);
+      console.log('Farm data response:', response.data);
+      
+      if (response.data.success && response.data.data && response.data.data.farmBoundary) {
+        const boundary = response.data.data.farmBoundary;
+        console.log('Farm boundary data:', boundary);
         
-        const response = await axios.get(`/api/farms/${currentFarmId}/boundary`, {
-          headers: {
-            // Add authentication header if needed
-            // 'Authorization': `Bearer ${localStorage.getItem('token')}`
-          }
-        });
+        // Convert GeoJSON coordinates to Google Maps LatLng objects
+        const paths = convertGeoJSONToGoogleMaps(boundary);
+        console.log('Converted polygon paths:', paths);
         
-        if (response.data.success && response.data.data && map) {
-          const boundary = response.data.data;
+        if (paths.length > 0) {
+          // Create polygon and add it to the map
+          const polygon = new google.maps.Polygon({
+            paths,
+            fillColor: '#4CAF50',
+            fillOpacity: 0.3,
+            strokeWeight: 2,
+            strokeColor: '#4CAF50',
+            clickable: true,
+            editable: isAuthorized, // Only make it editable if user is authorized
+          });
           
-          // Convert GeoJSON coordinates to Google Maps LatLng objects
-          if (boundary.coordinates && boundary.coordinates.length > 0) {
-            const paths = boundary.coordinates[0].map((coord: number[]) => ({
-              lat: coord[1], // GeoJSON format is [lng, lat]
-              lng: coord[0]
-            }));
-            
-            // Create a new polygon and add it to the map
-            const polygon = new google.maps.Polygon({
-              paths,
-              fillColor: '#4CAF50',
-              fillOpacity: 0.3,
-              strokeWeight: 2,
-              strokeColor: '#4CAF50',
-              clickable: true,
-              editable: true,
-            });
-            
-            polygon.setMap(map);
-            setActivePolygon(polygon);
-            
-            // Update the polygon data in state
-            setPolygonCoords(paths);
-            setPolygonArea(calculatePolygonArea(paths));
-            setPolygonPerimeter(calculatePolygonPerimeter(paths));
-            
-            // Add listeners for editing
+          polygon.setMap(map);
+          setActivePolygon(polygon);
+          
+          // Update the polygon data in state
+          setPolygonCoords(paths);
+          const metrics = updatePolygonMetrics(paths);
+          setPolygonArea(metrics.area);
+          setPolygonPerimeter(metrics.perimeter);
+          
+          // Add listeners for editing only if authorized
+          if (isAuthorized) {
             google.maps.event.addListener(polygon.getPath(), 'set_at', () => {
               updatePolygonData(polygon);
             });
             google.maps.event.addListener(polygon.getPath(), 'insert_at', () => {
               updatePolygonData(polygon);
             });
-            
-            // Fit map to the loaded polygon
-            // The useEffect will handle this when polygonCoords changes
           }
+          
+          // Fit map to polygon bounds
+          fitMapToPolygon();
+        } else {
+          console.warn('No valid paths extracted from boundary');
         }
-      } catch (error) {
-        console.error('Error fetching farm boundary:', error);
-        toast.error('Error loading farm boundary');
+      } else {
+        console.warn('No farm boundary found in response:', response.data);
       }
-    };
-    
-    if (map) {
-      fetchFarmBoundary();
+    } catch (error) {
+      console.error('Error fetching farm boundary:', error);
+      setLoadError('Failed to load farm boundary. Please try again later.');
+    } finally {
+      setIsLoading(false);
     }
-  }, [map, farmId]);
+  };
   
+  fetchBoundary();
+}, [map, farmId, ownerId, isAuthorized]);
+  
+  // Update polygon data utility - kept the same
   const updatePolygonData = (polygon: google.maps.Polygon) => {
-    const path = polygon.getPath();
-    const coords = path.getArray().map(p => ({ lat: p.lat(), lng: p.lng() }));
+    const coords = extractPolygonCoordinates(polygon);
     
     setPolygonCoords(coords);
-    setPolygonArea(calculatePolygonArea(coords));
-    setPolygonPerimeter(calculatePolygonPerimeter(coords));
-    
-    // Map will be updated by the useEffect that watches polygonCoords
+    const metrics = updatePolygonMetrics(coords);
+    setPolygonArea(metrics.area);
+    setPolygonPerimeter(metrics.perimeter);
   };
 
+  // Updated polygon complete handler with authorization check
   const onPolygonComplete = (polygon: google.maps.Polygon) => {
+    // Check authorization again
+    if (!isAuthorized) {
+      // Remove the polygon if not authorized
+      polygon.setMap(null);
+      toast.error('You are not authorized to draw on this farm');
+      return;
+    }
+    
     // Store reference to active polygon
     setActivePolygon(polygon);
     
-    // Extract coordinates
-    const path = polygon.getPath();
-    const coords = path.getArray().map(p => ({ lat: p.lat(), lng: p.lng() }));
-    
-    // Set coordinates and calculate metrics
+    // Extract coordinates and update metrics
+    const coords = extractPolygonCoordinates(polygon);
     setPolygonCoords(coords);
-    setPolygonArea(calculatePolygonArea(coords));
-    setPolygonPerimeter(calculatePolygonPerimeter(coords));
+    
+    const metrics = updatePolygonMetrics(coords);
+    setPolygonArea(metrics.area);
+    setPolygonPerimeter(metrics.perimeter);
     
     // Add listeners for when polygon is edited
     google.maps.event.addListener(polygon.getPath(), 'set_at', () => {
@@ -337,13 +413,22 @@ const FarmMap: React.FC<FarmMapProps> = ({ coordinates, farmId }) => {
       updatePolygonData(polygon);
     });
     
-    console.log('Polygon drawn:', polygon);
-    console.log('Coordinates:', coords);
-    
     // Disable drawing mode after completion
     setDrawing(false);
     setActiveToolbar(null);
   };
+
+  // Render unauthorized message if needed
+  if (farmId && !isAuthorized) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <div className="bg-red-50 text-red-700 p-6 rounded-lg shadow max-w-md text-center">
+          <h3 className="text-lg font-semibold mb-2">Unauthorized Access</h3>
+          <p>You don't have permission to view or edit this farm's boundary.</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="relative w-full h-full">
@@ -372,6 +457,7 @@ const FarmMap: React.FC<FarmMapProps> = ({ coordinates, farmId }) => {
           onTogglePanel={handleTogglePanel}
           onDeletePolygon={handleDeletePolygon}
           onSavePolygon={handleSavePolygon}
+          isAuthorized={isAuthorized} // Pass authorization status to toolbar
         />
       </div>
       
@@ -381,7 +467,7 @@ const FarmMap: React.FC<FarmMapProps> = ({ coordinates, farmId }) => {
           coordinates={polygonCoords}
           area={polygonArea}
           perimeter={polygonPerimeter}
-          onDelete={handleDeletePolygon}
+          onDelete={isAuthorized ? handleDeletePolygon : undefined} // Only allow delete if authorized
         />
       )}
       
@@ -398,7 +484,7 @@ const FarmMap: React.FC<FarmMapProps> = ({ coordinates, farmId }) => {
           mapTypeControl: false,
         }}
       >
-        {map && (
+        {map && isAuthorized && ( // Only show drawing manager if authorized
           <DrawingManager
             onLoad={handleDrawingManagerLoad}
             onPolygonComplete={onPolygonComplete}

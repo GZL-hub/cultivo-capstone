@@ -26,6 +26,7 @@ function App() {
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [userId, setUserId] = useState<string>('');
 
   const { isLoaded, loadError } = useJsApiLoader({
     id: 'google-map-script',
@@ -38,6 +39,11 @@ function App() {
     const checkAuth = () => {
       if (authService.isAuthenticated()) {
         setIsLoggedIn(true);
+        // Get the user ID from the auth service
+        const userData = authService.getCurrentUser();
+        if (userData && userData.id) {
+          setUserId(userData.id);
+        }
       }
     };
     
@@ -53,6 +59,11 @@ function App() {
       
       if (response.success) {
         setIsLoggedIn(true);
+        // Set user ID after successful login
+        const userData = authService.getCurrentUser();
+        if (userData && userData.id) {
+          setUserId(userData.id);
+        }
       } else {
         setError(response.message || 'Login failed');
       }
@@ -121,11 +132,11 @@ function App() {
             <Route path="/farm" element={<FarmManagement />}>
               <Route
                 path="overview"
-                element={<FarmOverview workers={workers} weather={weather} />}
+                element={<FarmOverview workers={workers} weather={weather} ownerId={userId} />}
               />
               <Route
                 path="map"
-                element={<FarmMap />}
+                element={<FarmMap ownerId={userId}/>}
               />
               <Route path="cctv" element={<FarmCCTV />} />
               <Route index element={<Navigate to="overview" replace />} />

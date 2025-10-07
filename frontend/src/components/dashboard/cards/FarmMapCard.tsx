@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { GoogleMap, Polygon } from '@react-google-maps/api';
+import axios from 'axios';
 
 // Define device status type
 type DeviceStatus = 'online' | 'offline' | 'low_battery';
@@ -25,18 +26,107 @@ interface FarmInfo {
 }
 
 interface FarmMapCardProps {
-  farmInfo: FarmInfo;
+  farmId?: string; // Add farmId prop
   devices: Device[];
   isLoaded: boolean;
   onViewFullMap?: () => void;
 }
 
+const API_URL = '/api';
+
 const FarmMapCard: React.FC<FarmMapCardProps> = ({
-  farmInfo,
+  farmId,
   devices,
   isLoaded,
   onViewFullMap
 }) => {
+  // Add state for farm info
+  const [farmInfo, setFarmInfo] = useState<FarmInfo>({
+    name: "Loading...",
+    type: "Loading...",
+    operationDate: "Loading...",
+    areaSize: "Loading...",
+    farmBoundary: {
+      type: "Polygon",
+      coordinates: [[[0, 0], [0, 0], [0, 0], [0, 0]]]
+    }
+  });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Fetch farm data when component mounts or farmId changes
+  useEffect(() => {
+    const fetchFarmData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        let response;
+        
+        // If farmId is provided, fetch specific farm
+        if (farmId) {
+          response = await axios.get(`${API_URL}/farms/${farmId}`);
+          console.log(`Fetching farm with ID: ${farmId}`);
+        } else {
+          // Otherwise fetch all farms and use the first one
+          response = await axios.get(`${API_URL}/farms`);
+          console.log('No farmId provided, fetching all farms');
+        }
+        
+        // Handle farm data from response
+        if (farmId && response.data.success && response.data.data) {
+          // Single farm response format
+          const farm = response.data.data;
+          setFarmInfo({
+            name: farm.name || "Unknown",
+            type: farm.type || "Unknown",
+            operationDate: farm.operationDate || "Unknown",
+            areaSize: farm.areaSize || "Unknown",
+            farmBoundary: farm.farmBoundary || {
+              type: "Polygon",
+              coordinates: [[[0, 0], [0, 0], [0, 0], [0, 0]]]
+            }
+          });
+          console.log('Farm data received:', farm);
+        } else if (!farmId && response.data.success && response.data.data && response.data.data.length > 0) {
+          // Multiple farms response format - take first farm
+          const farm = response.data.data[0];
+          setFarmInfo({
+            name: farm.name || "Unknown",
+            type: farm.type || "Unknown",
+            operationDate: farm.operationDate || "Unknown",
+            areaSize: farm.areaSize || "Unknown",
+            farmBoundary: farm.farmBoundary || {
+              type: "Polygon",
+              coordinates: [[[0, 0], [0, 0], [0, 0], [0, 0]]]
+            }
+          });
+          console.log('Multiple farms found, using first farm:', farm);
+        } else {
+          throw new Error('No farm data found');
+        }
+      } catch (err) {
+        console.error('Error fetching farm data:', err);
+        setError('Failed to load farm data');
+        // Use default values on error
+        setFarmInfo({
+          name: "Error Loading Farm",
+          type: "Unknown",
+          operationDate: "Unknown",
+          areaSize: "Unknown",
+          farmBoundary: {
+            type: "Polygon",
+            coordinates: [[[0, 0], [0, 0], [0, 0], [0, 0]]]
+          }
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchFarmData();
+  }, [farmId]); // Re-fetch when farmId changes
+
   // Helper function to get status styles
   const getStatusStyles = (status: DeviceStatus) => {
     switch (status) {
@@ -132,7 +222,9 @@ const FarmMapCard: React.FC<FarmMapCardProps> = ({
     <div className="bg-white p-4 rounded-lg shadow-md w-full h-full flex flex-col">
       {/* Map Header */}
       <div className="flex items-center justify-between mb-3">
-        <h2 className="text-lg font-semibold text-gray-700">Farm Overview</h2>
+        <h2 className="text-lg font-semibold text-gray-700">
+          {loading ? 'Loading Farm...' : `Farm Overview: ${farmInfo.name}`}
+        </h2>
         <button 
           className="text-blue-500 text-sm hover:underline"
           onClick={onViewFullMap}
@@ -143,7 +235,7 @@ const FarmMapCard: React.FC<FarmMapCardProps> = ({
 
       {/* Map Area */}
       <div className="h-[350px] w-full bg-gray-100 rounded-md mb-3 overflow-hidden border border-gray-200">
-        {isLoaded ? (
+        {isLoaded && !loading ? (
           <GoogleMap
             mapContainerStyle={mapContainerStyle}
             center={getMapCenter()}
@@ -168,11 +260,20 @@ const FarmMapCard: React.FC<FarmMapCardProps> = ({
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
                 </svg>
               </div>
-              <p className="text-gray-500 font-medium">Loading Map...</p>
+              <p className="text-gray-500 font-medium">
+                {!isLoaded ? 'Loading Map...' : 'Loading Farm Data...'}
+              </p>
             </div>
           </div>
         )}
       </div>
+      
+      {/* Error message if present */}
+      {error && (
+        <div className="bg-red-50 text-red-600 p-3 mb-3 rounded-md">
+          <p className="text-sm">{error}</p>
+        </div>
+      )}
       
       {/* Farm Info and Active Sensors Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 flex-grow">

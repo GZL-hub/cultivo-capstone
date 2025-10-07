@@ -20,6 +20,7 @@ interface FarmMapToolbarProps {
   isPanelVisible: boolean;
   hasPolygon: boolean;
   showSaveButton?:boolean;
+  isAuthorized: boolean;
   onToolbarItemClick: (itemId: string) => void;
   onMapTypeSelect: (value: 'roadmap' | 'satellite' | 'terrain' | 'hybrid') => void;
   onToggleLock: () => void;

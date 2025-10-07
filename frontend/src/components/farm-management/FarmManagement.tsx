@@ -1,10 +1,60 @@
-import React from 'react';
-import { Outlet } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Outlet, useNavigate, useOutletContext } from 'react-router-dom';
+import { getFarms } from '../../services/farmService';
+import authService from '../../services/authService';
 
-const FarmManagement = () => (
-  <div className="w-full h-full flex flex-col px-4 py-4">
-    <Outlet />
-  </div>
-);
+// Define the context type for TypeScript
+type FarmManagementContext = {
+  farmId: string | null;
+  ownerId: string;
+};
+
+const FarmManagement: React.FC = () => {
+  const [selectedFarmId, setSelectedFarmId] = useState<string | null>(null);
+  const [farms, setFarms] = useState<any[]>([]);
+  
+  // Get current user ID
+  const userId = authService.getCurrentUser()?.id || '';
+  
+  // Fetch available farms when component mounts
+  useEffect(() => {
+    const fetchUserFarms = async () => {
+      try {
+        const userFarms = await getFarms(userId);
+        setFarms(userFarms);
+        
+        // Set first farm as selected if available
+        if (userFarms.length > 0) {
+          setSelectedFarmId(userFarms[0]._id);
+          console.log(`Selected farm ID: ${userFarms[0]._id}`);
+        } else {
+          console.log('No farms available for this user');
+        }
+      } catch (error) {
+        console.error('Error loading farms:', error);
+      }
+    };
+    
+    fetchUserFarms();
+  }, [userId]);
+
+  // Handle farm selection change
+  const handleFarmChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setSelectedFarmId(e.target.value);
+  };
+  
+  // Simplified layout with padding added
+  return (
+    <div className="w-full h-full flex flex-col px-4 py-3">
+      {/* Pass context but use the simple layout with padding */}
+      <Outlet context={{ farmId: selectedFarmId, ownerId: userId } as FarmManagementContext} />
+    </div>
+  );
+};
+
+// Export a helper function to use this context in child components
+export function useFarmManagement() {
+  return useOutletContext<FarmManagementContext>();
+}
 
 export default FarmManagement;

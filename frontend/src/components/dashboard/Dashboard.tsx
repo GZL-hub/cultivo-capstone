@@ -47,6 +47,8 @@ const Dashboard: React.FC<DashboardProps> = ({ isLoaded }) => {
   });
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedFarmId, setSelectedFarmId] = useState<string | null>(null);
+
 
   // Fetch farm data on component mount
   useEffect(() => {
@@ -90,6 +92,27 @@ const Dashboard: React.FC<DashboardProps> = ({ isLoaded }) => {
       } catch (err) {
         console.error('Error fetching farm data:', err);
         // Keep default values on error
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchFarmData();
+  }, []);
+
+  useEffect(() => {
+    const fetchFarmData = async () => {
+      try {
+        setIsLoading(true);
+        const response = await axios.get(`${API_URL}/farms`);
+        const farms = response.data.data;
+        
+        if (farms && farms.length > 0) {
+          // Store the farm ID for use with FarmMapCard
+          setSelectedFarmId(farms[0]._id);
+        }
+      } catch (err) {
+        console.error('Error fetching farm data:', err);
       } finally {
         setIsLoading(false);
       }
@@ -239,7 +262,7 @@ const Dashboard: React.FC<DashboardProps> = ({ isLoaded }) => {
             </div>
           ) : (
             <FarmMapCard 
-              farmInfo={farmInfo}
+              farmId={selectedFarmId || undefined}
               devices={devices}
               onViewFullMap={handleViewFullMap}
               isLoaded={isLoaded}

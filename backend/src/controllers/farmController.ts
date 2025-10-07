@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import Farm, { IFarm } from '../models/Farm';
+import mongoose from 'mongoose';
 
 // Define the coordinate type
 interface Coordinate {
@@ -10,7 +11,20 @@ interface Coordinate {
 // Get all farms
 export const getAllFarms = async (req: Request, res: Response): Promise<void> => {
   try {
-    const farms = await Farm.find();
+    // Check if owner query parameter is provided
+    const filter: any = {};
+    if (req.query.owner) {
+      // Convert string ID to MongoDB ObjectId
+      try {
+        filter.owner = new mongoose.Types.ObjectId(req.query.owner as string);
+      } catch (err) {
+        // If invalid ObjectId format, return empty result instead of crashing
+        res.status(200).json({ success: true, data: [] });
+        return;
+      }
+    }
+    
+    const farms = await Farm.find(filter);
     res.status(200).json({ success: true, data: farms });
   } catch (error) {
     res.status(500).json({ success: false, error: 'Server Error' });
@@ -36,6 +50,18 @@ export const getFarmById = async (req: Request, res: Response): Promise<void> =>
 // Create new farm
 export const createFarm = async (req: Request, res: Response): Promise<void> => {
   try {
+    // Ensure owner field is included in request body
+    if (!req.body.owner) {
+      res.status(400).json({ success: false, error: 'Owner ID is required' });
+      return;
+    }
+
+    // Validate owner ID format
+    if (!mongoose.Types.ObjectId.isValid(req.body.owner)) {
+      res.status(400).json({ success: false, error: 'Invalid owner ID format' });
+      return;
+    }
+
     const farm = await Farm.create(req.body);
     res.status(201).json({ success: true, data: farm });
   } catch (error) {
@@ -50,6 +76,11 @@ export const createFarm = async (req: Request, res: Response): Promise<void> => 
 // Update farm
 export const updateFarm = async (req: Request, res: Response): Promise<void> => {
   try {
+    // Don't allow changing the owner
+    if (req.body.owner) {
+      delete req.body.owner;
+    }
+    
     const farm = await Farm.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
       runValidators: true
