@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Edit } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Edit, Check } from 'lucide-react';
 
 interface PersonalInfoFormProps {
   userData: {
@@ -14,16 +14,38 @@ interface PersonalInfoFormProps {
 const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({ userData, onSave }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({ ...userData });
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+
+  useEffect(() => {
+    // Update form data when userData prop changes
+    setFormData({ ...userData });
+  }, [userData]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onSave(formData);
-    setIsEditing(false);
+    setIsSaving(true);
+    
+    try {
+      await onSave(formData);
+      setIsEditing(false);
+      setIsSaving(false);
+      setShowSuccess(true);
+      
+      // Hide success message after 3 seconds
+      setTimeout(() => {
+        setShowSuccess(false);
+      }, 3000);
+    } catch (error) {
+      setIsSaving(false);
+      console.error("Error saving profile:", error);
+      // You could add error handling here
+    }
   };
 
   const handleCancel = () => {
@@ -35,7 +57,7 @@ const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({ userData, onSave })
     <div className="bg-white rounded-lg shadow-md p-6">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-lg font-semibold text-gray-700">Personal Information</h2>
-        {!isEditing && (
+        {!isEditing && !showSuccess && (
           <button 
             onClick={() => setIsEditing(true)}
             className="text-sm px-3 py-1.5 bg-green-50 text-green-600 rounded-md hover:bg-green-100 transition-colors flex items-center"
@@ -45,6 +67,14 @@ const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({ userData, onSave })
           </button>
         )}
       </div>
+
+      {/* Success Message */}
+      {showSuccess && (
+        <div className="mb-4 bg-green-50 border border-green-200 text-green-800 rounded-md p-3 flex items-center">
+          <Check className="mr-2" size={18} />
+          <span>Profile information updated successfully!</span>
+        </div>
+      )}
 
       <form onSubmit={handleSubmit}>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -56,7 +86,7 @@ const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({ userData, onSave })
               name="name"
               value={formData.name}
               onChange={handleInputChange}
-              disabled={!isEditing}
+              disabled={!isEditing || isSaving}
               className={`mt-1 block w-full px-3 py-2 border ${isEditing ? 'border-gray-300' : 'border-gray-200 bg-gray-50'} rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500`}
             />
           </div>
@@ -69,7 +99,7 @@ const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({ userData, onSave })
               name="email"
               value={formData.email}
               onChange={handleInputChange}
-              disabled={!isEditing}
+              disabled={!isEditing || isSaving}
               className={`mt-1 block w-full px-3 py-2 border ${isEditing ? 'border-gray-300' : 'border-gray-200 bg-gray-50'} rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500`}
             />
           </div>
@@ -82,7 +112,7 @@ const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({ userData, onSave })
               name="phone"
               value={formData.phone}
               onChange={handleInputChange}
-              disabled={!isEditing}
+              disabled={!isEditing || isSaving}
               className={`mt-1 block w-full px-3 py-2 border ${isEditing ? 'border-gray-300' : 'border-gray-200 bg-gray-50'} rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500`}
             />
           </div>
@@ -95,7 +125,7 @@ const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({ userData, onSave })
               name="role"
               value={formData.role}
               onChange={handleInputChange}
-              disabled={!isEditing}
+              disabled={!isEditing || isSaving}
               className={`mt-1 block w-full px-3 py-2 border ${isEditing ? 'border-gray-300' : 'border-gray-200 bg-gray-50'} rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500`}
             />
           </div>
@@ -106,15 +136,17 @@ const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({ userData, onSave })
             <button
               type="button"
               onClick={handleCancel}
-              className="px-4 py-2 border border-gray-300 rounded-md text-sm text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+              disabled={isSaving}
+              className="px-4 py-2 border border-gray-300 rounded-md text-sm text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-4 py-2 bg-green-600 border border-transparent rounded-md text-sm text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+              disabled={isSaving}
+              className="px-4 py-2 bg-green-600 border border-transparent rounded-md text-sm text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Save Changes
+              {isSaving ? 'Saving...' : 'Save Changes'}
             </button>
           </div>
         )}

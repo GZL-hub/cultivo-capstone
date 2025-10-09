@@ -1,42 +1,35 @@
 import express from 'express';
+import mongoose from 'mongoose';
 import cors from 'cors';
-import path from 'path';
 import dotenv from 'dotenv';
-import connectDB from './config/database';
 import farmRoutes from './routes/farmRoutes';
-import authRoutes from './routes/authRoutes'; // Add this import
+import authRoutes from './routes/authRoutes';
+import userRoutes from './routes/userRoutes';
 
 // Load environment variables
 dotenv.config();
 
+// Initialize express
 const app = express();
-// Use the PORT environment variable that Cloud Run provides (defaults to 8080)
-const PORT = process.env.PORT || 8080;
+const PORT = process.env.PORT || 5000;
 
 // Connect to MongoDB
-connectDB();
+mongoose.connect(process.env.MONGODB_URI as string)
+  .then(() => console.log('MongoDB Connected'))
+  .catch(err => console.error('MongoDB connection error:', err));
 
-// CORS setup
+// Middleware
 app.use(cors());
-
-// JSON middleware
 app.use(express.json());
 
-// API routes
+// Routes
 app.use('/api/farms', farmRoutes);
-app.use('/api/auth', authRoutes); // Add this line for authentication routes
+app.use('/api/auth', authRoutes);
+app.use('/api/users', userRoutes); // Add this
 
-app.get('/api/message', (req, res) => {
-  console.log('Message endpoint accessed');
-  res.status(200).json({ message: 'ok', success: true });
-});
-
-// IMPORTANT: Serve static frontend files from public directory
-app.use(express.static(path.join(__dirname, '../public')));
-
-// Serve index.html for all other routes (SPA support)
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, '../public/index.html'));
+// Basic route for testing
+app.get('/', (req, res) => {
+  res.send('Cultivo API is running');
 });
 
 // Start server

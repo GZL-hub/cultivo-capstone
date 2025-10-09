@@ -100,7 +100,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed }) => {
           </div>
         </div>
 
-        <div className="px-4 py-4 border-t border-gray-200">
+        <div className="px-2 py-4 border-t border-gray-200">
           <div className="space-y-1">
             <NavItem to="/settings" icon={Settings}>Settings</NavItem>
           </div>

@@ -1,67 +1,133 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import ProfileHeader from './ProfileHeader';
 import PersonalInfoForm from './PersonalInfoForm';
 import PasswordChangeForm from './PasswordChangeForm';
 import AvatarModal from './AvatarModal';
+import { getUserById, updateUserProfile, updateUserAvatar, changePassword, IUser } from '../../../services/userService';
 
 // Predefined avatar options
 const avatarOptions = [
-  'https://images.unsplash.com/photo-1520262494112-9fe481d36ec3?w=150',
-  'https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=150',
-  'https://images.unsplash.com/photo-1527980965255-d3b416303d12?w=150',
-  'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150',
-  'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
-  'https://images.unsplash.com/photo-1507101105822-7472b28e22ac?w=150',
-  'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150',
-  'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150',
+  'https://images.unsplash.com/photo-1758551051834-61f10a361b73?w=150',
+  'https://images.unsplash.com/photo-1751517298236-b9150faa3dfd?w=150',
+  'https://images.unsplash.com/photo-1758811572950-5a1d284986a5?w=150',
+  'https://images.unsplash.com/photo-1745670993824-0570f723778c?w=150',
+  'https://images.unsplash.com/photo-1759503408358-b9083a7c27f0?w=150',
+  'https://images.unsplash.com/photo-1759697421584-c7a0c6558beb?w=150',
+  'https://images.unsplash.com/photo-1759508949812-973dcd259b6e?w=150',
+  'https://images.unsplash.com/photo-1759400333614-6d27a2666266?w=150',
 ];
 
 const AccountSettings: React.FC = () => {
-  // Mock user data - would come from your auth context or API in real implementation
-  const [userData, setUserData] = useState({
-    name: 'Alex Johnson',
-    email: 'alex@cultivofarming.com',
-    phone: '555-123-4567',
-    role: 'Farm Manager',
-    avatarUrl: avatarOptions[0]
-  });
+  // We'll assume you have the user ID stored somewhere after login
+  // For demo purposes, I'll use the ID from the MongoDB document you provided
+  const userId = "68d2c8fbed77eafbf8013bad";
+  
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [userData, setUserData] = useState<IUser | null>(null);
 
   // State for avatar selection modal
   const [showAvatarModal, setShowAvatarModal] = useState(false);
-  const [selectedAvatar, setSelectedAvatar] = useState(userData.avatarUrl);
+  const [selectedAvatar, setSelectedAvatar] = useState<string>('');
+
+  // Fetch user data
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        setLoading(true);
+        const data = await getUserById(userId);
+        setUserData(data);
+        setSelectedAvatar(data.avatarUrl);
+      } catch (error: any) {
+        setError(error.response?.data?.error || 'Failed to load user data');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUserData();
+  }, [userId]);
 
   // Avatar selection handlers
   const handleOpenAvatarModal = () => {
-    setSelectedAvatar(userData.avatarUrl);
     setShowAvatarModal(true);
   };
 
-  const handleSaveAvatar = () => {
-    setUserData(prev => ({ ...prev, avatarUrl: selectedAvatar }));
-    setShowAvatarModal(false);
+  const handleSaveAvatar = async () => {
+    if (!userData) return;
+    
+    try {
+      await updateUserAvatar(userId, selectedAvatar);
+      setUserData({
+        ...userData,
+        avatarUrl: selectedAvatar
+      });
+      setShowAvatarModal(false);
+    } catch (error: any) {
+      console.error('Failed to update avatar:', error);
+      // You could add error handling/notification here
+    }
   };
 
   // Handle profile update
-  const handleUpdateProfile = (updatedData: typeof userData) => {
-    setUserData(updatedData);
+  const handleUpdateProfile = async (updatedData: Partial<IUser>) => {
+    if (!userData) return;
+    
+    try {
+      const updatedUser = await updateUserProfile(userId, updatedData);
+      setUserData(updatedUser);
+    } catch (error: any) {
+      console.error('Failed to update profile:', error);
+      // You could add error handling/notification here
+    }
   };
+
+  // Handle password change
+  const handlePasswordChange = async (currentPassword: string, newPassword: string) => {
+    try {
+      await changePassword(userId, { currentPassword, newPassword });
+      return { success: true, message: 'Password updated successfully' };
+    } catch (error: any) {
+      return { 
+        success: false, 
+        message: error.response?.data?.error || 'Failed to update password' 
+      };
+    }
+  };
+
+  if (loading) return <div className="text-center p-6">Loading user data...</div>;
+  
+  if (error) return <div className="text-center p-6 text-red-600">Error: {error}</div>;
+  
+  if (!userData) return <div className="text-center p-6">No user data found</div>;
 
   return (
     <div className="space-y-6">
       {/* User Profile Header */}
       <ProfileHeader 
-        userData={userData}
+        userData={{
+          name: userData.name,
+          email: userData.email,
+          phone: userData.phone || '',
+          role: userData.role || 'User',
+          avatarUrl: userData.avatarUrl
+        }}
         onAvatarClick={handleOpenAvatarModal}
       />
 
       {/* Personal Information Form */}
       <PersonalInfoForm 
-        userData={userData} 
+        userData={{
+          name: userData.name,
+          email: userData.email,
+          phone: userData.phone || '',
+          role: userData.role || 'User'
+        }}
         onSave={handleUpdateProfile}
       />
 
       {/* Change Password */}
-      <PasswordChangeForm />
+      <PasswordChangeForm onChangePassword={handlePasswordChange} />
 
       {/* Avatar Selection Modal */}
       {showAvatarModal && (
