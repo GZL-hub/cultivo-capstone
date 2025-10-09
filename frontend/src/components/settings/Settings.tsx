@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import AccountSettings from './AccountSettings';
+import AccountSettings from './account/AccountSettings';
 import FarmSettings from './FarmSettings';
 import NotificationSettings from './NotificationSettings';
 
