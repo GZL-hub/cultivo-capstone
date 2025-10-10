@@ -153,7 +153,6 @@ const TodayForecast: React.FC<TodayForecastProps> = ({ data, isLoading, error, i
     return (
       <div className={`${theme.bg} rounded-xl shadow-lg overflow-hidden p-4`}>
         <div className="flex items-center mb-4">
-          <Cloud className="h-5 w-5 mr-2" />
           <h2 className="text-xl font-bold text-white">
             {isDaily ? '5-Day Forecast' : 'Today\'s Forecast'}
           </h2>

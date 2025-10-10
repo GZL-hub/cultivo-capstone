@@ -1,26 +1,25 @@
-import React from 'react';
+import React, { useEffect } from 'react';
+import { Routes, Route, Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom';
 
-const Devices = () => {
-  return (
-    <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-md p-6">
-      <h1 className="text-2xl font-bold text-green-700 mb-4">Devices</h1>
-      <p className="text-gray-600">Manage your connected IoT devices and sensors.</p>
-      
-      <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="p-4 border rounded-lg bg-white">
-          <h3 className="font-medium text-green-800">Soil Moisture Sensor</h3>
-          <p className="text-sm text-gray-500">Status: Online</p>
-          <p className="text-sm text-gray-500">Battery: 87%</p>
-        </div>
-        
-        <div className="p-4 border rounded-lg bg-white">
-          <h3 className="font-medium text-green-800">Weather Station</h3>
-          <p className="text-sm text-gray-500">Status: Online</p>
-          <p className="text-sm text-gray-500">Battery: 92%</p>
-        </div>
-      </div>
-    </div>
-  );
+/**
+ * Device management component that serves as a container for device subpages
+ * Since we don't want a main device page, this component automatically 
+ * redirects to sensors from the root path
+ */
+const Devices: React.FC = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const isRoot = location.pathname === '/device-settings';
+  
+  // If we're at the root device path, redirect to sensors
+  useEffect(() => {
+    if (isRoot) {
+      navigate('/device-settings/sensors', { replace: true });
+    }
+  }, [isRoot, navigate]);
+
+  // Show the outlet for child routes (sensors or cameras)
+  return <Outlet />;
 };
 
 export default Devices;

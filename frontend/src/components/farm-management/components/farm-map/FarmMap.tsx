@@ -417,19 +417,7 @@ useEffect(() => {
     setDrawing(false);
     setActiveToolbar(null);
   };
-
-  // Render unauthorized message if needed
-  if (farmId && !isAuthorized) {
-    return (
-      <div className="flex items-center justify-center h-full">
-        <div className="bg-red-50 text-red-700 p-6 rounded-lg shadow max-w-md text-center">
-          <h3 className="text-lg font-semibold mb-2">Unauthorized Access</h3>
-          <p>You don't have permission to view or edit this farm's boundary.</p>
-        </div>
-      </div>
-    );
-  }
-
+  
   return (
     <div className="relative w-full h-full">
       <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 w-full px-4">

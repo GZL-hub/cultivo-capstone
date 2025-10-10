@@ -79,7 +79,6 @@ const getThemeColors = () => {
     return (
       <div className={`${theme.bg} rounded-xl shadow-lg overflow-hidden p-6 h-full flex flex-col`}>
         <div className="flex items-center mb-4">
-          <Calendar className="h-5 w-5 mr-2 text-white" />
           <h2 className="text-xl font-bold text-white">5-Day Forecast</h2>
         </div>
         <div className="flex-grow flex items-center justify-center">

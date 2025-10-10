@@ -8,7 +8,12 @@ import Analytics from './components/analytics/Analytics';
 import FarmAnalytics from './components/analytics/FarmAnalytics';
 import WeatherAnalytics from './components/analytics/weather/WeatherAnalytics';
 import Alerts from './components/alerts/Alerts';
-import Devices from './components/devices/Devices';
+
+// Import the device management components
+import Device from './components/devices/Devices';
+import SensorDevices from './components/devices/sensor/SensorDevices';
+import CameraDevices from './components/devices/camera/CameraDevices';
+
 import FarmManagement from './components/farm-management/FarmManagement';
 import FarmOverview from './components/farm-management/components/FarmOverview';
 import FarmMap from './components/farm-management/components/farm-map/FarmMap';
@@ -118,7 +123,7 @@ function App() {
           <Routes>
             <Route path="/" element={<Dashboard isLoaded={isLoaded} />} />
             
-            {/* Analytics Nested Routes - similar to Farm Management */}
+            {/* Analytics Nested Routes */}
             <Route path="/analytics" element={<Analytics />}>
               <Route path="farm" element={<FarmAnalytics />} />
               <Route path="weather" element={<WeatherAnalytics />} />
@@ -126,7 +131,13 @@ function App() {
             </Route>
             
             <Route path="/alerts" element={<Alerts />} />
-            <Route path="/devices" element={<Devices />} />
+            
+            {/* Devices Nested Routes */}
+            <Route path="/device-settings" element={<Device />}>
+              <Route path="sensors" element={<SensorDevices />} />
+              <Route path="cameras" element={<CameraDevices />} />
+              <Route index element={<Device />} />
+            </Route>
             
             {/* Farm Management Nested Routes */}
             <Route path="/farm" element={<FarmManagement />}>
