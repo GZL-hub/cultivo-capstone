@@ -2,6 +2,14 @@ import { Request, Response } from 'express';
 import Farm, { IFarm } from '../models/Farm';
 import mongoose from 'mongoose';
 
+// Create a custom request type that includes the user property
+interface AuthRequest extends Request {
+  user?: {
+    id: string;
+    [key: string]: any;
+  };
+}
+
 // Define the coordinate type
 interface Coordinate {
   lat: number;
@@ -81,7 +89,19 @@ export const updateFarm = async (req: Request, res: Response): Promise<void> => 
       delete req.body.owner;
     }
     
-    const farm = await Farm.findByIdAndUpdate(req.params.id, req.body, {
+    // Validate the incoming data
+    const { name, type, operationDate } = req.body;
+    const updateData: Partial<IFarm> = {};
+    
+    // Only include fields that are provided in the request
+    if (name !== undefined) updateData.name = name;
+    if (type !== undefined) updateData.type = type;
+    if (operationDate !== undefined) updateData.operationDate = operationDate;
+    
+    // Always update the updatedAt timestamp
+    updateData.updatedAt = new Date();
+    
+    const farm = await Farm.findByIdAndUpdate(req.params.id, updateData, {
       new: true,
       runValidators: true
     });

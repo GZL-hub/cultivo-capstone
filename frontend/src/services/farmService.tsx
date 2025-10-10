@@ -52,3 +52,12 @@ export const createFarm = async (farmData: Omit<IFarm, '_id' | 'createdAt' | 'up
     throw error;
   }
 };
+export const updateFarm = async (id: string, farmData: Partial<IFarm>): Promise<IFarm> => {
+  try {
+    const response = await axios.put(`${API_URL}/farms/${id}`, farmData);
+    return response.data.data;
+  } catch (error) {
+    console.error(`Error updating farm with id ${id}:`, error);
+    throw error;
+  }
+};

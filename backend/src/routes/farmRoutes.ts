@@ -1,20 +1,17 @@
 import express from 'express';
-import { 
-  getAllFarms, 
-  getFarmById, 
-  createFarm, 
-  updateFarm, 
+import {
+  getAllFarms,
+  getFarmById,
+  createFarm,
+  updateFarm,
   deleteFarm,
   getFarmBoundary,
-  updateFarmBoundary
+  updateFarmBoundary,
 } from '../controllers/farmController';
 
 const router = express.Router();
 
-// Protect all routes
-// router.use(protect);
-
-// Farm CRUD routes
+// Make these routes public for development
 router.route('/')
   .get(getAllFarms)
   .post(createFarm);
@@ -24,7 +21,7 @@ router.route('/:id')
   .put(updateFarm)
   .delete(deleteFarm);
 
-// Farm boundary polygon routes
+// Farm boundary specific routes
 router.route('/:id/boundary')
   .get(getFarmBoundary)
   .put(updateFarmBoundary);

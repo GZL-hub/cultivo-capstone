@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import AccountSettings from './account/AccountSettings';
-import FarmSettings from './FarmSettings';
+import FarmSettings from './farm/FarmSettings';
 import NotificationSettings from './NotificationSettings';
 
 // Define the available tabs
