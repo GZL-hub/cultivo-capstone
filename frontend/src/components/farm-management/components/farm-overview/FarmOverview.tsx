@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import GoogleMap from '../../googlemap/GoogleMap';
-import { User, Users, Wifi, WifiOff, CloudSun, Thermometer, Wind } from 'lucide-react';
-import { IFarm, getFarms, getFarm } from '../../../services/farmService';
+import GoogleMap from '../../../googlemap/GoogleMap';
+import { Wifi, WifiOff } from 'lucide-react';
+import { IFarm, getFarms } from '../../../../services/farmService';
 import axios from 'axios';
+import CalendarCard from './calendar/CalendarCard';
+import WorkerCard from './worker/WorkerCard';
 
 // API URL
 const API_URL = '/api';
@@ -19,85 +21,18 @@ interface Worker {
   role: string;
 }
 
-interface Weather {
-  temperature: number; // Celsius
-  humidity: number; // %
-  windSpeed: number; // m/s
-  weatherDescription: string;
-  icon: string; // e.g. "01d"
+interface FarmEvent {
+  id: string;
+  title: string;
+  date: Date;
+  category: 'planting' | 'harvesting' | 'maintenance' | 'other';
 }
 
 interface FarmOverviewProps {
   farmId?: string; // Optional: if provided, fetch specific farm by ID
   ownerId: string;
   workers: Worker[];
-  weather?: Weather;
 }
-
-const WeatherCard: React.FC<{ weather?: Weather }> = ({ weather }) => (
-  // WeatherCard implementation
-  <div className="bg-white rounded-lg shadow p-6 flex flex-col items-center h-full">
-    <div className="flex items-center mb-2">
-      <CloudSun className="text-blue-500 mr-2" size={28} />
-      <h3 className="text-lg font-semibold">Weather</h3>
-    </div>
-    {weather ? (
-      <>
-        <div className="flex items-center gap-2 mb-2">
-          <img
-            src={`https://openweathermap.org/img/wn/${weather.icon}@2x.png`}
-            alt={weather.weatherDescription}
-            className="w-12 h-12"
-          />
-          <span className="text-3xl font-bold">{weather.temperature}°C</span>
-        </div>
-        <div className="capitalize text-gray-600 mb-2">{weather.weatherDescription}</div>
-        <div className="flex flex-col gap-1 text-sm text-gray-500">
-          <div className="flex items-center gap-2">
-            <Thermometer size={16} /> Humidity: <span className="font-medium">{weather.humidity}%</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Wind size={16} /> Wind: <span className="font-medium">{weather.windSpeed} m/s</span>
-          </div>
-        </div>
-      </>
-    ) : (
-      <div className="text-gray-400">No weather data</div>
-    )}
-  </div>
-);
-
-const ActionsCard: React.FC = () => (
-  // ActionsCard implementation
-  <div className="bg-white rounded-lg shadow p-6 flex flex-col items-center justify-center h-full">
-    <h3 className="text-lg font-semibold mb-4">Quick Actions</h3>
-    <div className="flex flex-col gap-3 w-full">
-      <button className="bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded w-full">Edit Farm</button>
-      <button className="bg-blue-100 hover:bg-blue-200 text-blue-700 py-2 px-4 rounded w-full">Add Zone</button>
-    </div>
-  </div>
-);
-
-const WorkerCard: React.FC<{ workers: Worker[] }> = ({ workers }) => (
-  // WorkerCard implementation
-  <div className="bg-white rounded-lg shadow p-6 flex flex-col h-full">
-    <div className="flex items-center mb-4">
-      <Users className="text-green-700 mr-2" />
-      <h3 className="text-lg font-semibold">Workers</h3>
-    </div>
-    <ul className="space-y-3">
-      {workers.map((worker, idx) => (
-        <li key={idx} className="flex items-center gap-3">
-          <User className="text-gray-400" size={20} />
-          <div>
-            <div className="font-medium">{worker.name}</div>
-            <div className="text-xs text-gray-500">{worker.role}</div>
-          </div>
-        </li>
-      ))}
-    </ul>
-  </div>
-);
 
 // Helper function to calculate farm center from boundary
 const calculateFarmCenter = (farmBoundary?: { type: string; coordinates: number[][][] }) => {
@@ -166,10 +101,32 @@ const getBoundaryPolygon = (farmBoundary?: { type: string; coordinates: number[]
   return [];
 };
 
-const FarmOverview: React.FC<FarmOverviewProps> = ({ farmId, ownerId, workers, weather }) => {
+const FarmOverview: React.FC<FarmOverviewProps> = ({ farmId, ownerId, workers }) => {
   const [farm, setFarm] = useState<ExtendedFarm | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // Sample farm events - in a real app, these would come from the backend
+  const farmEvents: FarmEvent[] = [
+    {
+      id: '1',
+      title: 'Plant Rice',
+      date: new Date(new Date().setDate(new Date().getDate() + 3)),
+      category: 'planting'
+    },
+    {
+      id: '2',
+      title: 'Fertilize Field 2',
+      date: new Date(new Date().setDate(new Date().getDate() + 5)),
+      category: 'maintenance'
+    },
+    {
+      id: '3',
+      title: 'Harvest Corn',
+      date: new Date(new Date().setDate(new Date().getDate() + 10)),
+      category: 'harvesting'
+    }
+  ];
   
   // Fetch farm data on component mount
   useEffect(() => {
@@ -210,6 +167,17 @@ const FarmOverview: React.FC<FarmOverviewProps> = ({ farmId, ownerId, workers, w
 
     fetchFarmData();
   }, [farmId, ownerId]);
+
+  // Handlers for calendar events
+  const handleViewEvent = (event: FarmEvent) => {
+    console.log('View event:', event);
+    // In a real app, you might navigate to an event details page or open a modal
+  };
+
+  const handleAddEvent = () => {
+    console.log('Add new event');
+    // In a real app, you would open a form to add a new event
+  };
 
   // Render loading state
   if (isLoading) {
@@ -287,10 +255,16 @@ const FarmOverview: React.FC<FarmOverviewProps> = ({ farmId, ownerId, workers, w
         </div>
       </div>
 
-      {/* Side Cards: Weather, Actions, Workers */}
+      {/* Side Cards: Calendar, Workers */}
       <div className="flex flex-col gap-6 h-full">
-        <WeatherCard weather={weather} />
-        <ActionsCard />
+        {/* Calendar Card */}
+        <CalendarCard 
+          events={farmEvents} 
+          onViewEvent={handleViewEvent}
+          onAddEvent={handleAddEvent}
+        />
+        
+        {/* Worker Card - now imported as a separate component */}
         <WorkerCard workers={workers} />
       </div>
       

@@ -15,14 +15,14 @@ import SensorDevices from './components/devices/sensor/SensorDevices';
 import CameraDevices from './components/devices/camera/CameraDevices';
 
 import FarmManagement from './components/farm-management/FarmManagement';
-import FarmOverview from './components/farm-management/components/FarmOverview';
+import FarmOverview from './components/farm-management/components/farm-overview/FarmOverview';
 import FarmMap from './components/farm-management/components/farm-map/FarmMap';
 import FarmCCTV from './components/farm-management/components/FarmCCTV';
 import Settings from './components/settings/Settings';
 import authService from './services/authService';
 
 // Only import the worker and weather dummy data - not the farm data
-import { weather, workers } from './components/farm-management/farmDummyData';
+import { workers } from './components/farm-management/farmDummyData';
 
 // Define libraries outside the component to prevent re-creation
 const libraries: ('places' | 'drawing')[] = ['places', 'drawing'];
@@ -143,7 +143,7 @@ function App() {
             <Route path="/farm" element={<FarmManagement />}>
               <Route
                 path="overview"
-                element={<FarmOverview workers={workers} weather={weather} ownerId={userId} />}
+                element={<FarmOverview workers={workers} ownerId={userId} />}
               />
               <Route
                 path="map"
