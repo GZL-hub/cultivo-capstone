@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { User, Users, Search, ChevronDown, ChevronUp, Filter, X, Check } from 'lucide-react';
+import { User, Users, Search, Filter, X, Check } from 'lucide-react';
 
 interface Worker {
   name: string;
@@ -13,7 +13,6 @@ interface WorkerCardProps {
 
 const WorkerCard: React.FC<WorkerCardProps> = ({ workers, className = "" }) => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [isExpanded, setIsExpanded] = useState(false);
   const [roleFilters, setRoleFilters] = useState<Record<string, boolean>>({});
   const [isFilterDropdownOpen, setIsFilterDropdownOpen] = useState(false);
   
@@ -63,25 +62,12 @@ const WorkerCard: React.FC<WorkerCardProps> = ({ workers, className = "" }) => {
       worker.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       worker.role.toLowerCase().includes(searchTerm.toLowerCase());
     
-    // If no role filters are active, show all. Otherwise, check if worker's role is selected
     const noActiveRoleFilters = activeFilterCount === 0;
     const roleIsSelected = roleFilters[worker.role];
     
     return matchesSearch && (noActiveRoleFilters || roleIsSelected);
   });
 
-  // Determine if we need expand functionality (for more than 5 workers)
-  const showExpandControls = filteredWorkers.length > 5;
-  
-  // Calculate display height based on number of workers and expand state
-  const getListHeight = () => {
-    if (!showExpandControls || isExpanded) {
-      return 'max-h-80'; // Expanded height with scrolling
-    }
-    // Default height to show about 5 workers
-    return 'max-h-52';
-  };
-  
   // Toggle a role filter checkbox
   const toggleRoleFilter = (role: string) => {
     setRoleFilters(prev => ({
@@ -101,6 +87,7 @@ const WorkerCard: React.FC<WorkerCardProps> = ({ workers, className = "" }) => {
   
   return (
     <div className={`bg-white rounded-lg shadow p-6 flex flex-col h-full ${className}`}>
+      {/* Header Section */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center">
           <Users className="text-green-700 mr-2" />
@@ -109,7 +96,6 @@ const WorkerCard: React.FC<WorkerCardProps> = ({ workers, className = "" }) => {
         </div>
         
         <div className="flex space-x-2">
-          {/* Role filter dropdown */}
           {uniqueRoles.length > 1 && (
             <div className="relative" ref={dropdownRef}>
               <button 
@@ -128,7 +114,6 @@ const WorkerCard: React.FC<WorkerCardProps> = ({ workers, className = "" }) => {
                 )}
               </button>
               
-              {/* Dropdown menu */}
               {isFilterDropdownOpen && (
                 <div className="absolute right-0 mt-1 w-56 bg-white rounded-md shadow-lg z-10 border border-gray-200">
                   <div className="p-3">
@@ -158,7 +143,7 @@ const WorkerCard: React.FC<WorkerCardProps> = ({ workers, className = "" }) => {
                             type="checkbox"
                             checked={roleFilters[role] || false}
                             onChange={() => toggleRoleFilter(role)}
-                            className="sr-only" // Hidden but accessible
+                            className="sr-only"
                           />
                         </label>
                       ))}
@@ -169,7 +154,6 @@ const WorkerCard: React.FC<WorkerCardProps> = ({ workers, className = "" }) => {
             </div>
           )}
           
-          {/* Search input */}
           {workers.length > 5 && (
             <div className="relative">
               <input
@@ -188,7 +172,6 @@ const WorkerCard: React.FC<WorkerCardProps> = ({ workers, className = "" }) => {
       {/* Active filters summary */}
       {activeFilterCount > 0 && (
         <div className="flex flex-wrap gap-1 mb-3 bg-gray-50 p-2 rounded-md">
-          <span className="text-xs text-gray-500 mr-1">Filters:</span>
           {Object.entries(roleFilters)
             .filter(([_, isActive]) => isActive)
             .map(([role]) => (
@@ -211,53 +194,31 @@ const WorkerCard: React.FC<WorkerCardProps> = ({ workers, className = "" }) => {
         </div>
       )}
       
+      {/* Main Content Area */}
       {workers.length > 0 ? (
-        <>
-          {/* Filtered results count - shown when filters are active or search is used */}
-          {(activeFilterCount > 0 || searchTerm) && filteredWorkers.length > 0 && (
-            <div className="text-xs text-gray-500 mb-2">
-              Showing {filteredWorkers.length} of {workers.length} worker{workers.length !== 1 ? 's' : ''}
+        <div className="flex-1 flex flex-col min-h-0">
+          {filteredWorkers.length > 0 ? (
+            <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+              <ul className="space-y-3 pr-1">
+                {filteredWorkers.map((worker, idx) => (
+                  <li key={idx} className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded">
+                    <div className="bg-gray-100 rounded-full p-1.5">
+                      <User className="text-gray-600" size={18} />
+                    </div>
+                      <div className="flex-grow flex items-baseline gap-2">
+                        <div className="font-medium">{worker.name}</div>
+                        <div className="text-xs text-gray-500">{worker.role}</div>
+                      </div>
+                  </li>
+                ))}
+              </ul>
             </div>
-          )}
-          
-          {/* Scrollable worker list */}
-          <div className={`overflow-y-auto ${getListHeight()} scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100`}>
-            <ul className="space-y-3 pr-1">
-              {filteredWorkers.map((worker, idx) => (
-                <li key={idx} className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded">
-                  <div className="bg-gray-100 rounded-full p-1.5">
-                    <User className="text-gray-600" size={18} />
-                  </div>
-                  <div className="flex-grow">
-                    <div className="font-medium">{worker.name}</div>
-                    <div className="text-xs text-gray-500">{worker.role}</div>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </div>
-          
-          {/* Show/hide more workers control */}
-          {showExpandControls && (
-            <button 
-              className="mt-2 text-sm text-green-600 flex items-center justify-center hover:underline"
-              onClick={() => setIsExpanded(!isExpanded)}
-            >
-              {isExpanded ? (
-                <>Show Less <ChevronUp size={16} className="ml-1" /></>
-              ) : (
-                <>Show All Workers <ChevronDown size={16} className="ml-1" /></>
-              )}
-            </button>
-          )}
-          
-          {/* Show message when filtered results are empty */}
-          {filteredWorkers.length === 0 && (
-            <div className="text-gray-500 text-sm text-center py-4">
+          ) : (
+            <div className="flex-1 flex items-center justify-center text-gray-500 text-sm">
               {searchTerm ? 'No workers match your search.' : 'No workers match the selected filters.'}
             </div>
           )}
-        </>
+        </div>
       ) : (
         <div className="flex-1 flex items-center justify-center text-gray-500">
           <p>No workers assigned</p>
