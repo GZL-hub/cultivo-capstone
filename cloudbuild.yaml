@@ -11,20 +11,6 @@ steps:
   - name: 'gcr.io/cloud-builders/docker'
     args: ['push', '${_AR_HOSTNAME}/${PROJECT_ID}/${_AR_REPOSITORY}/${_SERVICE_NAME}:latest']
 
-  # Verify API key was passed correctly
-  - name: 'gcr.io/cloud-builders/docker'
-    entrypoint: 'bash'
-    args:
-      - '-c'
-      - |
-        echo "Verifying API key was passed correctly..."
-        echo "API key length: ${#_REACT_APP_GOOGLE_MAPS_API_KEY}"
-        if [ -z "${_REACT_APP_GOOGLE_MAPS_API_KEY}" ]; then
-          echo "⚠️ WARNING: API key appears to be empty!"
-        else
-          echo "✅ API key exists (starts with: ${_REACT_APP_GOOGLE_MAPS_API_KEY:0:3}...)"
-        fi
-
 substitutions:
   _AR_HOSTNAME: asia-southeast1-docker.pkg.dev
   _AR_REPOSITORY: cloud-run-source-deploy

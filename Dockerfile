@@ -6,24 +6,12 @@ WORKDIR /app/frontend
 COPY frontend/package*.json ./
 RUN npm install
 
-# Copy the frontend code first
+# Copy the frontend code
 COPY frontend/ ./
 
-# Then create .env file to override any committed .env file
+# Create .env file with API key
 ARG REACT_APP_GOOGLE_MAPS_API_KEY
-
-# Debug - Use a safer approach to check if the key exists
-RUN if [ -n "$REACT_APP_GOOGLE_MAPS_API_KEY" ]; then \
-      echo "API Key is present (not showing for security)"; \
-    else \
-      echo "WARNING: API Key is NOT present"; \
-    fi
-
-# Create the .env file
 RUN echo "REACT_APP_GOOGLE_MAPS_API_KEY=$REACT_APP_GOOGLE_MAPS_API_KEY" > .env
-
-# Debug - Verify .env file was created without exposing the key
-RUN grep -q "REACT_APP_GOOGLE_MAPS_API_KEY" .env && echo "API key is in .env file" || echo "API key is MISSING from .env file"
 
 RUN npm run build
 
@@ -39,15 +27,8 @@ COPY backend/package*.json ./
 RUN npm install
 COPY backend/ ./
 
-# Create .env file for backend with MongoDB URI
+# Create .env file for backend
 RUN echo "MONGODB_URI=$MONGODB_URI" > .env
-
-# Debug - Verify MongoDB URI is set (safely)
-RUN if grep -q "MONGODB_URI=" .env; then \
-      echo "MongoDB URI is in .env file"; \
-    else \
-      echo "WARNING: MongoDB URI is MISSING from .env file"; \
-    fi
 
 RUN npm run build
 

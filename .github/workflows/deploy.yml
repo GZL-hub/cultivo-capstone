@@ -35,27 +35,14 @@ jobs:
       
     # Create frontend .env file with API key
     - name: Create frontend environment file
-      run: |
-        echo "REACT_APP_GOOGLE_MAPS_API_KEY=${{ secrets.REACT_APP_GOOGLE_MAPS_API_KEY }}" > frontend/.env
-        echo "Created frontend/.env with API key"
-        grep -q "REACT_APP_GOOGLE_MAPS_API_KEY" frontend/.env && echo "✅ API key is in .env file" || echo "❌ API key is MISSING from .env file"
+      run: echo "REACT_APP_GOOGLE_MAPS_API_KEY=${{ secrets.REACT_APP_GOOGLE_MAPS_API_KEY }}" > frontend/.env
     
     # Build and push using Cloud Build
     - name: Build and push to Artifact Registry
       run: |
-        # Save API key to a secure variable
-        API_KEY="${{ secrets.REACT_APP_GOOGLE_MAPS_API_KEY }}"
-        
-        # Check if API key is available
-        if [ -z "$API_KEY" ]; then
-          echo "❌ ERROR: API key is empty or not set!"
-          exit 1
-        fi
-        
-        # Use the API key directly in the command
         gcloud builds submit --project=${{ secrets.GCP_PROJECT_ID }} \
         --config=cloudbuild.yaml \
-        --substitutions=_REACT_APP_GOOGLE_MAPS_API_KEY="$API_KEY",_MONGODB_URI="${{ secrets.MONGODB_URI }}",_AR_HOSTNAME="${{ env.AR_HOSTNAME }}",_AR_REPOSITORY="${{ env.AR_REPOSITORY }}",_SERVICE_NAME="${{ env.SERVICE_NAME }}"
+        --substitutions=_REACT_APP_GOOGLE_MAPS_API_KEY="${{ secrets.REACT_APP_GOOGLE_MAPS_API_KEY }}",_MONGODB_URI="${{ secrets.MONGODB_URI }}",_AR_HOSTNAME="${{ env.AR_HOSTNAME }}",_AR_REPOSITORY="${{ env.AR_REPOSITORY }}",_SERVICE_NAME="${{ env.SERVICE_NAME }}"
     
     - name: Deploy to Cloud Run
       uses: google-github-actions/deploy-cloudrun@v1
