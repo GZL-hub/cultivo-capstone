@@ -22,7 +22,8 @@ const routeTitles: { [key: string]: string } = {
   '/farm/overview': 'Farm Overview',
   '/farm/map': 'Farm Map',
   '/farm/cctv': 'Farm CCTV',
-  '/settings': 'Settings',
+  '/farm/workers' : "Worker Management",
+  '/settings': 'Settings'
 };
 
 const Header: React.FC<HeaderProps> = ({

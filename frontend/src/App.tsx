@@ -13,11 +13,13 @@ import Alerts from './components/alerts/Alerts';
 import Device from './components/devices/Devices';
 import SensorDevices from './components/devices/sensor/SensorDevices';
 import CameraDevices from './components/devices/camera/CameraDevices';
-
+// Import the farm management components
 import FarmManagement from './components/farm-management/FarmManagement';
 import FarmOverview from './components/farm-management/components/farm-overview/FarmOverview';
+import WorkerManagement from './components/farm-management/components/worker/WorkerManagement';
 import FarmMap from './components/farm-management/components/farm-map/FarmMap';
 import FarmCCTV from './components/farm-management/components/FarmCCTV';
+// Settings
 import Settings from './components/settings/Settings';
 import authService from './services/authService';
 
@@ -151,6 +153,7 @@ function App() {
               />
               <Route path="cctv" element={<FarmCCTV />} />
               <Route index element={<Navigate to="overview" replace />} />
+              <Route path="/farm/workers" element={<WorkerManagement />} />
             </Route>
             
             <Route path="/settings" element={<Settings />} />

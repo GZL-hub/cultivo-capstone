@@ -4,7 +4,6 @@ import {
   Home,
   BarChart2,
   Bell,
-  Server,
   Settings,
   Map,
   Camera,
@@ -12,6 +11,7 @@ import {
   CloudSun,
   Cpu,
   VideoIcon,
+  Users,
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -105,6 +105,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed }) => {
                 <NavItem to="/farm/overview" icon={LayoutDashboard}>Farm Overview</NavItem>
                 <NavItem to="/farm/map" icon={Map}>Farm Map</NavItem>
                 <NavItem to="/farm/cctv" icon={Camera}>Farm CCTV</NavItem>
+                <NavItem to="/farm/workers" icon={Users}>Workers</NavItem>                
               </div>
             </div>
           </div>
