@@ -32,10 +32,6 @@ jobs:
       
     - name: Authorize Docker push
       run: gcloud auth configure-docker ${{ env.AR_HOSTNAME }} --quiet
-      
-    # Create frontend .env file with API key
-    - name: Create frontend environment file
-      run: echo "REACT_APP_GOOGLE_MAPS_API_KEY=${{ secrets.REACT_APP_GOOGLE_MAPS_API_KEY }}" > frontend/.env
     
     # Build and push using Cloud Build
     - name: Build and push to Artifact Registry
