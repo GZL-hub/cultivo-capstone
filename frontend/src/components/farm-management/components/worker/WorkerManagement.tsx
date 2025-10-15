@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import WorkerHeader from './WorkHeader';
 import WorkerTable from './WorkerTable';
 import AddWorkerModal from './AddWorkerModal';
@@ -91,6 +91,10 @@ const WorkerManagement: React.FC = () => {
   const [workers, setWorkers] = useState<Worker[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(5); // Number of items per page
   
   // State for confirmation dialog
   const [confirmDialog, setConfirmDialog] = useState({
@@ -125,18 +129,39 @@ const WorkerManagement: React.FC = () => {
   }, [farmId]);
 
   // Filter workers based on search term and status filter
-  const filteredWorkers = workers.filter(worker => {
-    const matchesSearch = 
-      worker.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-      worker.role.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (worker.email && worker.email.toLowerCase().includes(searchTerm.toLowerCase()));
-    
-    const matchesFilter = 
-      statusFilter === 'all' || 
-      worker.status === statusFilter;
-    
-    return matchesSearch && matchesFilter;
-  });
+  const filteredWorkers = useMemo(() => {
+    return workers.filter(worker => {
+      const matchesSearch = 
+        worker.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+        worker.role.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (worker.email && worker.email.toLowerCase().includes(searchTerm.toLowerCase()));
+      
+      const matchesFilter = 
+        statusFilter === 'all' || 
+        worker.status === statusFilter;
+      
+      return matchesSearch && matchesFilter;
+    });
+  }, [workers, searchTerm, statusFilter]);
+
+  // Calculate pagination
+  const totalPages = useMemo(() => Math.max(1, Math.ceil(filteredWorkers.length / pageSize)), [filteredWorkers, pageSize]);
+  
+  // Get current page data
+  const currentWorkers = useMemo(() => {
+    const startIndex = (currentPage - 1) * pageSize;
+    return filteredWorkers.slice(startIndex, startIndex + pageSize);
+  }, [filteredWorkers, currentPage, pageSize]);
+  
+  // Handle page change
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, statusFilter]);
 
   const handleAddWorker = async (workerData: Partial<Worker>) => {
     if (!farmId) {
@@ -227,6 +252,11 @@ const WorkerManagement: React.FC = () => {
         onSearch={setSearchTerm}
         onFilterChange={setStatusFilter}
         filterValue={statusFilter}
+        pageSize={pageSize}
+        onPageSizeChange={(size) => {
+          setPageSize(size);
+          setCurrentPage(1); // Reset to page 1 when changing page size
+        }}
       />
       
       <div className="flex-1 overflow-auto p-4">
@@ -246,9 +276,13 @@ const WorkerManagement: React.FC = () => {
             </div>
           ) : (
             <WorkerTable 
-              workers={filteredWorkers}
+              workers={currentWorkers}
               onDelete={handleDeleteWorker}
               onEdit={handleEditWorker}
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={handlePageChange}
+              pageSize={pageSize}
             />
           )}
         </div>

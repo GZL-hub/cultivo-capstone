@@ -5,13 +5,17 @@ interface WorkHeaderProps {
   onSearch: (term: string) => void;
   onFilterChange: (filter: string) => void;
   filterValue: string;
+  pageSize?: number;
+  onPageSizeChange?: (pageSize: number) => void;
 }
 
 const WorkHeader: React.FC<WorkHeaderProps> = ({ 
   onAddClick, 
   onSearch, 
   onFilterChange, 
-  filterValue 
+  filterValue,
+  pageSize = 5,
+  onPageSizeChange
 }) => {
   return (
     <div className="bg-white shadow-sm border-b border-gray-200 z-10">
@@ -30,6 +34,23 @@ const WorkHeader: React.FC<WorkHeaderProps> = ({
                 <option value="inactive">Inactive</option>
               </select>
             </div>
+            
+            {/* Page Size Selector (if enabled) */}
+            {onPageSizeChange && (
+              <div className="flex items-center">
+                <span className="text-sm text-gray-500 mr-2">Show:</span>
+                <select
+                  value={pageSize}
+                  onChange={(e) => onPageSizeChange(parseInt(e.target.value, 10))}
+                  className="px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm"
+                >
+                  <option value="5">5</option>
+                  <option value="10">10</option>
+                  <option value="25">25</option>
+                  <option value="50">50</option>
+                </select>
+              </div>
+            )}
             
             {/* Search Field */}
             <div className="relative">
