@@ -1,14 +1,5 @@
 import React from 'react';
-
-interface Worker {
-  id: string;
-  name: string;
-  role: string;
-  email?: string;
-  phone?: string;
-  joinDate?: string;
-  status?: 'active' | 'inactive';
-}
+import { Worker } from '../../../../services/workerService';
 
 interface WorkerTableProps {
   workers: Worker[];
@@ -61,11 +52,11 @@ const WorkerTable: React.FC<WorkerTableProps> = ({ workers, onDelete, onEdit }) 
                       ? 'bg-green-100 text-green-800' 
                       : 'bg-red-100 text-red-800'
                   }`}>
-                    {worker.status}
+                    {worker.status || 'active'}
                   </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {worker.joinDate}
+                  {worker.joinDate || 'Not specified'}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                   <button 

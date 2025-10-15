@@ -8,6 +8,7 @@ import {
   getFarmBoundary,
   updateFarmBoundary,
 } from '../controllers/farmController';
+import workerRoutes from './workerRoutes';
 
 const router = express.Router();
 
@@ -25,5 +26,9 @@ router.route('/:id')
 router.route('/:id/boundary')
   .get(getFarmBoundary)
   .put(updateFarmBoundary);
+
+// Nested routes for workers 
+router.use('/:farmId/workers', workerRoutes);
+
 
 export default router;

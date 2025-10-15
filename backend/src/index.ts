@@ -6,6 +6,7 @@ import dotenv from 'dotenv';
 import farmRoutes from './routes/farmRoutes';
 import authRoutes from './routes/authRoutes';
 import userRoutes from './routes/userRoutes';
+import workerRoutes from './routes/workerRoutes';
 
 // Load environment variables
 dotenv.config();
@@ -28,6 +29,7 @@ app.use(express.json());
 app.use('/api/farms', farmRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/workers', workerRoutes);
 
 // Basic route for testing
 app.get('/api/message', (req, res) => {
