@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Outlet, useNavigate, useOutletContext } from 'react-router-dom';
+import { Outlet, useOutletContext } from 'react-router-dom';
 import { getFarms } from '../../services/farmService';
 import authService from '../../services/authService';
 
@@ -37,16 +37,9 @@ const FarmManagement: React.FC = () => {
     
     fetchUserFarms();
   }, [userId]);
-
-  // Handle farm selection change
-  const handleFarmChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setSelectedFarmId(e.target.value);
-  };
   
-  // Simplified layout with padding added
   return (
-    <div className="w-full h-full flex flex-col px-4 py-3">
-      {/* Pass context but use the simple layout with padding */}
+    < div className="w-full h-full flex flex-col">
       <Outlet context={{ farmId: selectedFarmId, ownerId: userId } as FarmManagementContext} />
     </div>
   );

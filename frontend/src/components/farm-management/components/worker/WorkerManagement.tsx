@@ -147,8 +147,7 @@ const WorkerManagement: React.FC = () => {
   };
 
   return (
-    <div className="container mx-auto">
-      {/* Header Component */}
+    <div className="relative w-full h-full flex flex-col bg-gray-50">
       <WorkerHeader 
         onAddClick={() => {
           setSelectedWorker(undefined);
@@ -159,14 +158,16 @@ const WorkerManagement: React.FC = () => {
         filterValue={statusFilter}
       />
       
-      {/* Worker Table Component */}
-      <WorkerTable 
-        workers={filteredWorkers}
-        onDelete={handleDeleteWorker}
-        onEdit={handleEditWorker}
-      />
+      <div className="flex-1 overflow-auto p-4">
+        <div className="w-full mx-auto">
+          <WorkerTable 
+            workers={filteredWorkers}
+            onDelete={handleDeleteWorker}
+            onEdit={handleEditWorker}
+          />
+        </div>
+      </div>
       
-      {/* Add/Edit Worker Modal */}
       <AddWorkerModal 
         isOpen={showAddModal}
         onClose={() => {
@@ -177,7 +178,6 @@ const WorkerManagement: React.FC = () => {
         worker={selectedWorker}
       />
       
-      {/* Confirmation Dialog */}
       <ConfirmDialog
         isOpen={confirmDialog.isOpen}
         message={confirmDialog.message}

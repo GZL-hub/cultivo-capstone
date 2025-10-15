@@ -216,6 +216,7 @@ const FarmOverview: React.FC<FarmOverviewProps> = ({ farmId, ownerId, workers })
   const polygonPath = getBoundaryPolygon(farm.farmBoundary);
   
   return (
+  <div className="w-full h-full flex flex-col px-4 py-3">
     <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
       {/* Center Map and Farm Info */}
       <div className="xl:col-span-2 flex flex-col gap-6 h-full">
@@ -275,6 +276,7 @@ const FarmOverview: React.FC<FarmOverviewProps> = ({ farmId, ownerId, workers })
         </div>
       )}
     </div>
+  </div>
   );
 };
 
