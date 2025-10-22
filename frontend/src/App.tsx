@@ -18,7 +18,7 @@ import FarmManagement from './components/farm-management/FarmManagement';
 import FarmOverview from './components/farm-management/components/farm-overview/FarmOverview';
 import WorkerManagement from './components/farm-management/components/worker/WorkerManagement';
 import FarmMap from './components/farm-management/components/farm-map/FarmMap';
-import FarmCCTV from './components/farm-management/components/FarmCCTV';
+import FarmCCTV from './components/farm-management/components/camera/FarmCCTV';
 // Settings
 import Settings from './components/settings/Settings';
 import authService from './services/authService';
