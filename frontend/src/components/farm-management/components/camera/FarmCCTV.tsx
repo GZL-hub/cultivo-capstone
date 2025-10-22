@@ -10,7 +10,7 @@ const FarmCCTV: React.FC = () => {
   const [errorDetails, setErrorDetails] = useState<string | null>(null);
 
   // The hardcoded stream URL for testing
-  const streamUrl = 'http://136.110.0.27:8889/livefeed/whep';
+  const streamUrl = 'https://136.110.0.27:8889/livefeed/whep';
   
   const handleStatusChange = (status: ConnectionStatus, error?: string) => {
     setConnectionStatus(status);
