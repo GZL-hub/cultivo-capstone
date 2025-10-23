@@ -14,11 +14,7 @@ interface ExtendedFarm extends IFarm {
   activeDevices: number;
   inactiveDevices: number;
   lastActivity: string;
-}
-
-interface Worker {
-  name: string;
-  role: string;
+  id: string; // Ensure farm has an id for the WorkerCard
 }
 
 interface FarmEvent {
@@ -31,7 +27,6 @@ interface FarmEvent {
 interface FarmOverviewProps {
   farmId?: string; // Optional: if provided, fetch specific farm by ID
   ownerId: string;
-  workers: Worker[];
 }
 
 // Helper function to calculate farm center from boundary
@@ -101,32 +96,12 @@ const getBoundaryPolygon = (farmBoundary?: { type: string; coordinates: number[]
   return [];
 };
 
-const FarmOverview: React.FC<FarmOverviewProps> = ({ farmId, ownerId, workers }) => {
+const FarmOverview: React.FC<FarmOverviewProps> = ({ farmId, ownerId }) => {
   const [farm, setFarm] = useState<ExtendedFarm | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
-  // Sample farm events - in a real app, these would come from the backend
-  const farmEvents: FarmEvent[] = [
-    {
-      id: '1',
-      title: 'Plant Rice',
-      date: new Date(new Date().setDate(new Date().getDate() + 3)),
-      category: 'planting'
-    },
-    {
-      id: '2',
-      title: 'Fertilize Field 2',
-      date: new Date(new Date().setDate(new Date().getDate() + 5)),
-      category: 'maintenance'
-    },
-    {
-      id: '3',
-      title: 'Harvest Corn',
-      date: new Date(new Date().setDate(new Date().getDate() + 10)),
-      category: 'harvesting'
-    }
-  ];
+  const [workerFarmId, setWorkerFarmId] = useState<string>('');
+
   
   // Fetch farm data on component mount
   useEffect(() => {
@@ -135,20 +110,32 @@ const FarmOverview: React.FC<FarmOverviewProps> = ({ farmId, ownerId, workers })
         setIsLoading(true);
         
         let farmData;
+        let actualFarmId: string;
+        
         if (farmId) {
           // Fetch specific farm if ID is provided
           const response = await axios.get(`${API_URL}/farms/${farmId}`);
           farmData = response.data.data;
+          actualFarmId = farmId;
         } else {
           // Fetch farms filtered by owner
           const farms = await getFarms(ownerId);
           farmData = farms && farms.length > 0 ? farms[0] : null;
+          // Use the real farm ID from the API response
+          actualFarmId = farmData?._id || ''; 
         }
         
+        // Set the farm ID for the worker service to use
+        setWorkerFarmId(actualFarmId);
+        
         if (farmData) {
+          // Keep using the original ID for the farm object
+          const id = farmData._id || farmData.id || farmId || `farm-${Date.now()}`;
+          
           // Extend with device info (which would normally come from a separate API call)
           setFarm({
             ...farmData,
+            id,
             activeDevices: 5, // Example values, could be fetched from a devices API
             inactiveDevices: 2,
             lastActivity: new Date().toISOString()
@@ -260,14 +247,13 @@ const FarmOverview: React.FC<FarmOverviewProps> = ({ farmId, ownerId, workers })
       <div className="flex flex-col gap-6 h-full">
         {/* Calendar Card */}
         <CalendarCard 
-          events={farmEvents} 
           onViewEvent={handleViewEvent}
           onAddEvent={handleAddEvent}
         />
         
-        {/* Worker Card - now imported as a separate component */}
-        <WorkerCard workers={workers} />
-      </div>
+        {/* Worker Card - now passing farmId instead of workers */}
+          {workerFarmId && <WorkerCard farmId={workerFarmId} />}      
+        </div>
       
       {/* Show error notification if there was an error but we're still showing data */}
       {error && (

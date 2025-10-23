@@ -17,6 +17,7 @@ const WebRTCPlayer: React.FC<WebRTCPlayerProps> = ({
 }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
+  const isPlayingRef = useRef(false); // Reference to track playing state
 
   // Store callback in ref to prevent dependency changes from causing reconnections
   const onStatusChangeRef = useRef(onStatusChange);
@@ -34,6 +35,10 @@ const WebRTCPlayer: React.FC<WebRTCPlayerProps> = ({
       return;
     }
 
+    // Reset playing state when creating a new connection
+    setIsPlaying(false);
+    isPlayingRef.current = false;
+
     // Create WebRTC connection with STUN servers
     const pc = new RTCPeerConnection({
       iceServers: [
@@ -45,7 +50,6 @@ const WebRTCPlayer: React.FC<WebRTCPlayerProps> = ({
     });
     
     onStatusChangeRef.current?.('connecting');
-    setIsPlaying(false);
 
     // Log ICE connection state changes to help with debugging
     pc.oniceconnectionstatechange = () => {
@@ -73,6 +77,7 @@ const WebRTCPlayer: React.FC<WebRTCPlayerProps> = ({
             console.log('Video is flowing! Size:', videoRef.current.videoWidth, 'x', videoRef.current.videoHeight);
             onStatusChangeRef.current?.('connected');
             setIsPlaying(true);
+            isPlayingRef.current = true; // Update ref value
           } else {
             // Keep checking until video flows or timeout occurs
             setTimeout(checkVideoFlowing, 500);
@@ -82,13 +87,16 @@ const WebRTCPlayer: React.FC<WebRTCPlayerProps> = ({
         checkVideoFlowing();
         
         // Set a timeout in case video never flows
-        // Increased from 10000 to 30000 (30 seconds) to accommodate slower streams
-        setTimeout(() => {
-          if (!isPlaying) {
+        const timeoutId = setTimeout(() => {
+          // Only show error if video is still not playing
+          if (!isPlayingRef.current) {
             console.error('Video not flowing after timeout');
             onStatusChangeRef.current?.('error', 'Video stream received but no data is flowing');
           }
         }, 30000);
+
+        // Clear timeout when component unmounts
+        return () => clearTimeout(timeoutId);
       }
     };
 
@@ -172,6 +180,7 @@ const WebRTCPlayer: React.FC<WebRTCPlayerProps> = ({
   const handleVideoPlay = () => {
     console.log('Video play event triggered');
     setIsPlaying(true);
+    isPlayingRef.current = true; // Update ref value
   };
   
   const handleVideoError = (e: React.SyntheticEvent<HTMLVideoElement>) => {

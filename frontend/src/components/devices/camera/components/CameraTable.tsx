@@ -1,5 +1,6 @@
 import React from 'react';
 import { Camera } from '../data/cameraData';
+import { ExternalLink, Pencil, Trash2 } from 'lucide-react';
 
 interface CameraTableProps {
   cameras: Camera[];
@@ -25,7 +26,7 @@ const CameraTable: React.FC<CameraTableProps> = ({ cameras }) => {
                 Location
               </th>
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Storage
+                Stream URL
               </th>
               <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Actions
@@ -58,8 +59,15 @@ const CameraRow: React.FC<CameraRowProps> = ({ camera }) => {
     switch (status) {
       case 'online': return 'bg-green-100 text-green-800';
       case 'offline': return 'bg-red-100 text-red-800';
-      case 'maintenance': return 'bg-yellow-100 text-yellow-800';
+      case 'error': return 'bg-yellow-100 text-yellow-800';
       default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const openStream = () => {
+    // Open the camera stream in a new window/tab
+    if (camera.streamUrl) {
+      window.open(`/camera-view?id=${camera.id}&url=${encodeURIComponent(camera.streamUrl)}`, '_blank');
     }
   };
 
@@ -68,8 +76,8 @@ const CameraRow: React.FC<CameraRowProps> = ({ camera }) => {
       <td className="px-6 py-4 whitespace-nowrap">
         <div className="flex items-center">
           <div className="h-10 w-10 flex-shrink-0 bg-gray-100 rounded overflow-hidden">
-            {camera.lastSnapshot ? (
-              <img src={camera.lastSnapshot} alt="" className="h-10 w-10 object-cover" />
+            {camera.thumbnail ? (
+              <img src={camera.thumbnail} alt="" className="h-10 w-10 object-cover" />
             ) : (
               <div className="h-10 w-10 flex items-center justify-center text-gray-400">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -96,12 +104,31 @@ const CameraRow: React.FC<CameraRowProps> = ({ camera }) => {
         {camera.location}
       </td>
       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-        {camera.storage}
+        {camera.streamUrl ? (
+          <div className="max-w-[200px] truncate">
+            {camera.streamUrl}
+          </div>
+        ) : (
+          <span className="text-gray-400">Not available</span>
+        )}
       </td>
       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-        <button className="text-blue-600 hover:text-blue-900 mr-3">View</button>
-        <button className="text-green-600 hover:text-green-900 mr-3">Edit</button>
-        <button className="text-red-600 hover:text-red-900">Remove</button>
+        <button 
+          onClick={openStream}
+          className="text-blue-600 hover:text-blue-900 mr-3 inline-flex items-center"
+          disabled={!camera.streamUrl}
+        >
+          <ExternalLink size={16} className="mr-1" />
+          View
+        </button>
+        <button className="text-green-600 hover:text-green-900 mr-3 inline-flex items-center">
+          <Pencil size={16} className="mr-1" />
+          Edit
+        </button>
+        <button className="text-red-600 hover:text-red-900 inline-flex items-center">
+          <Trash2 size={16} className="mr-1" />
+          Remove
+        </button>
       </td>
     </tr>
   );

@@ -2,51 +2,57 @@ export interface Camera {
   id: string;
   name: string;
   type: string;
-  status: 'online' | 'offline' | 'maintenance';
-  resolution: string;
   location: string;
-  storage: string;
-  lastSnapshot?: string;
+  resolution: string;
+  status: 'online' | 'offline' | 'error';
+  lastUpdated: string;
+  thumbnail: string;
+  streamUrl: string; // Add this property to the interface
 }
 
-// Sample data - in a real app, you would fetch this from an API
 export const sampleCameras: Camera[] = [
   {
-    id: 'c1',
-    name: 'North Gate CCTV',
+    id: 'cam-001',
+    name: 'Front Gate Camera',
     type: 'Security Camera',
-    status: 'online',
+    location: 'Main Entrance',
     resolution: '1080p',
-    location: 'North Farm Entrance',
-    storage: 'Cloud (14 days retention)',
-    lastSnapshot: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxzZWFyY2h8MXx8ZmFybSUyMGdhdGV8ZW58MHx8MHx8&w=200&q=80'
-  },
-  {
-    id: 'c2',
-    name: 'Orchard Time-Lapse',
-    type: 'Time-Lapse Camera',
     status: 'online',
-    resolution: '4K',
-    location: 'Main Orchard',
-    storage: 'Local (500GB)',
-    lastSnapshot: 'https://images.unsplash.com/photo-1473158912295-779ef17fc94b?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxzZWFyY2h8Mnx8b3JjaGFyZHxlbnwwfHwwfHw%3D&w=200&q=80'
+    lastUpdated: '2025-10-23T08:30:00Z',
+    thumbnail: '/images/camera-1.jpg',
+    streamUrl: 'http://136.110.0.27:8889/livefeed/whep', // Add sample URL to existing cameras
   },
   {
-    id: 'c3',
+    id: 'cam-002',
     name: 'Greenhouse Camera',
     type: 'Monitoring Camera',
-    status: 'offline',
+    location: 'Greenhouse A',
     resolution: '720p',
-    location: 'Greenhouse',
-    storage: 'Local (128GB)',
+    status: 'online',
+    lastUpdated: '2025-10-23T08:35:00Z',
+    thumbnail: '/images/camera-2.jpg',
+    streamUrl: 'http://136.110.0.27:8889/greenhouse/whep',
   },
   {
-    id: 'c4',
-    name: 'Equipment Shed',
+    id: 'cam-003',
+    name: 'Storage Area Camera',
     type: 'Security Camera',
-    status: 'maintenance',
+    location: 'Storage Facility',
     resolution: '1080p',
-    location: 'Tool Shed',
-    storage: 'Cloud (30 days retention)',
+    status: 'offline',
+    lastUpdated: '2025-10-22T15:45:00Z',
+    thumbnail: '/images/camera-3.jpg',
+    streamUrl: 'http://136.110.0.27:8889/storage/whep',
+  },
+  {
+    id: 'cam-004',
+    name: 'Field Time-lapse',
+    type: 'Time-Lapse Camera',
+    location: 'North Field',
+    resolution: '4K',
+    status: 'error',
+    lastUpdated: '2025-10-23T07:20:00Z',
+    thumbnail: '/images/camera-4.jpg',
+    streamUrl: 'http://136.110.0.27:8889/field/whep',
   }
 ];

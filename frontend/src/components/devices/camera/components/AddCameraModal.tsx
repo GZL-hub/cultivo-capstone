@@ -3,27 +3,60 @@ import React, { useState } from 'react';
 interface AddCameraModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onAddCamera: (camera: CameraData) => void;
 }
 
-const AddCameraModal: React.FC<AddCameraModalProps> = ({ isOpen, onClose }) => {
-  const [formData, setFormData] = useState({
+export interface CameraData {
+  name: string;
+  type: string;
+  streamUrl: string;
+  resolution: string;
+  location: string;
+}
+
+const AddCameraModal: React.FC<AddCameraModalProps> = ({ isOpen, onClose, onAddCamera }) => {
+  const [formData, setFormData] = useState<CameraData>({
     name: '',
     type: 'Security Camera',
+    streamUrl: '',
     resolution: '1080p',
     location: '',
-    storage: 'Local (128GB)'
   });
+
+  const [isValidUrl, setIsValidUrl] = useState(true);
   
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+    
+    // Validate stream URL when that field changes
+    if (name === 'streamUrl') {
+      try {
+        const url = new URL(value);
+        setIsValidUrl(url.protocol === 'http:' || url.protocol === 'https:');
+      } catch (e) {
+        setIsValidUrl(value === '' || value.startsWith('http://') || value.startsWith('https://'));
+      }
+    }
   };
   
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // In a real app, you would handle form submission here
-    console.log('Form submitted:', formData);
+    
+    // Ensure URL is valid before submitting
+    if (!isValidUrl) return;
+    
+    onAddCamera(formData);
     onClose();
+    
+    // Reset form
+    setFormData({
+      name: '',
+      type: 'Security Camera',
+      streamUrl: '',
+      resolution: '1080p',
+      location: '',
+    });
   };
   
   if (!isOpen) return null;
@@ -40,6 +73,7 @@ const AddCameraModal: React.FC<AddCameraModalProps> = ({ isOpen, onClose }) => {
               name="name"
               value={formData.name}
               onChange={handleChange}
+              placeholder="e.g., Greenhouse Camera 1"
               className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2" 
               required
             />
@@ -56,7 +90,27 @@ const AddCameraModal: React.FC<AddCameraModalProps> = ({ isOpen, onClose }) => {
               <option value="Security Camera">Security Camera</option>
               <option value="Monitoring Camera">Monitoring Camera</option>
               <option value="Time-Lapse Camera">Time-Lapse Camera</option>
+              <option value="WebRTC Stream">WebRTC Stream</option>
             </select>
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Stream URL</label>
+            <input 
+              type="text" 
+              name="streamUrl"
+              value={formData.streamUrl}
+              onChange={handleChange}
+              placeholder="http://server:8889/path/whep"
+              className={`mt-1 block w-full border ${isValidUrl ? 'border-gray-300' : 'border-red-500'} rounded-md shadow-sm p-2`} 
+              required
+            />
+            {!isValidUrl && (
+              <p className="text-sm text-red-500 mt-1">Please enter a valid HTTP/HTTPS URL</p>
+            )}
+            <p className="text-xs text-gray-500 mt-1">
+              WebRTC URL format: http://server:8889/streamname/whep
+            </p>
           </div>
           
           <div>
@@ -80,24 +134,10 @@ const AddCameraModal: React.FC<AddCameraModalProps> = ({ isOpen, onClose }) => {
               name="location"
               value={formData.location}
               onChange={handleChange}
+              placeholder="e.g., North Greenhouse"
               className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2" 
               required
             />
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Storage</label>
-            <select 
-              name="storage"
-              value={formData.storage}
-              onChange={handleChange}
-              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"
-            >
-              <option value="Local (128GB)">Local (128GB)</option>
-              <option value="Local (500GB)">Local (500GB)</option>
-              <option value="Cloud (14 days retention)">Cloud (14 days retention)</option>
-              <option value="Cloud (30 days retention)">Cloud (30 days retention)</option>
-            </select>
           </div>
           
           <div className="mt-6 flex justify-end space-x-3">
@@ -111,6 +151,7 @@ const AddCameraModal: React.FC<AddCameraModalProps> = ({ isOpen, onClose }) => {
             <button 
               type="submit"
               className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+              disabled={!isValidUrl}
             >
               Add Camera
             </button>
