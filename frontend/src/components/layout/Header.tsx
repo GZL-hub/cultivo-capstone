@@ -55,7 +55,7 @@ const Header: React.FC<HeaderProps> = ({
 
         {/* Collapse toggle button - hidden on mobile */}
         <button
-          className="hidden md:flex text-gray-700 hover:text-green-600 hover:bg-green-50 p-2 rounded-md items-center justify-center mr-2 transition-colors"
+          className="hidden md:flex text-gray-700 hover:text-primary hover:bg-primary/10 p-2 rounded-md items-center justify-center mr-2 transition-colors"
           onClick={onToggleCollapse}
         >
           <PanelLeft size={20} />
@@ -74,14 +74,14 @@ const Header: React.FC<HeaderProps> = ({
           <input
             type="text"
             placeholder="Search..."
-            className="py-2 pl-10 pr-4 w-64 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+            className="py-2 pl-10 pr-4 w-64 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
           />
         </div>
 
         <button className="text-gray-500">
           <Bell size={20} />
         </button>
-        <div className="h-8 w-8 rounded-full bg-green-500 flex items-center justify-center text-white">
+        <div className="h-8 w-8 rounded-full bg-accent flex items-center justify-center text-white">
           <User size={16} />
         </div>
         <button

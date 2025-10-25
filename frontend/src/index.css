@@ -7,16 +7,35 @@
 
 /* Rest of your existing CSS */
 
-/* Define font variables for consistent use */
-:root {
-  --font-figtree: 'Figtree', sans-serif;
-  --font-noto-sans: 'Noto Sans', sans-serif;
-  --font-roboto-mono: 'Roboto Mono', monospace;
+@layer base {
+  :root {
+    /* Font variables */
+    --font-figtree: 'Figtree', sans-serif;
+    --font-noto-sans: 'Noto Sans', sans-serif;
+    --font-roboto-mono: 'Roboto Mono', monospace;
+
+    /* Color theme variables */
+    --text: #0e1608;
+    --background: #f5f8f3;
+    --primary: #37621e;
+    --secondary: #a1dc7f;
+    --accent: #67c431;
+  }
+
+  .dark {
+    --text: #eff7e9;
+    --background: #060b04;
+    --primary: #b6e19d;
+    --secondary: #458023;
+    --accent: #71ce3b;
+  }
 }
 
 /* Apply default font to body */
 body {
   font-family: var(--font-figtree);
+  background-color: var(--background);
+  color: var(--text);
   /* Your existing body styles */
 }
 

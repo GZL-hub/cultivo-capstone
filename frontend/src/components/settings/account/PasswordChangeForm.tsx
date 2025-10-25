@@ -77,7 +77,7 @@ const PasswordChangeForm: React.FC<PasswordChangeFormProps> = ({ onChangePasswor
       
       {status.message && (
         <div className={`mb-4 p-3 rounded-md flex items-center ${status.type === 'success' 
-          ? 'bg-green-50 border border-green-200 text-green-800' 
+          ? 'bg-primary/10 border border-primary-200 text-green-800' 
           : 'bg-red-50 border border-red-200 text-red-800'}`}
         >
           {status.type === 'success' && <Check className="mr-2" size={18} />}
@@ -99,7 +99,7 @@ const PasswordChangeForm: React.FC<PasswordChangeFormProps> = ({ onChangePasswor
                 value={currentPassword}
                 onChange={(e) => setCurrentPassword(e.target.value)}
                 disabled={loading}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 pr-10"
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary-500 pr-10"
               />
               <button 
                 type="button" 
@@ -126,7 +126,7 @@ const PasswordChangeForm: React.FC<PasswordChangeFormProps> = ({ onChangePasswor
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 disabled={loading}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 pr-10"
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary-500 pr-10"
               />
               <button 
                 type="button" 
@@ -153,7 +153,7 @@ const PasswordChangeForm: React.FC<PasswordChangeFormProps> = ({ onChangePasswor
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 disabled={loading}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500 pr-10"
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary-500 pr-10"
               />
               <button 
                 type="button" 
@@ -173,7 +173,7 @@ const PasswordChangeForm: React.FC<PasswordChangeFormProps> = ({ onChangePasswor
             <button
               type="submit"
               disabled={loading}
-              className={`px-4 py-2 bg-green-600 border border-transparent rounded-md text-sm text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
+              className={`px-4 py-2 bg-green-600 border border-transparent rounded-md text-sm text-white hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
             >
               {loading ? 'Updating...' : 'Update Password'}
             </button>

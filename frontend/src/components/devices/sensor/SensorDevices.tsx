@@ -15,7 +15,7 @@ const SensorDevices: React.FC = () => {
     : sensors.filter(sensor => sensor.status === filter);
 
   return (
-    <div className="relative w-full h-full flex flex-col bg-gray-50">
+    <div className="relative w-full h-full flex flex-col bg-background">
       <SensorHeader 
         filter={filter}
         setFilter={setFilter}

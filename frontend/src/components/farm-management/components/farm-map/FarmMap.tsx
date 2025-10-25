@@ -62,6 +62,7 @@ const FarmMap: React.FC<FarmMapProps> = ({ coordinates, farmId: propFarmId, owne
   // Refs
   const drawingManagerRef = useRef<google.maps.drawing.DrawingManager | null>(null);
   const searchBoxRef = useRef<google.maps.places.SearchBox | null>(null);
+  const eventListenersRef = useRef<google.maps.MapsEventListener[]>([]);
 
   // API Handling 
   const [isAuthorized, setIsAuthorized] = useState<boolean>(false);
@@ -97,12 +98,21 @@ const FarmMap: React.FC<FarmMapProps> = ({ coordinates, farmId: propFarmId, owne
     }
   }, [drawing, map]);
   
-  // Effect to fit map to polygon - kept the same
+  // Effect to fit map to polygon - fixed circular dependency
   useEffect(() => {
     if (polygonCoords.length > 0 && map) {
-      fitMapToPolygon();
+      const bounds = new google.maps.LatLngBounds();
+
+      polygonCoords.forEach(point => {
+        bounds.extend(new google.maps.LatLng(point.lat, point.lng));
+      });
+
+      map.fitBounds(bounds, 50);
+
+      const newCenter = calculatePolygonCenter(polygonCoords, coordinates);
+      setCenter(newCenter);
     }
-  }, [polygonCoords, map, fitMapToPolygon]);
+  }, [polygonCoords.length, map]); // Only depend on length to avoid unnecessary re-renders
 
   // Event handlers - kept the same
   const handleMapLoad = useCallback((mapInstance: google.maps.Map) => {
@@ -268,40 +278,60 @@ const FarmMap: React.FC<FarmMapProps> = ({ coordinates, farmId: propFarmId, owne
       toast.error('You are not authorized to save changes to this farm');
       return;
     }
-    
-    if (activePolygon && polygonCoords.length > 0) {
-      try {
-        const currentFarmId = farmId || '68d18a709f69d8c82056758c';
-        
-        const result = await saveFarmBoundary(currentFarmId, {
-          coordinates: polygonCoords,
-          area: polygonArea,
-          perimeter: polygonPerimeter,
-          ownerId // Include owner ID for verification
-        });
-        
-        if (result.success) {
-          toast.success('Boundary saved successfully');
-        } else {
-          toast.error('Failed to save boundary: ' + (result.error || 'Unknown error'));
-        }
-      } catch (error) {
-        console.error('Error saving polygon:', error);
-        toast.error('Error saving boundary');
+
+    if (!farmId) {
+      toast.error('No farm selected. Please select a farm before saving.');
+      return;
+    }
+
+    if (!activePolygon || polygonCoords.length < 3) {
+      toast.error('Invalid polygon. Please draw a valid boundary with at least 3 points.');
+      return;
+    }
+
+    try {
+      const result = await saveFarmBoundary(farmId, {
+        coordinates: polygonCoords,
+        area: polygonArea,
+        perimeter: polygonPerimeter,
+        ownerId // Include owner ID for verification
+      });
+
+      if (result.success) {
+        toast.success('Boundary saved successfully');
+      } else {
+        toast.error('Failed to save boundary: ' + (result.error || 'Unknown error'));
       }
+    } catch (error) {
+      console.error('Error saving polygon:', error);
+      toast.error('Error saving boundary');
     }
   }, [activePolygon, polygonCoords, polygonArea, polygonPerimeter, farmId, ownerId, isAuthorized]);
 
   // Updated to fetch boundary with owner verification
 // Update the effect that fetches the boundary
 useEffect(() => {
+  const abortController = new AbortController();
+
   const fetchBoundary = async () => {
     if (!map) return;
-    
+
     // Clear previous error
     setLoadError(null);
     setIsLoading(true);
-    
+
+    // Clean up existing polygon and event listeners before creating new ones
+    if (activePolygon) {
+      activePolygon.setMap(null);
+      setActivePolygon(null);
+    }
+
+    // Remove all existing event listeners
+    eventListenersRef.current.forEach(listener => {
+      google.maps.event.removeListener(listener);
+    });
+    eventListenersRef.current = [];
+
     try {
       // Only attempt to fetch if we have a farmId
       if (!farmId) {
@@ -309,21 +339,23 @@ useEffect(() => {
         setIsLoading(false);
         return;
       }
-      
+
       console.log(`Fetching boundary for farm: ${farmId}, owner: ${ownerId}`);
-      
-      // Direct API call to ensure we're getting the raw response
-      const response = await axios.get(`/api/farms/${farmId}`);
+
+      // Direct API call with abort signal for race condition protection
+      const response = await axios.get(`/api/farms/${farmId}`, {
+        signal: abortController.signal
+      });
       console.log('Farm data response:', response.data);
-      
+
       if (response.data.success && response.data.data && response.data.data.farmBoundary) {
         const boundary = response.data.data.farmBoundary;
         console.log('Farm boundary data:', boundary);
-        
+
         // Convert GeoJSON coordinates to Google Maps LatLng objects
         const paths = convertGeoJSONToGoogleMaps(boundary);
         console.log('Converted polygon paths:', paths);
-        
+
         if (paths.length > 0) {
           // Create polygon and add it to the map
           const polygon = new google.maps.Polygon({
@@ -335,26 +367,29 @@ useEffect(() => {
             clickable: true,
             editable: isAuthorized, // Only make it editable if user is authorized
           });
-          
+
           polygon.setMap(map);
           setActivePolygon(polygon);
-          
+
           // Update the polygon data in state
           setPolygonCoords(paths);
           const metrics = updatePolygonMetrics(paths);
           setPolygonArea(metrics.area);
           setPolygonPerimeter(metrics.perimeter);
-          
+
           // Add listeners for editing only if authorized
           if (isAuthorized) {
-            google.maps.event.addListener(polygon.getPath(), 'set_at', () => {
+            const listener1 = google.maps.event.addListener(polygon.getPath(), 'set_at', () => {
               updatePolygonData(polygon);
             });
-            google.maps.event.addListener(polygon.getPath(), 'insert_at', () => {
+            const listener2 = google.maps.event.addListener(polygon.getPath(), 'insert_at', () => {
               updatePolygonData(polygon);
             });
+
+            // Store listeners for cleanup
+            eventListenersRef.current.push(listener1, listener2);
           }
-          
+
           // Fit map to polygon bounds
           fitMapToPolygon();
         } else {
@@ -364,14 +399,29 @@ useEffect(() => {
         console.warn('No farm boundary found in response:', response.data);
       }
     } catch (error) {
+      // Ignore abort errors
+      if (axios.isCancel(error)) {
+        console.log('Request cancelled:', error.message);
+        return;
+      }
       console.error('Error fetching farm boundary:', error);
       setLoadError('Failed to load farm boundary. Please try again later.');
     } finally {
       setIsLoading(false);
     }
   };
-  
+
   fetchBoundary();
+
+  // Cleanup function
+  return () => {
+    abortController.abort();
+    // Clean up event listeners when component unmounts or dependencies change
+    eventListenersRef.current.forEach(listener => {
+      google.maps.event.removeListener(listener);
+    });
+    eventListenersRef.current = [];
+  };
 }, [map, farmId, ownerId, isAuthorized]);
   
   // Update polygon data utility - kept the same
@@ -393,26 +443,38 @@ useEffect(() => {
       toast.error('You are not authorized to draw on this farm');
       return;
     }
-    
+
+    // Clean up existing polygon and listeners if any
+    if (activePolygon) {
+      activePolygon.setMap(null);
+    }
+    eventListenersRef.current.forEach(listener => {
+      google.maps.event.removeListener(listener);
+    });
+    eventListenersRef.current = [];
+
     // Store reference to active polygon
     setActivePolygon(polygon);
-    
+
     // Extract coordinates and update metrics
     const coords = extractPolygonCoordinates(polygon);
     setPolygonCoords(coords);
-    
+
     const metrics = updatePolygonMetrics(coords);
     setPolygonArea(metrics.area);
     setPolygonPerimeter(metrics.perimeter);
-    
-    // Add listeners for when polygon is edited
-    google.maps.event.addListener(polygon.getPath(), 'set_at', () => {
+
+    // Add listeners for when polygon is edited and store them
+    const listener1 = google.maps.event.addListener(polygon.getPath(), 'set_at', () => {
       updatePolygonData(polygon);
     });
-    google.maps.event.addListener(polygon.getPath(), 'insert_at', () => {
+    const listener2 = google.maps.event.addListener(polygon.getPath(), 'insert_at', () => {
       updatePolygonData(polygon);
     });
-    
+
+    // Store listeners for cleanup
+    eventListenersRef.current.push(listener1, listener2);
+
     // Disable drawing mode after completion
     setDrawing(false);
     setActiveToolbar(null);
@@ -420,6 +482,24 @@ useEffect(() => {
   
   return (
     <div className="relative w-full h-full">
+      {/* Loading Overlay */}
+      {isLoading && (
+        <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-50">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500 mx-auto mb-4"></div>
+            <p className="text-gray-600 font-medium">Loading farm boundary...</p>
+          </div>
+        </div>
+      )}
+
+      {/* Error Display */}
+      {loadError && (
+        <div className="absolute top-20 left-1/2 -translate-x-1/2 z-40 bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg shadow-lg max-w-md">
+          <p className="font-medium">Error Loading Boundary</p>
+          <p className="text-sm mt-1">{loadError}</p>
+        </div>
+      )}
+
       <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 w-full px-4">
         <FarmMapToolbar
           mapType={mapType}
@@ -465,6 +545,7 @@ useEffect(() => {
         mapType={mapType}
         onLoad={handleMapLoad}
         isDarkMode={isDarkMode}
+        showDefaultMarker={false}
         options={{
           zoomControl: false,
           streetViewControl: false,

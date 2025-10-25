@@ -203,7 +203,7 @@ const FarmOverview: React.FC<FarmOverviewProps> = ({ farmId, ownerId }) => {
   const polygonPath = getBoundaryPolygon(farm.farmBoundary);
   
   return (
-  <div className="w-full h-full flex flex-col px-4 py-3">
+  <div className="w-full h-full flex flex-col px-4 py-3 bg-background">
     <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
       {/* Center Map and Farm Info */}
       <div className="xl:col-span-2 flex flex-col gap-6 h-full">
@@ -231,7 +231,7 @@ const FarmOverview: React.FC<FarmOverviewProps> = ({ farmId, ownerId }) => {
             <div className="mb-1 text-sm">Boundary Type: <span className="font-medium">{farm.farmBoundary?.type || "Polygon"}</span></div>
             <div className="mb-1 text-sm">Coordinate: <span className="font-mono text-xs">{boundaryCoordinates}</span></div>
             <div className="flex gap-2 mt-3">
-              <span className="inline-flex items-center bg-green-100 text-green-700 px-3 py-1 rounded text-sm">
+              <span className="inline-flex items-center bg-green-100 text-primary-700 px-3 py-1 rounded text-sm">
                 <Wifi className="mr-1" size={16} /> {farm.activeDevices} Active
               </span>
               <span className="inline-flex items-center bg-red-100 text-red-700 px-3 py-1 rounded text-sm">

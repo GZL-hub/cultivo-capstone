@@ -24,7 +24,7 @@ const FarmCCTV: React.FC = () => {
   };
 
   return (
-    <div className="w-full h-full flex flex-col p-4 bg-white rounded-lg shadow">
+    <div className="w-full h-full flex flex-col p-4 bg-background">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-lg font-semibold text-gray-800">Camera Test</h2>
         <PlayerControls 

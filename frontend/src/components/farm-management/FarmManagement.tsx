@@ -12,17 +12,21 @@ type FarmManagementContext = {
 const FarmManagement: React.FC = () => {
   const [selectedFarmId, setSelectedFarmId] = useState<string | null>(null);
   const [farms, setFarms] = useState<any[]>([]);
-  
+  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+
   // Get current user ID
   const userId = authService.getCurrentUser()?.id || '';
-  
+
   // Fetch available farms when component mounts
   useEffect(() => {
     const fetchUserFarms = async () => {
       try {
+        setIsLoading(true);
+        setError(null);
         const userFarms = await getFarms(userId);
         setFarms(userFarms);
-        
+
         // Set first farm as selected if available
         if (userFarms.length > 0) {
           setSelectedFarmId(userFarms[0]._id);
@@ -32,15 +36,48 @@ const FarmManagement: React.FC = () => {
         }
       } catch (error) {
         console.error('Error loading farms:', error);
+        setError('Failed to load farms. Please try again.');
+      } finally {
+        setIsLoading(false);
       }
     };
-    
+
     fetchUserFarms();
   }, [userId]);
   
   return (
-    < div className="w-full h-full flex flex-col">
-      <Outlet context={{ farmId: selectedFarmId, ownerId: userId } as FarmManagementContext} />
+    <div className="w-full h-full flex flex-col">
+      {/* Error Display */}
+      {error && (
+        <div className="bg-red-50 text-red-600 p-4 rounded-md m-4 border border-red-200">
+          <div className="flex items-start">
+            <div className="flex-shrink-0">
+              <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div className="ml-3">
+              <p className="font-medium">Error Loading Farms</p>
+              <p className="text-sm mt-1">{error}</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Loading Display */}
+      {isLoading && !error && (
+        <div className="flex items-center justify-center h-64 m-4">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500 mx-auto mb-4"></div>
+            <p className="text-gray-600 font-medium">Loading farms...</p>
+          </div>
+        </div>
+      )}
+
+      {/* Content */}
+      {!isLoading && (
+        <Outlet context={{ farmId: selectedFarmId, ownerId: userId } as FarmManagementContext} />
+      )}
     </div>
   );
 };

@@ -136,7 +136,7 @@ const WorkerCard: React.FC<WorkerCardProps> = ({ farmId, className = "" }) => {
       {/* Header Section */}
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center">
-          <Users className="text-green-700 mr-2" />
+          <Users className="text-primary-700 mr-2" />
           <h3 className="text-lg font-semibold">Workers</h3>
           {!isLoading && <span className="ml-2 text-gray-500 text-sm">({workers.length})</span>}
         </div>
@@ -149,7 +149,7 @@ const WorkerCard: React.FC<WorkerCardProps> = ({ farmId, className = "" }) => {
                   onClick={() => setIsFilterDropdownOpen(!isFilterDropdownOpen)}
                   className={`flex items-center text-sm px-2 py-1 border rounded-md
                     ${activeFilterCount > 0 
-                      ? 'border-green-300 bg-green-50 text-green-700' 
+                      ? 'border-green-300 bg-primary/10 text-primary-700' 
                       : 'border-gray-300 hover:bg-gray-50'}`}
                 >
                   <Filter size={14} className="mr-1" />
@@ -180,7 +180,7 @@ const WorkerCard: React.FC<WorkerCardProps> = ({ farmId, className = "" }) => {
                         {uniqueRoles.map(role => (
                           <label key={role} className="flex items-center space-x-2 cursor-pointer">
                             <div className={`w-4 h-4 border rounded flex items-center justify-center
-                              ${roleFilters[role] ? 'bg-green-500 border-green-500' : 'border-gray-300'}`}
+                              ${roleFilters[role] ? 'bg-accent border-primary-500' : 'border-gray-300'}`}
                             >
                               {roleFilters[role] && <Check size={12} className="text-white" />}
                             </div>
@@ -208,7 +208,7 @@ const WorkerCard: React.FC<WorkerCardProps> = ({ farmId, className = "" }) => {
                   placeholder="Search workers"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-8 pr-4 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-green-500"
+                  className="pl-8 pr-4 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-primary"
                 />
                 <Search className="absolute left-2 top-1.5 text-gray-400" size={16} />
               </div>

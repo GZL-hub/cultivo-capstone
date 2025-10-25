@@ -76,10 +76,10 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLogin, onRegister, loading = fa
   return (
     <div className="w-full max-w-md space-y-8 font-figtree">
       <div className="lg:hidden text-center mb-8">
-        <div className="w-8 h-8 rounded-lg flex items-center justify-center mx-auto mb-3 bg-green-600">
+        <div className="w-8 h-8 rounded-lg flex items-center justify-center mx-auto mb-3 bg-primary">
           <div className="w-4 h-4 bg-white rounded-sm"></div>
         </div>
-        <h1 className="text-xl font-semibold text-gray-900">Cultivo</h1>
+        <h1 className="text-xl font-semibold text-text">Cultivo</h1>
       </div>
 
       <div className="space-y-6">
@@ -93,12 +93,12 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLogin, onRegister, loading = fa
               <ArrowLeft className="h-4 w-4" />
             </button>
           )}
-          <h2 className="text-3xl text-gray-900 font-bold">
+          <h2 className="text-3xl text-text font-bold">
             {currentView === "login" && "Welcome Back"}
             {currentView === "register" && "Create Account"}
             {currentView === "forgot" && "Reset Password"}
           </h2>
-          <p className="text-gray-500 font-noto-sans">
+          <p className="text-text/70 font-noto-sans">
             {currentView === "login" && "Enter your email and password to access your farm dashboard."}
             {currentView === "register" && "Create a new account to get started with Cultivo."}
             {currentView === "forgot" && "Enter your email address and we'll send you a reset link."}
@@ -115,7 +115,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLogin, onRegister, loading = fa
         <form onSubmit={handleSubmit} className="space-y-4">
           {currentView === "register" && (
             <div className="space-y-2">
-              <label htmlFor="name" className="text-sm font-medium text-gray-900">
+              <label htmlFor="name" className="text-sm font-medium text-text">
                 Full Name
               </label>
               <input
@@ -124,13 +124,13 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLogin, onRegister, loading = fa
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="John Doe"
-                className="w-full h-12 px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-green-600 font-noto-sans"
+                className="w-full h-12 px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 font-noto-sans"
               />
             </div>
           )}
 
           <div className="space-y-2">
-            <label htmlFor="email" className="text-sm font-medium text-gray-900">
+            <label htmlFor="email" className="text-sm font-medium text-text">
               Email
             </label>
             <input
@@ -139,13 +139,13 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLogin, onRegister, loading = fa
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="user@farm.com"
-              className="w-full h-12 px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-green-600 font-noto-sans"
+              className="w-full h-12 px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 font-noto-sans"
             />
           </div>
 
           {currentView !== "forgot" && (
             <div className="space-y-2">
-              <label htmlFor="password" className="text-sm font-medium text-gray-900">
+              <label htmlFor="password" className="text-sm font-medium text-text">
                 Password
               </label>
               <div className="relative">
@@ -155,7 +155,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLogin, onRegister, loading = fa
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Enter password"
-                  className="w-full h-12 px-3 py-2 pr-10 border border-gray-200 rounded-lg focus:outline-none focus:border-green-600 font-noto-sans"
+                  className="w-full h-12 px-3 py-2 pr-10 border border-gray-200 rounded-lg focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 font-noto-sans"
                 />
                 <button
                   type="button"
@@ -174,7 +174,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLogin, onRegister, loading = fa
 
           {currentView === "register" && (
             <div className="space-y-2">
-              <label htmlFor="confirmPassword" className="text-sm font-medium text-gray-900">
+              <label htmlFor="confirmPassword" className="text-sm font-medium text-text">
                 Confirm Password
               </label>
               <div className="relative">
@@ -184,7 +184,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLogin, onRegister, loading = fa
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   placeholder="Confirm password"
-                  className="w-full h-12 px-3 py-2 pr-10 border border-gray-200 rounded-lg focus:outline-none focus:border-green-600 font-noto-sans"
+                  className="w-full h-12 px-3 py-2 pr-10 border border-gray-200 rounded-lg focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 font-noto-sans"
                 />
                 <button
                   type="button"
@@ -215,7 +215,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLogin, onRegister, loading = fa
               </div>
               <button
                 type="button"
-                className="text-sm text-green-600 hover:text-green-700 cursor-pointer font-noto-sans"
+                className="text-sm text-primary hover:text-primary/80 cursor-pointer font-noto-sans"
                 onClick={() => handleViewChange("forgot")}
               >
                 Forgot Your Password?
@@ -226,7 +226,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLogin, onRegister, loading = fa
           <button
             type="submit"
             disabled={loading}
-            className={`w-full h-12 text-sm font-medium text-white rounded-lg bg-green-600 hover:bg-green-700 ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
+            className={`w-full h-12 text-sm font-medium text-white rounded-lg bg-green-600 hover:bg-primary/90 transition-colors ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
           >
             {loading ? (
               <span className="flex items-center justify-center">
@@ -252,7 +252,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLogin, onRegister, loading = fa
               <p className="mb-2">Don't have an account?</p>
               <button
                 type="button"
-                className="w-full h-11 text-sm font-medium text-green-700 border border-green-600 rounded-lg hover:bg-green-50"
+                className="w-full h-11 text-sm font-medium text-primary border border-primary rounded-lg hover:bg-primary/10 transition-colors"
                 onClick={() => handleViewChange("register")}
               >
                 Register Now
@@ -260,11 +260,11 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLogin, onRegister, loading = fa
             </div>
           )}
           {currentView === "register" && (
-            <div className="text-sm text-gray-600">
+            <div className="text-sm text-text/70">
               <p className="mb-2">Already have an account?</p>
               <button
                 type="button"
-                className="w-full h-11 text-sm font-medium text-green-700 border border-green-600 rounded-lg hover:bg-green-50"
+                className="w-full h-11 text-sm font-medium text-primary border border-primary rounded-lg hover:bg-primary/10 transition-colors"
                 onClick={() => handleViewChange("login")}
               >
                 Sign In
@@ -272,11 +272,11 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLogin, onRegister, loading = fa
             </div>
           )}
           {currentView === "forgot" && (
-            <div className="text-sm text-gray-600">
+            <div className="text-sm text-text/70">
               <p className="mb-2">Remember your password?</p>
               <button
                 type="button"
-                className="w-full h-11 text-sm font-medium text-green-700 border border-green-600 rounded-lg hover:bg-green-50"
+                className="w-full h-11 text-sm font-medium text-primary border border-primary rounded-lg hover:bg-primary/10 transition-colors"
                 onClick={() => handleViewChange("login")}
               >
                 Back to Login

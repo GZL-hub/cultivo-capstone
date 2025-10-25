@@ -156,7 +156,7 @@ const Dashboard: React.FC<DashboardProps> = ({ isLoaded }) => {
   };
 
   return (
-    <div className="w-full h-full overflow-auto flex flex-col px-4 py-4">    
+    <div className="w-full h-full overflow-auto flex flex-col px-4 py-4 bg-background">    
       {/* Top row - devices stats and weather */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
         {/* Device Statistics Component */}

@@ -11,7 +11,7 @@ const Layout: React.FC<LayoutProps> = ({ children, onLogout }) => {
   const [collapsed, setCollapsed] = useState(false);
 
   return (
-    <div className="flex h-screen bg-gray-100">
+    <div className="flex h-screen bg-background">
       <Sidebar collapsed={collapsed} setCollapsed={setCollapsed} />
       <div
         className={`flex flex-col flex-1 transition-all duration-300 ${
@@ -24,7 +24,7 @@ const Layout: React.FC<LayoutProps> = ({ children, onLogout }) => {
           collapsed={collapsed}
           onLogout={onLogout}
         />
-        <main className="flex-1 overflow-y-auto">{children}</main>
+        <main className="flex-1 overflow-y-auto bg-background">{children}</main>
       </div>
     </div>
   );

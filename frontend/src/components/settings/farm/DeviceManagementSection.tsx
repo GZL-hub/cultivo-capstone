@@ -11,7 +11,7 @@ const DeviceManagementSection: React.FC = () => {
           <p className="text-sm text-gray-500">Manage sensors and their update frequency</p>
           <Link 
             to="/device-settings/sensors" 
-            className="block mt-2 text-green-600 hover:text-green-800 text-sm"
+            className="block mt-2 text-primary hover:text-primary-800 text-sm"
           >
             Configure Sensors →
           </Link>
@@ -21,7 +21,7 @@ const DeviceManagementSection: React.FC = () => {
           <p className="text-sm text-gray-500">Configure CCTV cameras and recording options</p>
           <Link 
             to="/device-settings/cameras" 
-            className="block mt-2 text-green-600 hover:text-green-800 text-sm"
+            className="block mt-2 text-primary hover:text-primary-800 text-sm"
           >
             Configure Cameras →
           </Link>

@@ -22,10 +22,10 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({ userData, onAvatarClick }
             <img 
               src={userData.avatarUrl} 
               alt="Profile" 
-              className="w-24 h-24 rounded-full object-cover border-2 border-green-500"
+              className="w-24 h-24 rounded-full object-cover border-2 border-primary-500"
             />
             <button 
-              className="absolute bottom-0 right-0 bg-green-500 text-white rounded-full p-1.5 shadow-md hover:bg-green-600 transition-colors"
+              className="absolute bottom-0 right-0 bg-accent text-white rounded-full p-1.5 shadow-md hover:bg-green-600 transition-colors"
               aria-label="Change avatar"
               onClick={onAvatarClick}
             >
@@ -65,7 +65,7 @@ const ProfileHeader: React.FC<ProfileHeaderProps> = ({ userData, onAvatarClick }
 
           {/* Role badge and membership info */}
           <div className="mt-3 flex flex-wrap items-center justify-center md:justify-start gap-2">
-            <div className="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-gradient-to-r from-green-50 to-emerald-50 text-green-700 border border-green-100">
+            <div className="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-gradient-to-r from-green-50 to-emerald-50 text-primary-700 border border-green-100">
               {userData.role}
             </div>
             

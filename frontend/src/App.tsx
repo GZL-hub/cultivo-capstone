@@ -116,7 +116,12 @@ function App() {
           error={error}
         />
       ) : !isLoaded ? (
-        <div>Loading...</div> // Show a loading screen while the map script loads
+        <div className="flex items-center justify-center h-screen bg-background">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+            <p className="text-text">Loading...</p>
+          </div>
+        </div>
       ) : (
         <Layout onLogout={handleLogout}>
           <Routes>

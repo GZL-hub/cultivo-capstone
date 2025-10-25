@@ -39,7 +39,7 @@ const Settings: React.FC = () => {
               onClick={() => handleTabChange('account')}
               className={`pb-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200 ease-out ${
                 activeTab === 'account'
-                  ? 'border-green-500 text-green-600'
+                  ? 'border-primary-500 text-primary'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
               }`}
               aria-current={activeTab === 'account' ? 'page' : undefined}
@@ -51,7 +51,7 @@ const Settings: React.FC = () => {
               onClick={() => handleTabChange('farm')}
               className={`pb-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200 ease-out ${
                 activeTab === 'farm'
-                  ? 'border-green-500 text-green-600'
+                  ? 'border-primary-500 text-primary'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
               }`}
               aria-current={activeTab === 'farm' ? 'page' : undefined}
@@ -63,7 +63,7 @@ const Settings: React.FC = () => {
               onClick={() => handleTabChange('notifications')}
               className={`pb-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200 ease-out ${
                 activeTab === 'notifications'
-                  ? 'border-green-500 text-green-600'
+                  ? 'border-primary-500 text-primary'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
               }`}
               aria-current={activeTab === 'notifications' ? 'page' : undefined}

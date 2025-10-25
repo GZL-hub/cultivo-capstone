@@ -181,6 +181,7 @@ interface MapComponentProps {
   onLoad?: (map: google.maps.Map) => void;
   isDarkMode?: boolean;
   polygonPath?: { lat: number; lng: number }[];
+  showDefaultMarker?: boolean; // New prop to control default marker rendering
 }
 
 function MapComponent({
@@ -192,6 +193,7 @@ function MapComponent({
   onLoad: customOnLoad,
   isDarkMode = false,
   polygonPath,
+  showDefaultMarker = true, // Default to true for backward compatibility
 }: MapComponentProps) {
   const [map, setMap] = useState<google.maps.Map | null>(null);
   const [showTraffic, setShowTraffic] = useState(false);
@@ -253,11 +255,11 @@ function MapComponent({
         onUnmount={onUnmount}
         options={mapOptions}
       >
-        {/* Show marker if no polygon */}
-        {(!polygonPath || polygonPath.length === 0) && (
+        {/* Show marker if no polygon and showDefaultMarker is true */}
+        {showDefaultMarker && (!polygonPath || polygonPath.length === 0) && (
           <Marker position={center} />
         )}
-        
+
         {/* Show polygon if available */}
         {polygonPath && polygonPath.length > 0 && (
           <Polygon
@@ -265,7 +267,7 @@ function MapComponent({
             options={polygonOptions}
           />
         )}
-        
+
         {children}
         {showTraffic && <TrafficLayer />}
       </GoogleMapComponent>

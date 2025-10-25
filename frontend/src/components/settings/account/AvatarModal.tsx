@@ -56,7 +56,7 @@ const AvatarModal: React.FC<AvatarModalProps> = ({
         
         {/* Success notification */}
         {showSuccess && (
-          <div className="bg-green-50 border border-green-200 text-green-800 rounded-md p-3 mb-4 flex items-center">
+          <div className="bg-primary/10 border border-primary-200 text-green-800 rounded-md p-3 mb-4 flex items-center">
             <Check className="mr-2" size={18} />
             <span>Avatar successfully updated!</span>
           </div>
@@ -67,7 +67,7 @@ const AvatarModal: React.FC<AvatarModalProps> = ({
             <div 
               key={index} 
               className={`relative aspect-square rounded-full overflow-hidden cursor-pointer ${
-                selectedAvatar === avatar ? 'ring-4 ring-green-500 ring-offset-2' : 'hover:ring-2 hover:ring-gray-300 hover:ring-offset-1'
+                selectedAvatar === avatar ? 'ring-4 ring-primary ring-offset-2' : 'hover:ring-2 hover:ring-gray-300 hover:ring-offset-1'
               }`}
               onClick={() => !isLoading && !showSuccess && onSelectAvatar(avatar)}
             >
@@ -77,8 +77,8 @@ const AvatarModal: React.FC<AvatarModalProps> = ({
                 className="w-full h-full object-cover"
               />
               {selectedAvatar === avatar && (
-                <div className="absolute inset-0 bg-green-500 bg-opacity-20 flex items-center justify-center">
-                  <div className="bg-green-500 rounded-full p-1">
+                <div className="absolute inset-0 bg-accent bg-opacity-20 flex items-center justify-center">
+                  <div className="bg-accent rounded-full p-1">
                     <Check className="text-white" size={16} />
                   </div>
                 </div>
@@ -101,8 +101,8 @@ const AvatarModal: React.FC<AvatarModalProps> = ({
               isLoading 
                 ? 'bg-blue-500 cursor-wait' 
                 : showSuccess 
-                  ? 'bg-green-500 cursor-not-allowed' 
-                  : 'bg-green-600 hover:bg-green-700'
+                  ? 'bg-accent cursor-not-allowed' 
+                  : 'bg-green-600 hover:bg-primary/90'
             }`}
             disabled={isLoading || showSuccess}
           >

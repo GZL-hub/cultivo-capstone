@@ -58,7 +58,7 @@ interface StatCardProps {
 const StatCard: React.FC<StatCardProps> = ({ title, count, color, icon }) => {
   const getBorderClass = () => {
     switch (color) {
-      case 'green': return 'border-green-500';
+      case 'green': return 'border-primary-500';
       case 'red': return 'border-red-500';
       case 'yellow': return 'border-yellow-500';
       default: return 'border-gray-500';

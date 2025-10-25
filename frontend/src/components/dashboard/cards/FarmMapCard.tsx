@@ -132,7 +132,7 @@ const FarmMapCard: React.FC<FarmMapCardProps> = ({
     switch (status) {
       case 'online':
         return {
-          border: 'border-green-500',
+          border: 'border-primary-500',
           badge: 'bg-green-100 text-green-800',
           text: 'Online'
         };
@@ -183,8 +183,8 @@ const FarmMapCard: React.FC<FarmMapCardProps> = ({
     } catch (error) {
       console.error("Error calculating map center:", error);
     }
-    // Default coordinates if parsing fails
-    return { lat: 37.7749, lng: -122.4194 }; // Default to San Francisco
+    // Default coordinates if parsing fails (Manila, Philippines)
+    return { lat: 14.5995, lng: 120.9842 };
   };
 
   // Convert boundary coordinates to Google Maps LatLngLiteral format

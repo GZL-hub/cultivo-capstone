@@ -60,7 +60,7 @@ const FarmConfigSection: React.FC<FarmConfigSectionProps> = ({ farmData, onFarmU
         <h2 className="text-lg font-semibold text-gray-700">Farm Configuration</h2>
         {!isEditing ? (
           <button
-            className="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600 text-sm"
+            className="px-3 py-1 bg-accent text-white rounded hover:bg-green-600 text-sm"
             onClick={() => setIsEditing(true)}
           >
             Edit Details
@@ -99,7 +99,7 @@ const FarmConfigSection: React.FC<FarmConfigSectionProps> = ({ farmData, onFarmU
               name="name"
               value={formData.name}
               onChange={handleChange}
-              className="w-full p-2 border border-gray-300 rounded focus:ring-green-500 focus:border-green-500"
+              className="w-full p-2 border border-gray-300 rounded focus:ring-primary focus:border-primary-500"
               required
             />
           </div>
@@ -113,7 +113,7 @@ const FarmConfigSection: React.FC<FarmConfigSectionProps> = ({ farmData, onFarmU
               name="type"
               value={formData.type}
               onChange={handleChange}
-              className="w-full p-2 border border-gray-300 rounded focus:ring-green-500 focus:border-green-500"
+              className="w-full p-2 border border-gray-300 rounded focus:ring-primary focus:border-primary-500"
               required
             >
               <option value="">Select farm type</option>
@@ -136,14 +136,14 @@ const FarmConfigSection: React.FC<FarmConfigSectionProps> = ({ farmData, onFarmU
               placeholder="e.g., March 15, 2022"
               value={formData.operationDate}
               onChange={handleChange}
-              className="w-full p-2 border border-gray-300 rounded focus:ring-green-500 focus:border-green-500"
+              className="w-full p-2 border border-gray-300 rounded focus:ring-primary focus:border-primary-500"
             />
           </div>
           
           <div className="pt-4">
             <button
               type="submit"
-              className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+              className="px-4 py-2 bg-accent text-white rounded hover:bg-green-600"
               disabled={isLoading}
             >
               {isLoading ? 'Saving...' : 'Save Changes'}

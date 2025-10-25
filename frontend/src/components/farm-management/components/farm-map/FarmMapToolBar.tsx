@@ -78,6 +78,7 @@ const FarmMapToolbar: React.FC<FarmMapToolbarProps> = ({
   isPanelVisible,
   hasPolygon,
   showSaveButton = false,
+  isAuthorized,
   onToolbarItemClick,
   onMapTypeSelect,
   onToggleLock,
@@ -148,8 +149,8 @@ const FarmMapToolbar: React.FC<FarmMapToolbarProps> = ({
           transition={transition}
           className={`relative flex items-center rounded-lg px-3 py-2 text-sm font-medium ${
             isMapSelected 
-              ? "bg-green-600 text-white" 
-              : "text-gray-600 hover:bg-green-50 hover:text-green-700"
+              ? "bg-primary text-white" 
+              : "text-gray-600 hover:bg-primary/10 hover:text-primary-700"
           }`}
         >
           <Map size={16} className={isMapSelected ? "text-white" : ""} />
@@ -189,9 +190,9 @@ const FarmMapToolbar: React.FC<FarmMapToolbarProps> = ({
                       e.stopPropagation();
                       onMapTypeSelect(type.value);
                     }}
-                    className={`w-full text-left px-3 py-2 text-sm hover:bg-green-100 ${
+                    className={`w-full text-left px-3 py-2 text-sm hover:bg-primary-100 ${
                       mapType === type.value 
-                        ? 'font-medium text-green-700 bg-green-50' 
+                        ? 'font-medium text-primary-700 bg-primary/10' 
                         : 'text-gray-800'
                     }`}
                   >
@@ -203,23 +204,29 @@ const FarmMapToolbar: React.FC<FarmMapToolbarProps> = ({
           </AnimatePresence>
         </motion.button>
 
-        {/* Draw Button - now disabled when hasPolygon is true */}
+        {/* Draw Button - disabled when hasPolygon is true or not authorized */}
         <motion.button
           variants={buttonVariants}
           initial={false}
           animate="animate"
           custom={drawing || activeToolbar === "draw"}
           onClick={handleDrawingClick}
-          disabled={hasPolygon && !drawing}
+          disabled={(hasPolygon && !drawing) || !isAuthorized}
           transition={transition}
           className={`flex items-center rounded-lg px-3 py-2 text-sm font-medium ${
             drawing || activeToolbar === "draw"
-              ? "bg-green-600 text-white" 
-              : hasPolygon 
+              ? "bg-primary text-white"
+              : (hasPolygon || !isAuthorized)
                 ? "text-gray-400 cursor-not-allowed" // Disabled state
-                : "text-gray-600 hover:bg-green-50 hover:text-green-700"
+                : "text-gray-600 hover:bg-primary/10 hover:text-primary-700"
           }`}
-          title={hasPolygon ? "Delete existing polygon to draw a new one" : "Draw polygon"}
+          title={
+            !isAuthorized
+              ? "You are not authorized to draw on this farm"
+              : hasPolygon
+                ? "Delete existing polygon to draw a new one"
+                : "Draw polygon"
+          }
         >
           <Pencil size={16} className={(drawing || activeToolbar === "draw") ? "text-white" : ""} />
           <AnimatePresence initial={false}>
@@ -241,11 +248,16 @@ const FarmMapToolbar: React.FC<FarmMapToolbarProps> = ({
         {/* Add Delete Button when hasPolygon is true */}
         {hasPolygon && onDeletePolygon && (
           <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
+            whileHover={isAuthorized ? { scale: 1.05 } : {}}
+            whileTap={isAuthorized ? { scale: 0.95 } : {}}
             onClick={onDeletePolygon}
-            className="flex items-center justify-center h-10 w-10 rounded-lg text-red-500 hover:bg-red-50 transition-colors"
-            title="Delete polygon"
+            disabled={!isAuthorized}
+            className={`flex items-center justify-center h-10 w-10 rounded-lg transition-colors ${
+              isAuthorized
+                ? "text-red-500 hover:bg-red-50 cursor-pointer"
+                : "text-gray-400 cursor-not-allowed"
+            }`}
+            title={isAuthorized ? "Delete polygon" : "You are not authorized to delete this boundary"}
           >
             <Trash2 size={16} />
           </motion.button>
@@ -254,11 +266,16 @@ const FarmMapToolbar: React.FC<FarmMapToolbarProps> = ({
         {/* Add Save Button when hasPolygon is true */}
         {hasPolygon && onSavePolygon && (
           <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
+            whileHover={isAuthorized ? { scale: 1.05 } : {}}
+            whileTap={isAuthorized ? { scale: 0.95 } : {}}
             onClick={onSavePolygon}
-            className="flex items-center justify-center h-10 w-10 rounded-lg text-green-500 hover:bg-green-50 transition-colors"
-            title="Save polygon"
+            disabled={!isAuthorized}
+            className={`flex items-center justify-center h-10 w-10 rounded-lg transition-colors ${
+              isAuthorized
+                ? "text-green-500 hover:bg-primary/10 cursor-pointer"
+                : "text-gray-400 cursor-not-allowed"
+            }`}
+            title={isAuthorized ? "Save polygon" : "You are not authorized to save changes"}
           >
             <Save size={16} />
           </motion.button>
@@ -273,7 +290,7 @@ const FarmMapToolbar: React.FC<FarmMapToolbarProps> = ({
               transition={{ type: "spring", stiffness: 300, damping: 25 }}
               className={`flex items-center rounded-lg h-10 ${
               showSearchInput 
-                  ? `border ${activeToolbar === "search" ? "border-green-500 ring-1 ring-green-500" : "border-gray-300"}` 
+                  ? `border ${activeToolbar === "search" ? "border-primary-500 ring-1 ring-primary" : "border-gray-300"}` 
                   : ""
               }`}
           >
@@ -282,8 +299,8 @@ const FarmMapToolbar: React.FC<FarmMapToolbarProps> = ({
                 onClick={toggleSearchInput}
                 className={`flex items-center justify-center h-10 min-w-[40px] rounded-lg ${
                     activeToolbar === "search"
-                    ? "bg-green-600 text-white" 
-                    : "text-gray-600 hover:bg-green-50 hover:text-green-700"
+                    ? "bg-primary text-white" 
+                    : "text-gray-600 hover:bg-primary/10 hover:text-primary-700"
                 }`}
               >
                 <Search size={16} />
@@ -347,7 +364,7 @@ const FarmMapToolbar: React.FC<FarmMapToolbarProps> = ({
           onClick={onTogglePanel}
           className={`flex items-center justify-center h-10 w-10 rounded-lg transition-colors ${
             isPanelVisible
-              ? "bg-green-100 text-green-700 hover:bg-green-200" 
+              ? "bg-primary-100 text-primary-700 hover:bg-green-200" 
               : "text-gray-700 hover:bg-gray-50"
           }`}
           aria-label="Toggle data panel"

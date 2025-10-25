@@ -97,7 +97,7 @@ const CalendarCard: React.FC<CalendarCardProps> = ({
         <div 
           key={`day-${day}`} 
           className={`relative h-8 w-8 flex items-center justify-center rounded-full 
-            ${isToday ? 'bg-green-500 text-white font-medium' : 'hover:bg-gray-100 cursor-pointer'}`}
+            ${isToday ? 'bg-accent text-white font-medium' : 'hover:bg-gray-100 cursor-pointer'}`}
         >
           {day}
           {dayEvents.length > 0 && (

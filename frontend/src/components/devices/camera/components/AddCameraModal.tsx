@@ -150,7 +150,7 @@ const AddCameraModal: React.FC<AddCameraModalProps> = ({ isOpen, onClose, onAddC
             </button>
             <button 
               type="submit"
-              className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+              className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-primary/90"
               disabled={!isValidUrl}
             >
               Add Camera

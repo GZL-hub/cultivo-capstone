@@ -102,7 +102,7 @@ const AddWorkerModal: React.FC<AddWorkerModalProps> = ({ isOpen, onClose, onSave
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-y-auto">
       <div className="bg-white rounded-xl shadow-2xl w-full max-w-md transform transition-all">
         {/* Header */}
-        <div className="bg-green-50 px-6 py-4 rounded-t-xl border-b border-green-100">
+        <div className="bg-primary/10 px-6 py-4 rounded-t-xl border-b border-green-100">
           <div className="flex justify-between items-center">
             <h3 className="text-xl font-semibold text-green-800">
               {worker ? 'Edit Worker Details' : 'Add New Worker'}
@@ -140,7 +140,7 @@ const AddWorkerModal: React.FC<AddWorkerModalProps> = ({ isOpen, onClose, onSave
                     onChange={handleChange}
                     className={`pl-10 block w-full rounded-lg border ${
                       errors.name ? 'border-red-300 text-red-900 placeholder-red-300 focus:ring-red-500 focus:border-red-500' : 
-                      'border-gray-300 focus:ring-green-500 focus:border-green-500'
+                      'border-gray-300 focus:ring-primary focus:border-primary-500'
                     } shadow-sm py-2.5 px-4`}
                   />
                   {errors.name && (
@@ -168,7 +168,7 @@ const AddWorkerModal: React.FC<AddWorkerModalProps> = ({ isOpen, onClose, onSave
                     onChange={handleChange}
                     className={`pl-10 block w-full rounded-lg border ${
                       errors.role ? 'border-red-300 text-red-900 placeholder-red-300 focus:ring-red-500 focus:border-red-500' : 
-                      'border-gray-300 focus:ring-green-500 focus:border-green-500'
+                      'border-gray-300 focus:ring-primary focus:border-primary-500'
                     } shadow-sm py-2.5 px-4`}
                   />
                   {errors.role && (
@@ -200,7 +200,7 @@ const AddWorkerModal: React.FC<AddWorkerModalProps> = ({ isOpen, onClose, onSave
                       onChange={handleChange}
                       className={`pl-10 block w-full rounded-lg border ${
                         errors.email ? 'border-red-300 text-red-900 placeholder-red-300 focus:ring-red-500 focus:border-red-500' : 
-                        'border-gray-300 focus:ring-green-500 focus:border-green-500'
+                        'border-gray-300 focus:ring-primary focus:border-primary-500'
                       } shadow-sm py-2.5 px-4`}
                     />
                     {errors.email && (
@@ -228,7 +228,7 @@ const AddWorkerModal: React.FC<AddWorkerModalProps> = ({ isOpen, onClose, onSave
                       onChange={handleChange}
                       className={`pl-10 block w-full rounded-lg border ${
                         errors.phone ? 'border-red-300 text-red-900 placeholder-red-300 focus:ring-red-500 focus:border-red-500' : 
-                        'border-gray-300 focus:ring-green-500 focus:border-green-500'
+                        'border-gray-300 focus:ring-primary focus:border-primary-500'
                       } shadow-sm py-2.5 px-4`}
                     />
                     {errors.phone && (
@@ -252,7 +252,7 @@ const AddWorkerModal: React.FC<AddWorkerModalProps> = ({ isOpen, onClose, onSave
                     name="joinDate"
                     value={formData.joinDate || ''}
                     onChange={handleChange}
-                    className="block w-full rounded-lg border border-gray-300 shadow-sm focus:ring-green-500 focus:border-green-500 py-2.5 px-4"
+                    className="block w-full rounded-lg border border-gray-300 shadow-sm focus:ring-primary focus:border-primary-500 py-2.5 px-4"
                   />
                 </div>
                 
@@ -265,7 +265,7 @@ const AddWorkerModal: React.FC<AddWorkerModalProps> = ({ isOpen, onClose, onSave
                       name="status"
                       value={formData.status}
                       onChange={handleChange}
-                      className="block w-full rounded-lg border border-gray-300 shadow-sm focus:ring-green-500 focus:border-green-500 py-2.5 px-4 appearance-none pr-10"
+                      className="block w-full rounded-lg border border-gray-300 shadow-sm focus:ring-primary focus:border-primary-500 py-2.5 px-4 appearance-none pr-10"
                     >
                       <option value="active">Active</option>
                       <option value="inactive">Inactive</option>
@@ -322,7 +322,7 @@ const AddWorkerModal: React.FC<AddWorkerModalProps> = ({ isOpen, onClose, onSave
                 className={`px-4 py-2.5 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white ${
                   isSubmitting 
                     ? 'bg-green-400 cursor-not-allowed' 
-                    : 'bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500'
+                    : 'bg-green-600 hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary'
                 } flex items-center`}
               >
                 {isSubmitting && (

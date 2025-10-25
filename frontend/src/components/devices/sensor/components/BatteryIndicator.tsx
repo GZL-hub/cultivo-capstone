@@ -12,7 +12,7 @@ const BatteryIndicator: React.FC<BatteryIndicatorProps> = ({ level }) => {
   };
   
   const getBarColor = (level: number) => {
-    if (level > 70) return 'bg-green-500';
+    if (level > 70) return 'bg-accent';
     if (level > 30) return 'bg-yellow-500';
     return 'bg-red-500';
   };

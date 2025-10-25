@@ -19,25 +19,43 @@ export interface FarmBoundary {
   coordinates: number[][][];
 }
 
+export interface ServiceResponse<T> {
+  success: boolean;
+  data?: T;
+  error?: string;
+}
+
 /**
  * Fetch the boundary polygon for a farm
  */
-export const getFarmBoundary = async (farmId: string, ownerId?: string): Promise<FarmBoundary | null> => {
+export const getFarmBoundary = async (
+  farmId: string,
+  ownerId?: string
+): Promise<ServiceResponse<FarmBoundary>> => {
   try {
     console.log(`Fetching boundary for farm: ${farmId}, owner: ${ownerId}`);
     // Direct API call to farm endpoint instead of a separate boundary endpoint
     const response = await axios.get(`${API_URL}/farms/${farmId}`);
-    
+
     if (response.data.success && response.data.data && response.data.data.farmBoundary) {
       console.log('Farm boundary data received:', response.data.data.farmBoundary);
-      return response.data.data.farmBoundary;
+      return {
+        success: true,
+        data: response.data.data.farmBoundary
+      };
     }
-    
+
     console.log('No farm boundary found in response:', response.data);
-    return null;
+    return {
+      success: false,
+      error: 'No farm boundary found'
+    };
   } catch (error) {
     console.error('Error fetching farm boundary:', error);
-    throw error;
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error occurred'
+    };
   }
 };
 
@@ -45,9 +63,9 @@ export const getFarmBoundary = async (farmId: string, ownerId?: string): Promise
  * Save a polygon as a farm boundary
  */
 export const saveFarmBoundary = async (
-  farmId: string, 
+  farmId: string,
   polygonData: PolygonData & { ownerId?: string }
-): Promise<any> => {
+): Promise<ServiceResponse<any>> => {
   try {
     const response = await axios.put(
       `${API_URL}/farms/${farmId}/boundary`,
@@ -58,11 +76,30 @@ export const saveFarmBoundary = async (
         }
       }
     );
-    
-    return response.data;
+
+    if (response.data.success) {
+      return {
+        success: true,
+        data: response.data.data
+      };
+    }
+
+    return {
+      success: false,
+      error: response.data.error || 'Failed to save boundary'
+    };
   } catch (error) {
     console.error('Error saving polygon:', error);
-    throw error;
+    if (axios.isAxiosError(error)) {
+      return {
+        success: false,
+        error: error.response?.data?.message || error.message || 'Network error occurred'
+      };
+    }
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error occurred'
+    };
   }
 };
 

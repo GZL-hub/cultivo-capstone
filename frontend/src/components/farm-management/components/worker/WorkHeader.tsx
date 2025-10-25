@@ -27,7 +27,7 @@ const WorkHeader: React.FC<WorkHeaderProps> = ({
               <select
                 value={filterValue}
                 onChange={(e) => onFilterChange(e.target.value)}
-                className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm"
+                className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm"
               >
                 <option value="all">All Workers</option>
                 <option value="active">Active</option>
@@ -42,7 +42,7 @@ const WorkHeader: React.FC<WorkHeaderProps> = ({
                 <select
                   value={pageSize}
                   onChange={(e) => onPageSizeChange(parseInt(e.target.value, 10))}
-                  className="px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm"
+                  className="px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm"
                 >
                   <option value="5">5</option>
                   <option value="10">10</option>
@@ -57,7 +57,7 @@ const WorkHeader: React.FC<WorkHeaderProps> = ({
               <input
                 type="text"
                 placeholder="Search workers..."
-                className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                 onChange={(e) => onSearch(e.target.value)}
               />
               <svg 
@@ -75,7 +75,7 @@ const WorkHeader: React.FC<WorkHeaderProps> = ({
           {/* Add Worker Button */}
           <button 
             onClick={onAddClick}
-            className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 flex items-center"
+            className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-primary/90 flex items-center"
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
               <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />

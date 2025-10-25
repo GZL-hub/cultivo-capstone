@@ -195,7 +195,7 @@ const CurrentWeather: React.FC<CurrentWeatherProps> = ({
             </div>
             <button 
               onClick={onRetry} 
-              className="px-6 py-2 bg-green-600 text-white rounded-full hover:bg-green-700 transition-colors shadow-lg"
+              className="px-6 py-2 bg-green-600 text-white rounded-full hover:bg-primary/90 transition-colors shadow-lg"
             >
               Refresh Data
             </button>

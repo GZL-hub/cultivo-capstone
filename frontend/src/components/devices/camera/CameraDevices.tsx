@@ -35,7 +35,7 @@ const CameraDevices: React.FC = () => {
   };
 
   return (
-    <div className="relative w-full h-full flex flex-col bg-gray-50">
+    <div className="relative w-full h-full flex flex-col bg-background">
       <CameraHeader 
         filter={filter}
         setFilter={setFilter}
