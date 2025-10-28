@@ -210,10 +210,12 @@ const FarmOverview: React.FC<FarmOverviewProps> = ({ farmId, ownerId }) => {
         {/* Map Card */}
         <div className="bg-white rounded-lg shadow p-0 flex flex-col overflow-hidden h-96">
           <div className="h-full w-full">
-            <GoogleMap 
-              center={farmCenter} 
-              zoom={17} 
+            <GoogleMap
+              center={farmCenter}
+              zoom={17}
               polygonPath={polygonPath}
+              mapType="satellite"
+              showTrafficControl={false}
             />
           </div>
           <div className="p-4 text-xs text-gray-500 text-center border-t">

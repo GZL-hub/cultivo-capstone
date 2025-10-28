@@ -182,6 +182,7 @@ interface MapComponentProps {
   isDarkMode?: boolean;
   polygonPath?: { lat: number; lng: number }[];
   showDefaultMarker?: boolean; // New prop to control default marker rendering
+  showTrafficControl?: boolean; // New prop to control traffic button visibility
 }
 
 function MapComponent({
@@ -194,6 +195,7 @@ function MapComponent({
   isDarkMode = false,
   polygonPath,
   showDefaultMarker = true, // Default to true for backward compatibility
+  showTrafficControl = true, // Default to true for backward compatibility
 }: MapComponentProps) {
   const [map, setMap] = useState<google.maps.Map | null>(null);
   const [showTraffic, setShowTraffic] = useState(false);
@@ -236,17 +238,19 @@ function MapComponent({
 
   return (
     <div className="relative w-full h-full">
-      <div className={`absolute top-2 left-2 z-30 ${isDarkMode ? 'bg-gray-800 text-white' : 'bg-white'} rounded shadow p-2 flex flex-col gap-2`}>
-        <label className="text-xs font-semibold">
-          <input
-            type="checkbox"
-            checked={showTraffic}
-            onChange={() => setShowTraffic((v) => !v)}
-            className="mr-1"
-          />
-          Show Traffic
-        </label>
-      </div>
+      {showTrafficControl && (
+        <div className={`absolute top-2 left-2 z-30 ${isDarkMode ? 'bg-gray-800 text-white' : 'bg-white'} rounded shadow p-2 flex flex-col gap-2`}>
+          <label className="text-xs font-semibold">
+            <input
+              type="checkbox"
+              checked={showTraffic}
+              onChange={() => setShowTraffic((v) => !v)}
+              className="mr-1"
+            />
+            Show Traffic
+          </label>
+        </div>
+      )}
       <GoogleMapComponent
         mapContainerStyle={containerStyle}
         center={center}
