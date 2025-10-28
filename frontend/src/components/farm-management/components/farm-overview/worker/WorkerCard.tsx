@@ -132,61 +132,65 @@ const WorkerCard: React.FC<WorkerCardProps> = ({ farmId, className = "" }) => {
   };
   
   return (
-    <div className={`bg-white rounded-lg shadow p-6 flex flex-col h-full ${className}`}>
+    <div className={`bg-white rounded-lg shadow p-5 flex flex-col h-full hover:shadow-xl transition-shadow ${className}`}>
       {/* Header Section */}
       <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center">
-          <Users className="text-primary-700 mr-2" />
-          <h3 className="text-lg font-semibold">Workers</h3>
-          {!isLoading && <span className="ml-2 text-gray-500 text-sm">({workers.length})</span>}
+        <div className="flex items-center gap-2">
+          <div className="bg-primary/10 rounded-lg p-2">
+            <Users className="text-primary" size={20} />
+          </div>
+          <div>
+            <h3 className="text-base font-semibold text-gray-800">Workers</h3>
+            {!isLoading && (
+              <span className="text-xs text-gray-500">{workers.length} total</span>
+            )}
+          </div>
         </div>
-        
+
         {!isLoading && workers.length > 0 && (
-          <div className="flex space-x-2">
+          <div className="flex items-center gap-2">
             {uniqueRoles.length > 1 && (
               <div className="relative" ref={dropdownRef}>
-                <button 
+                <button
                   onClick={() => setIsFilterDropdownOpen(!isFilterDropdownOpen)}
-                  className={`flex items-center text-sm px-2 py-1 border rounded-md
-                    ${activeFilterCount > 0 
-                      ? 'border-green-300 bg-primary/10 text-primary-700' 
-                      : 'border-gray-300 hover:bg-gray-50'}`}
+                  className={`flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg transition-all ${
+                    activeFilterCount > 0
+                      ? 'bg-primary text-white shadow-sm'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
                 >
-                  <Filter size={14} className="mr-1" />
-                  Filter
-                  {activeFilterCount > 0 && (
-                    <span className="ml-1 bg-green-100 text-green-800 text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                      {activeFilterCount}
-                    </span>
-                  )}
+                  <Filter size={12} />
+                  {activeFilterCount > 0 ? `${activeFilterCount} Filter${activeFilterCount > 1 ? 's' : ''}` : 'Filter'}
                 </button>
-                
+
                 {isFilterDropdownOpen && (
-                  <div className="absolute right-0 mt-1 w-56 bg-white rounded-md shadow-lg z-10 border border-gray-200">
+                  <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-xl z-20 border border-gray-200">
                     <div className="p-3">
-                      <div className="flex items-center justify-between mb-2">
-                        <h4 className="text-sm font-medium">Filter by Role</h4>
+                      <div className="flex items-center justify-between mb-3">
+                        <h4 className="text-xs font-semibold text-gray-700">Filter by Role</h4>
                         {activeFilterCount > 0 && (
-                          <button 
+                          <button
                             onClick={clearAllFilters}
-                            className="text-xs text-gray-500 hover:text-gray-700"
+                            className="text-xs text-primary hover:text-primary-600"
                           >
-                            Clear all
+                            Clear
                           </button>
                         )}
                       </div>
-                      
+
                       <div className="space-y-2 max-h-48 overflow-y-auto">
                         {uniqueRoles.map(role => (
-                          <label key={role} className="flex items-center space-x-2 cursor-pointer">
-                            <div className={`w-4 h-4 border rounded flex items-center justify-center
-                              ${roleFilters[role] ? 'bg-accent border-primary-500' : 'border-gray-300'}`}
-                            >
-                              {roleFilters[role] && <Check size={12} className="text-white" />}
+                          <label key={role} className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-1.5 rounded">
+                            <div className={`w-4 h-4 border rounded flex items-center justify-center transition-colors ${
+                              roleFilters[role] ? 'bg-primary border-primary' : 'border-gray-300'
+                            }`}>
+                              {roleFilters[role] && <Check size={10} className="text-white" strokeWidth={3} />}
                             </div>
-                            <span className="text-sm">{role}</span>
-                            <span className="text-xs text-gray-500">({roleCount[role]})</span>
-                            <input 
+                            <span className="text-sm text-gray-700 flex-1">{role}</span>
+                            <span className="text-xs text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">
+                              {roleCount[role]}
+                            </span>
+                            <input
                               type="checkbox"
                               checked={roleFilters[role] || false}
                               onChange={() => toggleRoleFilter(role)}
@@ -200,85 +204,87 @@ const WorkerCard: React.FC<WorkerCardProps> = ({ farmId, className = "" }) => {
                 )}
               </div>
             )}
-            
+
             {workers.length > 5 && (
               <div className="relative">
                 <input
                   type="text"
-                  placeholder="Search workers"
+                  placeholder="Search..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-8 pr-4 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-primary"
+                  className="pl-7 pr-3 py-1.5 text-xs border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary w-32"
                 />
-                <Search className="absolute left-2 top-1.5 text-gray-400" size={16} />
+                <Search className="absolute left-2 top-2 text-gray-400" size={14} />
               </div>
             )}
           </div>
         )}
       </div>
-      
+
       {/* Active filters summary */}
       {!isLoading && activeFilterCount > 0 && (
-        <div className="flex flex-wrap gap-1 mb-3 bg-gray-50 p-2 rounded-md">
+        <div className="flex flex-wrap gap-1.5 mb-3">
           {Object.entries(roleFilters)
             .filter(([_, isActive]) => isActive)
             .map(([role]) => (
-              <div key={role} className="text-xs px-2 py-0.5 bg-green-100 text-green-800 rounded flex items-center">
+              <div key={role} className="text-xs px-2 py-1 bg-primary/10 text-primary rounded-full flex items-center gap-1">
                 {role}
-                <button 
-                  onClick={() => toggleRoleFilter(role)} 
-                  className="ml-1 hover:text-green-600"
+                <button
+                  onClick={() => toggleRoleFilter(role)}
+                  className="hover:bg-primary/20 rounded-full p-0.5"
                 >
-                  <X size={12} />
+                  <X size={10} />
                 </button>
               </div>
             ))}
-          <button 
-            onClick={clearAllFilters}
-            className="text-xs text-gray-500 hover:text-gray-700 ml-auto"
-          >
-            Clear all
-          </button>
         </div>
       )}
       
       {/* Main Content Area */}
       {isLoading ? (
-        <div className="flex-1 flex items-center justify-center">
-          <Loader2 className="animate-spin text-green-600 mr-2" />
-          <span className="text-gray-600">Loading workers...</span>
+        <div className="flex-1 flex flex-col items-center justify-center py-8">
+          <Loader2 className="animate-spin text-primary mb-2" size={24} />
+          <span className="text-sm text-gray-500">Loading workers...</span>
         </div>
       ) : error ? (
-        <div className="flex-1 flex items-center justify-center text-red-500 text-center p-4">
-          <p>{error}</p>
+        <div className="flex-1 flex items-center justify-center text-center p-6">
+          <div>
+            <div className="text-red-500 text-sm font-medium mb-1">Error</div>
+            <p className="text-xs text-gray-500">{error}</p>
+          </div>
         </div>
       ) : workers.length > 0 ? (
         <div className="flex-1 flex flex-col min-h-0">
           {filteredWorkers.length > 0 ? (
             <>
-              <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
-                <ul className="space-y-3 pr-1">
+              <div className="flex-1 overflow-y-auto">
+                <ul className="space-y-2">
                   {currentWorkers.map((worker) => (
-                    <li key={worker.id} className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded">
-                      <div className="bg-gray-100 rounded-full p-1.5">
-                        <User className="text-gray-600" size={18} />
+                    <li
+                      key={worker.id}
+                      className="flex items-center gap-3 p-3 hover:bg-gray-50 rounded-lg transition-colors border border-transparent hover:border-gray-200"
+                    >
+                      <div className="bg-gradient-to-br from-primary/10 to-primary/5 rounded-full p-2 flex-shrink-0">
+                        <User className="text-primary" size={16} />
                       </div>
-                      <div className="flex-grow">
-                        <div className="flex items-baseline gap-2">
-                          <div className="font-medium">{worker.name}</div>
-                          <div className="text-xs text-gray-500">{worker.role}</div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-0.5">
+                          <div className="font-medium text-sm text-gray-800 truncate">{worker.name}</div>
+                          <div className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded flex-shrink-0">
+                            {worker.role}
+                          </div>
                         </div>
                         {worker.email && (
-                          <div className="text-xs text-gray-500 mt-0.5">
+                          <div className="text-xs text-gray-500 truncate">
                             {worker.email}
                           </div>
                         )}
                       </div>
                       {worker.status && (
-                        <div className={`text-xs px-2 py-0.5 rounded-full ${
-                          worker.status === 'active' 
-                            ? 'bg-green-100 text-green-800' 
-                            : 'bg-gray-100 text-gray-800'
+                        <div className={`text-xs px-2.5 py-1 rounded-full font-medium flex-shrink-0 ${
+                          worker.status === 'active'
+                            ? 'bg-green-100 text-green-700'
+                            : 'bg-gray-100 text-gray-600'
                         }`}>
                           {worker.status}
                         </div>
@@ -287,34 +293,34 @@ const WorkerCard: React.FC<WorkerCardProps> = ({ farmId, className = "" }) => {
                   ))}
                 </ul>
               </div>
-              
+
               {/* Pagination controls */}
               {totalPages > 1 && (
-                <div className="flex items-center justify-between border-t border-gray-200 pt-3 mt-3">
+                <div className="flex items-center justify-between border-t border-gray-100 pt-3 mt-3">
                   <div className="text-xs text-gray-500">
-                    Showing {indexOfFirstWorker + 1}-{Math.min(indexOfLastWorker, filteredWorkers.length)} of {filteredWorkers.length}
+                    {indexOfFirstWorker + 1}-{Math.min(indexOfLastWorker, filteredWorkers.length)} of {filteredWorkers.length}
                   </div>
-                  <div className="flex space-x-1">
-                    <button 
+                  <div className="flex items-center gap-1">
+                    <button
                       onClick={goToPreviousPage}
                       disabled={currentPage === 1}
-                      className={`p-1 rounded ${
-                        currentPage === 1 
-                          ? 'text-gray-300 cursor-not-allowed' 
+                      className={`p-1.5 rounded-lg transition-colors ${
+                        currentPage === 1
+                          ? 'text-gray-300 cursor-not-allowed'
                           : 'text-gray-600 hover:bg-gray-100'
                       }`}
                     >
                       <ChevronLeft size={16} />
                     </button>
-                    <div className="flex items-center px-2 text-sm">
+                    <div className="flex items-center px-2 text-xs font-medium text-gray-600">
                       {currentPage} / {totalPages}
                     </div>
-                    <button 
+                    <button
                       onClick={goToNextPage}
                       disabled={currentPage === totalPages}
-                      className={`p-1 rounded ${
-                        currentPage === totalPages 
-                          ? 'text-gray-300 cursor-not-allowed' 
+                      className={`p-1.5 rounded-lg transition-colors ${
+                        currentPage === totalPages
+                          ? 'text-gray-300 cursor-not-allowed'
                           : 'text-gray-600 hover:bg-gray-100'
                       }`}
                     >
@@ -325,14 +331,26 @@ const WorkerCard: React.FC<WorkerCardProps> = ({ farmId, className = "" }) => {
               )}
             </>
           ) : (
-            <div className="flex-1 flex items-center justify-center text-gray-500 text-sm">
-              {searchTerm ? 'No workers match your search.' : 'No workers match the selected filters.'}
+            <div className="flex-1 flex items-center justify-center py-8">
+              <div className="text-center">
+                <div className="text-gray-400 mb-2">
+                  <Users size={32} className="mx-auto" />
+                </div>
+                <p className="text-sm text-gray-500">
+                  {searchTerm ? 'No workers match your search' : 'No workers match filters'}
+                </p>
+              </div>
             </div>
           )}
         </div>
       ) : (
-        <div className="flex-1 flex items-center justify-center text-gray-500">
-          <p>No workers assigned to this farm</p>
+        <div className="flex-1 flex items-center justify-center py-8">
+          <div className="text-center">
+            <div className="text-gray-300 mb-2">
+              <Users size={32} className="mx-auto" />
+            </div>
+            <p className="text-sm text-gray-500">No workers assigned</p>
+          </div>
         </div>
       )}
     </div>
