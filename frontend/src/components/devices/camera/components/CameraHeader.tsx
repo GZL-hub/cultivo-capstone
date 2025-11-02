@@ -1,12 +1,21 @@
 import React from 'react';
+import { RefreshCw } from 'lucide-react';
 
 interface CameraHeaderProps {
   filter: string;
   setFilter: (filter: string) => void;
   onAddClick: () => void;
+  onRefreshStatus?: () => void;
+  isCheckingStatus?: boolean;
 }
 
-const CameraHeader: React.FC<CameraHeaderProps> = ({ filter, setFilter, onAddClick }) => {
+const CameraHeader: React.FC<CameraHeaderProps> = ({
+  filter,
+  setFilter,
+  onAddClick,
+  onRefreshStatus,
+  isCheckingStatus = false
+}) => {
   return (
     <div className="bg-white shadow-sm border-b border-gray-200 z-10">
       <div className="w-full px-4 py-4 sm:px-6 lg:px-8">
@@ -26,31 +35,48 @@ const CameraHeader: React.FC<CameraHeaderProps> = ({ filter, setFilter, onAddCli
             >
               Online
             </FilterButton>
-            <FilterButton 
-              active={filter === 'offline'} 
+            <FilterButton
+              active={filter === 'offline'}
               onClick={() => setFilter('offline')}
               color="red"
             >
               Offline
             </FilterButton>
-            <FilterButton 
-              active={filter === 'maintenance'} 
-              onClick={() => setFilter('maintenance')}
-              color="yellow"
-            >
-              Maintenance
-            </FilterButton>
           </div>
-          
-          <button 
-            onClick={onAddClick}
-            className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-primary/90 flex items-center"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
-            </svg>
-            Add New Camera
-          </button>
+
+          <div className="flex items-center space-x-3">
+            {/* Status Check Indicator */}
+            {isCheckingStatus && (
+              <div className="flex items-center text-sm text-gray-600">
+                <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                Checking status...
+              </div>
+            )}
+
+            {/* Refresh Status Button */}
+            {onRefreshStatus && (
+              <button
+                onClick={onRefreshStatus}
+                disabled={isCheckingStatus}
+                className="px-3 py-2 bg-blue-50 text-blue-600 rounded-md hover:bg-blue-100 flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
+                title="Refresh camera statuses"
+              >
+                <RefreshCw className={`h-4 w-4 mr-1 ${isCheckingStatus ? 'animate-spin' : ''}`} />
+                Refresh Status
+              </button>
+            )}
+
+            {/* Add Camera Button */}
+            <button
+              onClick={onAddClick}
+              className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-primary/90 flex items-center"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
+              </svg>
+              Add New Camera
+            </button>
+          </div>
         </div>
       </div>
     </div>

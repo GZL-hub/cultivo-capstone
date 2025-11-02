@@ -4,6 +4,7 @@ import SharedVideoPlayer from './SharedVideoPlayer';
 
 interface CameraGridItemProps {
   cameraId: number;
+  cameraName?: string;
   status: string;
   error: string | null;
   isHovered: boolean;
@@ -15,6 +16,7 @@ interface CameraGridItemProps {
 
 const CameraGridItem: React.FC<CameraGridItemProps> = ({
   cameraId,
+  cameraName,
   status,
   error,
   isHovered,
@@ -49,7 +51,7 @@ const CameraGridItem: React.FC<CameraGridItemProps> = ({
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="text-white font-semibold text-sm drop-shadow">
-              Camera {cameraId}
+              {cameraName || `Camera ${cameraId}`}
             </span>
             <div className="flex items-center gap-1">
               <div
@@ -120,8 +122,8 @@ const CameraGridItem: React.FC<CameraGridItemProps> = ({
       {/* Bottom Bar with Camera Info */}
       <div className="absolute bottom-0 left-0 right-0 z-10 bg-gradient-to-t from-black/70 to-transparent p-2">
         <div className="flex items-center justify-between text-xs text-white drop-shadow">
-          <span>Farm Main Sector</span>
-          {status === 'connected' && <span className="font-mono">REC</span>}
+          <span>{cameraName ? `Stream ${cameraId}` : 'Farm Main Sector'}</span>
+          {status === 'connected' && <span className="font-mono">LIVE</span>}
         </div>
       </div>
     </div>

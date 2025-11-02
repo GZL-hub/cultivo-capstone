@@ -9,6 +9,7 @@ import {
   updateFarmBoundary,
 } from '../controllers/farmController';
 import workerRoutes from './workerRoutes';
+import cctvRoutes from './cctvRoutes';
 
 const router = express.Router();
 
@@ -27,8 +28,11 @@ router.route('/:id/boundary')
   .get(getFarmBoundary)
   .put(updateFarmBoundary);
 
-// Nested routes for workers 
+// Nested routes for workers
 router.use('/:farmId/workers', workerRoutes);
+
+// Nested routes for CCTV devices
+router.use('/:farmId/cctvs', cctvRoutes);
 
 
 export default router;
