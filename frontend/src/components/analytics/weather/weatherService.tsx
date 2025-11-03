@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { getFarms } from '../../../services/farmService';
+import authService from '../../../services/authService';
 
 // WeatherData Interface
 export interface WeatherData {
@@ -40,27 +41,33 @@ export interface DailyForecast {
 }
 
 /**
- * Gets coordinates and name from the farm data
+ * Gets coordinates and name from the farm data for the current user
  * @returns Promise with latitude, longitude and farm name
  */
 export const getFarmCoordinates = async (): Promise<{latitude: number, longitude: number, farmName: string}> => {
   try {
-    // Get all farms
-    const farms = await getFarms();
-    
+    // Get current user
+    const currentUser = authService.getCurrentUser();
+    if (!currentUser || !currentUser.id) {
+      throw new Error('No user logged in');
+    }
+
+    // Get farms for the current user only
+    const farms = await getFarms(currentUser.id);
+
     // Check if we have farms
     if (!farms || farms.length === 0) {
-      throw new Error('No farms found in the database');
+      throw new Error('No farms registered. Please create a farm first.');
     }
     
     // Get the first farm boundary
     const firstFarm = farms[0];
     
-    if (!firstFarm.farmBoundary || 
-        !firstFarm.farmBoundary.coordinates || 
-        !firstFarm.farmBoundary.coordinates[0] || 
+    if (!firstFarm.farmBoundary ||
+        !firstFarm.farmBoundary.coordinates ||
+        !firstFarm.farmBoundary.coordinates[0] ||
         !firstFarm.farmBoundary.coordinates[0][0]) {
-      throw new Error('Farm boundary coordinates not available');
+      throw new Error('Farm boundary not drawn. Please draw your farm boundary on the map.');
     }
     
     // GeoJSON format: coordinates are [longitude, latitude]

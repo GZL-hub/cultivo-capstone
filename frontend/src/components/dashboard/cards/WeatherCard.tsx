@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { fetchWeatherData, WeatherData } from '../../../components/analytics/weather/weatherService';
 import WeatherIcon from '../../../components/analytics/weather/icons/WeatherIcons';
+import { AlertCircle } from 'lucide-react';
 
 interface WeatherCardProps {
   apiKey?: string;
@@ -112,16 +113,37 @@ const WeatherCard: React.FC<WeatherCardProps> = ({ apiKey }) => {
     );
   }
 
-  // Error state
+  // Error state - check if it's a "no farm" error
   if (error) {
+    const isNoFarmError = error.includes('No farms registered') || error.includes('Farm boundary not drawn');
+
+    if (isNoFarmError) {
+      return (
+        <div className="p-4 rounded-2xl shadow-2xl" style={timeBasedStyle}>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-lg font-semibold text-white">Weather</h2>
+            <div className="text-sm text-white/80">{formattedDate}</div>
+          </div>
+          <div className="text-center py-4">
+            <p className="text-white/90 font-medium mb-1">
+              {error.includes('boundary not drawn')
+                ? 'Please draw your farm boundary on the map'
+                : 'Create a farm to view weather data'}
+            </p>
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div className="p-4 rounded-2xl shadow-2xl" style={timeBasedStyle}>
         <div className="flex items-center justify-between mb-2">
           <h2 className="text-lg font-semibold text-white">Weather</h2>
           <div className="text-sm text-white/80">{formattedDate}</div>
         </div>
-        <div className="text-center py-2 text-white/80">
-          <p>Unable to load weather data</p>
+        <div className="text-center py-4">
+          <AlertCircle className="h-12 w-12 mx-auto text-white/40 mb-3" />
+          <p className="text-white/90 font-medium">Unable to load weather data</p>
           <p className="text-xs mt-1 text-white/60">{error}</p>
         </div>
       </div>

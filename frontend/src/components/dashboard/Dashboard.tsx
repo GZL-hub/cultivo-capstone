@@ -1,16 +1,18 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import DeviceStatistics from './cards/DeviceStatistics';
 import WeatherCard from './cards/WeatherCard';
 import RainwaterCollector from './cards/RainwaterCollector';
 import SensorCard from './cards/SensorCard';
 import FarmMapCard from './cards/FarmMapCard';
 import axios from 'axios';
+import authService from '../../services/authService';
 // Import icons
-import { 
-  FaSeedling, 
-  FaVideo, 
-  FaVial, 
-  FaTint 
+import {
+  FaSeedling,
+  FaVideo,
+  FaVial,
+  FaTint
 } from 'react-icons/fa';
 
 // API URL
@@ -34,6 +36,8 @@ interface DashboardProps {
 }
 
 const Dashboard: React.FC<DashboardProps> = ({ isLoaded }) => {
+  const navigate = useNavigate();
+
   // Add state for farm data
   const [farmInfo, setFarmInfo] = useState({
     name: "Loading...",
@@ -55,9 +59,19 @@ const Dashboard: React.FC<DashboardProps> = ({ isLoaded }) => {
     const fetchFarmData = async () => {
       try {
         setIsLoading(true);
-        const response = await axios.get(`${API_URL}/farms`);
+        setError(null);
+
+        // Get current user
+        const currentUser = authService.getCurrentUser();
+        if (!currentUser || !currentUser.id) {
+          setError('Please log in to view your farm');
+          return;
+        }
+
+        // Fetch farms for the current user only
+        const response = await axios.get(`${API_URL}/farms?owner=${currentUser.id}`);
         const farms = response.data.data;
-        
+
         if (farms && farms.length > 0) {
           setFarmInfo({
             name: farms[0].name,
@@ -69,50 +83,14 @@ const Dashboard: React.FC<DashboardProps> = ({ isLoaded }) => {
               coordinates: [[[0, 0], [0, 0], [0, 0], [0, 0]]]
             }
           });
-        } else {
-          // If no farms found, use default values
-          setFarmInfo({
-            name: "Green Valley Orchard",
-            type: "Tree Orchard",
-            operationDate: "March 15, 2022",
-            areaSize: "2.2 hectares",
-            farmBoundary: {
-              type: "Polygon",
-              coordinates: [
-                [
-                  [0, 0],
-                  [0, 0],
-                  [0, 0],
-                  [0, 0]
-                ]
-              ]
-            }
-          });
-        }
-      } catch (err) {
-        console.error('Error fetching farm data:', err);
-        // Keep default values on error
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchFarmData();
-  }, []);
-
-  useEffect(() => {
-    const fetchFarmData = async () => {
-      try {
-        setIsLoading(true);
-        const response = await axios.get(`${API_URL}/farms`);
-        const farms = response.data.data;
-        
-        if (farms && farms.length > 0) {
           // Store the farm ID for use with FarmMapCard
           setSelectedFarmId(farms[0]._id);
+        } else {
+          setSelectedFarmId(null);
         }
-      } catch (err) {
+      } catch (err: any) {
         console.error('Error fetching farm data:', err);
+        setError(err.response?.data?.error || 'Failed to load farm data');
       } finally {
         setIsLoading(false);
       }
@@ -151,8 +129,7 @@ const Dashboard: React.FC<DashboardProps> = ({ isLoaded }) => {
 
   // View full map handler
   const handleViewFullMap = () => {
-    console.log("View full map clicked");
-    // Navigate to full map view or open a modal
+    navigate('/farm/map');
   };
 
   return (

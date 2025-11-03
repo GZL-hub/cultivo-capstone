@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { GoogleMap, Polygon } from '@react-google-maps/api';
 import axios from 'axios';
+import { Map, MapPin } from 'lucide-react';
 
 // Define device status type
 type DeviceStatus = 'online' | 'offline' | 'low_battery';
@@ -103,28 +104,24 @@ const FarmMapCard: React.FC<FarmMapCardProps> = ({
           });
           console.log('Multiple farms found, using first farm:', farm);
         } else {
-          throw new Error('No farm data found');
+          setError('No farm registered. Please create a farm in Farm Management.');
         }
-      } catch (err) {
+      } catch (err: any) {
         console.error('Error fetching farm data:', err);
-        setError('Failed to load farm data');
-        // Use default values on error
-        setFarmInfo({
-          name: "Error Loading Farm",
-          type: "Unknown",
-          operationDate: "Unknown",
-          areaSize: "Unknown",
-          farmBoundary: {
-            type: "Polygon",
-            coordinates: [[[0, 0], [0, 0], [0, 0], [0, 0]]]
-          }
-        });
+        const errorMessage = err.response?.data?.error || 'Failed to load farm data';
+        setError(errorMessage);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchFarmData();
+    // Only fetch if we have a farmId
+    if (farmId) {
+      fetchFarmData();
+    } else {
+      setLoading(false);
+      setError('No farm registered. Please create a farm in Farm Management.');
+    }
   }, [farmId]); // Re-fetch when farmId changes
 
   // Helper function to get status styles
@@ -218,6 +215,34 @@ const FarmMapCard: React.FC<FarmMapCardProps> = ({
     strokeWeight: 2,
   };
 
+  // Show empty state if no farm is registered
+  if (error && (error.includes('No farm registered') || error.includes('No farm data found'))) {
+    return (
+      <div className="bg-white p-4 rounded-lg shadow-md w-full h-full flex flex-col items-center justify-center">
+        <div className="text-center max-w-md">
+          {/* Icon */}
+          <div className="mb-4 text-gray-300">
+            <Map className="h-24 w-24 mx-auto" strokeWidth={1.5} />
+          </div>
+
+          {/* Message */}
+          <h3 className="text-xl font-semibold text-gray-700 mb-2">No Farm Registered</h3>
+          <p className="text-gray-500 mb-4">
+            You haven't created a farm yet. Get started by creating and drawing your farm boundary in Farm Management.
+          </p>
+
+          {/* Action button */}
+          <button
+            onClick={onViewFullMap}
+            className="px-6 py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors"
+          >
+            Go to Farm Management
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-white p-4 rounded-lg shadow-md w-full h-full flex flex-col">
       {/* Map Header */}
@@ -225,7 +250,7 @@ const FarmMapCard: React.FC<FarmMapCardProps> = ({
         <h2 className="text-lg font-semibold text-gray-700">
           {loading ? 'Loading Farm...' : `Farm Overview: ${farmInfo.name}`}
         </h2>
-        <button 
+        <button
           className="text-blue-500 text-sm hover:underline"
           onClick={onViewFullMap}
         >
@@ -235,7 +260,7 @@ const FarmMapCard: React.FC<FarmMapCardProps> = ({
 
       {/* Map Area */}
       <div className="h-[350px] w-full bg-gray-100 rounded-md mb-3 overflow-hidden border border-gray-200">
-        {isLoaded && !loading ? (
+        {isLoaded && !loading && !error ? (
           <GoogleMap
             mapContainerStyle={mapContainerStyle}
             center={getMapCenter()}
@@ -267,9 +292,9 @@ const FarmMapCard: React.FC<FarmMapCardProps> = ({
           </div>
         )}
       </div>
-      
-      {/* Error message if present */}
-      {error && (
+
+      {/* Error message if present (but not "no farm" errors) */}
+      {error && !error.includes('No farm registered') && !error.includes('No farm data found') && (
         <div className="bg-red-50 text-red-600 p-3 mb-3 rounded-md">
           <p className="text-sm">{error}</p>
         </div>

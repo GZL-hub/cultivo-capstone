@@ -184,21 +184,39 @@ const CurrentWeather: React.FC<CurrentWeatherProps> = ({
       {/* Main Hero Section */}
       <div className="p-4">
         {data.error ? (
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <div className="flex items-center">
-              <CloudOff className="h-16 w-16 text-amber-500 mr-4" />
-              <div>
-                <h3 className="text-xl font-semibold text-gray-100">Weather Data Unavailable</h3>
-                <p className="text-amber-400">{data.error}</p>
-                <p className="text-sm text-gray-300 mt-1">Using fallback data for demonstration</p>
-              </div>
+          <div className="flex flex-col items-center justify-center gap-4 py-12">
+            <div className="text-center">
+              {data.error.includes('No farms registered') || data.error.includes('Farm boundary not drawn') ? (
+                <>
+                  {/* Farm icon for "no farm" error */}
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-20 w-20 mx-auto mb-4 text-white/40" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                  </svg>
+                  <h3 className="text-2xl font-semibold text-white mb-2">No Farm Location Available</h3>
+                  <p className="text-white/80 text-lg mb-1">{data.error}</p>
+                  <p className="text-white/60 text-sm">
+                    {data.error.includes('boundary not drawn')
+                      ? 'Please draw your farm boundary on the map to enable weather data.'
+                      : 'Create a farm in Farm Management to view weather data for your location.'}
+                  </p>
+                </>
+              ) : (
+                <>
+                  {/* Cloud icon for other errors */}
+                  <CloudOff className="h-20 w-20 text-amber-400 mx-auto mb-4" />
+                  <h3 className="text-2xl font-semibold text-white mb-2">Weather Data Unavailable</h3>
+                  <p className="text-amber-300 text-lg">{data.error}</p>
+                  {onRetry && (
+                    <button
+                      onClick={onRetry}
+                      className="mt-6 px-6 py-3 bg-white/20 hover:bg-white/30 text-white rounded-lg transition-colors shadow-lg"
+                    >
+                      Retry
+                    </button>
+                  )}
+                </>
+              )}
             </div>
-            <button 
-              onClick={onRetry} 
-              className="px-6 py-2 bg-green-600 text-white rounded-full hover:bg-primary/90 transition-colors shadow-lg"
-            >
-              Refresh Data
-            </button>
           </div>
         ) : (
           <div className="flex flex-col md:flex-row justify-between">
