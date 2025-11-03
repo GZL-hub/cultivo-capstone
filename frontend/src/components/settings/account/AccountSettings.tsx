@@ -4,6 +4,7 @@ import PersonalInfoForm from './PersonalInfoForm';
 import PasswordChangeForm from './PasswordChangeForm';
 import AvatarModal from './AvatarModal';
 import { getUserById, updateUserProfile, updateUserAvatar, changePassword, IUser } from '../../../services/userService';
+import authService from '../../../services/authService';
 
 // Predefined avatar options
 const avatarOptions = [
@@ -18,9 +19,9 @@ const avatarOptions = [
 ];
 
 const AccountSettings: React.FC = () => {
-  // We'll assume you have the user ID stored somewhere after login
-  // For demo purposes, I'll use the ID from the MongoDB document you provided
-  const userId = "68d2c8fbed77eafbf8013bad";
+  // Get current user from localStorage
+  const currentUser = authService.getCurrentUser();
+  const userId = currentUser?.id || "";
   
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -55,13 +56,24 @@ const AccountSettings: React.FC = () => {
 
   const handleSaveAvatar = async () => {
     if (!userData) return;
-    
+
     try {
       await updateUserAvatar(userId, selectedAvatar);
       setUserData({
         ...userData,
         avatarUrl: selectedAvatar
       });
+
+      // Update localStorage
+      authService.updateCurrentUser({ avatarUrl: selectedAvatar });
+
+      // Dispatch custom event to notify Header of avatar change
+      window.dispatchEvent(
+        new CustomEvent('avatarUpdated', {
+          detail: { avatarUrl: selectedAvatar }
+        })
+      );
+
       setShowAvatarModal(false);
     } catch (error: any) {
       console.error('Failed to update avatar:', error);
@@ -72,10 +84,28 @@ const AccountSettings: React.FC = () => {
   // Handle profile update
   const handleUpdateProfile = async (updatedData: Partial<IUser>) => {
     if (!userData) return;
-    
+
     try {
       const updatedUser = await updateUserProfile(userId, updatedData);
       setUserData(updatedUser);
+
+      // Update localStorage
+      authService.updateCurrentUser({
+        name: updatedUser.name,
+        email: updatedUser.email,
+        phone: updatedUser.phone,
+        role: updatedUser.role
+      });
+
+      // Dispatch custom event to notify Header of profile changes
+      window.dispatchEvent(
+        new CustomEvent('avatarUpdated', {
+          detail: {
+            name: updatedUser.name,
+            email: updatedUser.email
+          }
+        })
+      );
     } catch (error: any) {
       console.error('Failed to update profile:', error);
       // You could add error handling/notification here
