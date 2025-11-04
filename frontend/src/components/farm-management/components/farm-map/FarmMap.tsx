@@ -1,10 +1,12 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import MapComponent from '../../../googlemap/GoogleMap';
 import FarmMapToolbar, { MapType } from './FarmMapToolBar';
 import { DrawingManager } from '@react-google-maps/api';
 import PolygonDataPanel from './polygon/PolygonDataPanel';
 import { toast } from 'react-hot-toast';
 import axios from 'axios';
+import { MapPin, ArrowRight } from 'lucide-react';
 // Import the polygon service
 import { 
   getFarmBoundary, 
@@ -34,13 +36,15 @@ interface FarmMapProps {
   ownerId?: string; // Add ownerId as a required prop
 }
 const FarmMap: React.FC<FarmMapProps> = ({ coordinates, farmId: propFarmId, ownerId: propOwnerId }) => {
+  const navigate = useNavigate();
+
   // Get farmId and ownerId from context if not provided as props
   const context = useFarmManagement();
   const farmId = propFarmId || context?.farmId;
   const ownerId = propOwnerId || context?.ownerId;
-  
+
   console.log(`FarmMap rendered with farmId: ${farmId}, ownerId: ${ownerId}`);
-  
+
   // State declarations - kept the same
   const [map, setMap] = useState<google.maps.Map | null>(null);
   const [mapType, setMapType] = useState<'roadmap' | 'satellite' | 'terrain' | 'hybrid'>('roadmap');
@@ -480,6 +484,62 @@ useEffect(() => {
     setActiveToolbar(null);
   };
   
+  // Show onboarding UI if no farm is registered
+  if (!farmId) {
+    return (
+      <div className="w-full h-full flex items-center justify-center bg-gray-50 p-6">
+        <div className="bg-white rounded-lg shadow-xl p-8 max-w-lg w-full">
+          <div className="text-center">
+            {/* Icon */}
+            <div className="mb-6 text-blue-500">
+              <MapPin className="h-20 w-20 mx-auto" strokeWidth={1.5} />
+            </div>
+
+            {/* Heading */}
+            <h2 className="text-2xl font-bold text-gray-800 mb-3">Create a Farm First</h2>
+            <p className="text-gray-600 mb-6">
+              Before you can draw your farm boundary on the map, you need to register your farm with basic information.
+            </p>
+
+            {/* Info Box */}
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6 text-left">
+              <h3 className="font-semibold text-gray-800 mb-2">What you need to do:</h3>
+              <ol className="text-sm text-gray-700 space-y-2">
+                <li className="flex items-start">
+                  <span className="bg-primary text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold mr-2 mt-0.5 flex-shrink-0">
+                    1
+                  </span>
+                  <span>Go to Farm Overview and create your farm</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="bg-primary text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold mr-2 mt-0.5 flex-shrink-0">
+                    2
+                  </span>
+                  <span>Fill in basic farm details (name, type, size)</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="bg-primary text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold mr-2 mt-0.5 flex-shrink-0">
+                    3
+                  </span>
+                  <span>Return here to draw your farm boundary</span>
+                </li>
+              </ol>
+            </div>
+
+            {/* Action Button */}
+            <button
+              onClick={() => navigate('/farm/overview')}
+              className="inline-flex items-center px-6 py-3 bg-primary text-white font-medium rounded-lg hover:bg-primary/90 transition-colors shadow-md"
+            >
+              Go to Farm Overview
+              <ArrowRight size={20} className="ml-2" />
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="relative w-full h-full">
       {/* Loading Overlay */}

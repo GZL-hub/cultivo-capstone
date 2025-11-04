@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import GoogleMap from '../../../googlemap/GoogleMap';
-import { Wifi, WifiOff } from 'lucide-react';
+import { Wifi, WifiOff, Plus, Map } from 'lucide-react';
 import { IFarm, getFarms } from '../../../../services/farmService';
 import axios from 'axios';
 import CalendarCard from './calendar/CalendarCard';
 import WorkerCard from './worker/WorkerCard';
+import CreateFarmModal from './CreateFarmModal';
 
 // API URL
 const API_URL = '/api';
@@ -97,10 +99,12 @@ const getBoundaryPolygon = (farmBoundary?: { type: string; coordinates: number[]
 };
 
 const FarmOverview: React.FC<FarmOverviewProps> = ({ farmId, ownerId }) => {
+  const navigate = useNavigate();
   const [farm, setFarm] = useState<ExtendedFarm | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [workerFarmId, setWorkerFarmId] = useState<string>('');
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   
   // Fetch farm data on component mount
@@ -166,6 +170,16 @@ const FarmOverview: React.FC<FarmOverviewProps> = ({ farmId, ownerId }) => {
     // In a real app, you would open a form to add a new event
   };
 
+  // Handler for farm creation
+  const handleFarmCreated = (newFarmId: string) => {
+    // Refresh the page or refetch data
+    window.location.reload();
+  };
+
+  const handleGoToMap = () => {
+    navigate('/farm/map');
+  };
+
   // Render loading state
   if (isLoading) {
     return (
@@ -188,12 +202,71 @@ const FarmOverview: React.FC<FarmOverviewProps> = ({ farmId, ownerId }) => {
     );
   }
 
-  // If we have no farm data at this point, something went very wrong
+  // If we have no farm data, show onboarding UI
   if (!farm) {
     return (
-      <div className="bg-yellow-50 text-yellow-700 p-4 rounded-md">
-        <p>No farm data available.</p>
-      </div>
+      <>
+        <div className="w-full h-full flex items-center justify-center bg-background p-6">
+          <div className="bg-white rounded-lg shadow-xl p-8 max-w-2xl w-full">
+            <div className="text-center">
+              {/* Icon */}
+              <div className="mb-6 text-primary">
+                <Map className="h-24 w-24 mx-auto" strokeWidth={1.5} />
+              </div>
+
+              {/* Heading */}
+              <h2 className="text-3xl font-bold text-gray-800 mb-3">Welcome to Farm Management</h2>
+              <p className="text-gray-600 mb-8 text-lg">
+                Let's get started by creating your first farm. You'll be able to draw your farm boundary on the map after registration.
+              </p>
+
+              {/* Steps */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-left">
+                  <div className="flex items-center mb-2">
+                    <div className="bg-primary text-white rounded-full w-8 h-8 flex items-center justify-center font-bold mr-3">
+                      1
+                    </div>
+                    <h3 className="font-semibold text-gray-800">Create Your Farm</h3>
+                  </div>
+                  <p className="text-sm text-gray-600 ml-11">
+                    Register your farm with basic information like name, type, and size.
+                  </p>
+                </div>
+
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-left">
+                  <div className="flex items-center mb-2">
+                    <div className="bg-primary text-white rounded-full w-8 h-8 flex items-center justify-center font-bold mr-3">
+                      2
+                    </div>
+                    <h3 className="font-semibold text-gray-800">Draw Boundary</h3>
+                  </div>
+                  <p className="text-sm text-gray-600 ml-11">
+                    Navigate to the Farm Map to draw your farm's boundary on the interactive map.
+                  </p>
+                </div>
+              </div>
+
+              {/* Action Button */}
+              <button
+                onClick={() => setIsCreateModalOpen(true)}
+                className="inline-flex items-center px-6 py-3 bg-primary text-white text-lg font-medium rounded-lg hover:bg-primary/90 transition-colors shadow-lg"
+              >
+                <Plus size={24} className="mr-2" />
+                Create Your First Farm
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Create Farm Modal */}
+        <CreateFarmModal
+          isOpen={isCreateModalOpen}
+          onClose={() => setIsCreateModalOpen(false)}
+          onFarmCreated={handleFarmCreated}
+          ownerId={ownerId}
+        />
+      </>
     );
   }
   

@@ -8,7 +8,8 @@ export interface IFarm {
   type: string;
   operationDate: string;
   areaSize: string;
-  farmBoundary: {
+  coordinates?: string; // Optional coordinate string
+  farmBoundary?: {
     type: string;
     coordinates: number[][][];
   };

@@ -5,11 +5,12 @@ export interface IFarm extends Document {
   type: string;
   operationDate: string;
   areaSize: string;
-  coordinates: string;
-  farmBoundary: {
+  coordinates?: string;
+  farmBoundary?: {
     type: string;
     coordinates: number[][][];
   };
+  owner: mongoose.Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -34,18 +35,17 @@ const FarmSchema = new Schema({
   },
   coordinates: {
     type: String,
-    required: true
+    required: false
   },
   farmBoundary: {
-    type: {
-      type: String,
-      enum: ['Polygon'],
-      required: true
-    },
-    coordinates: {
-      type: [[[Number]]], // Array of arrays of arrays of numbers
-      required: true
-    }
+    type: Schema.Types.Mixed,
+    required: false,
+    default: undefined
+  },
+  owner: {
+    type: Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
   },
   createdAt: {
     type: Date,

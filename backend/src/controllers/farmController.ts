@@ -70,7 +70,24 @@ export const createFarm = async (req: Request, res: Response): Promise<void> => 
       return;
     }
 
-    const farm = await Farm.create(req.body);
+    // Remove farmBoundary and coordinates if they are empty/invalid
+    const farmData = { ...req.body };
+
+    // Don't include farmBoundary if it's empty or invalid
+    if (farmData.farmBoundary) {
+      if (!farmData.farmBoundary.coordinates ||
+          farmData.farmBoundary.coordinates.length === 0 ||
+          (Array.isArray(farmData.farmBoundary.coordinates[0]) && farmData.farmBoundary.coordinates[0].length === 0)) {
+        delete farmData.farmBoundary;
+      }
+    }
+
+    // Don't include coordinates if it's empty
+    if (!farmData.coordinates || farmData.coordinates === '') {
+      delete farmData.coordinates;
+    }
+
+    const farm = await Farm.create(farmData);
     res.status(201).json({ success: true, data: farm });
   } catch (error) {
     if (error instanceof Error) {
