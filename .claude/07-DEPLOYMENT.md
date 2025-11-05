@@ -12,22 +12,22 @@ Cultivo uses a **containerized deployment** strategy with Google Cloud Platform 
 │                                                                 │
 │  GitHub Repo                                                    │
 │      │                                                          │
-│      │ Push to main branch                                     │
+│      │ Push to main branch                                      │
 │      ▼                                                          │
 │  GitHub Actions                                                 │
 │      │                                                          │
-│      │ Trigger Cloud Build                                     │
+│      │ Trigger Cloud Build                                      │
 │      ▼                                                          │
 │  Google Cloud Build                                             │
 │      │                                                          │
-│      ├─► Build Docker image (multi-stage)                      │
-│      ├─► Push to Artifact Registry                             │
-│      └─► Deploy to Cloud Run                                   │
+│      ├─► Build Docker image (multi-stage)                       │
+│      ├─► Push to Artifact Registry                              │
+│      └─► Deploy to Cloud Run                                    │
 │           │                                                     │
 │           ▼                                                     │
-│  Cloud Run Service (cultivo-capstone)                          │
-│      ├─► Express.js Backend (API endpoints)                    │
-│      └─► React Frontend (Static files)                         │
+│  Cloud Run Service (cultivo-capstone)                           │
+│      ├─► Express.js Backend (API endpoints)                     │
+│      └─► React Frontend (Static files)                          │
 └─────────────────────────────────────────────────────────────────┘
 ```
 ---
