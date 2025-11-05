@@ -1,276 +1,114 @@
-# CLAUDE.md
+# CLAUDE.md - Quick Reference Guide
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+**Cultivo**: Full-stack farm management platform with WebRTC CCTV, Google Maps, worker management, and analytics.
 
-## Project Overview
-
-Cultivo is a full-stack farm management platform enabling farmers to monitor farms with maps and sensors, manage workers, track equipment (sensors/cameras), analyze weather data, and monitor live CCTV feeds via WebRTC.
-
-**Tech Stack:**
+## Tech Stack
 - **Frontend:** React 19.1 (TypeScript) + Tailwind CSS + Google Maps
 - **Backend:** Express.js + MongoDB (Mongoose) + JWT auth
-- **Deployment:** Docker multi-stage build → Google Cloud Run (Asia Southeast 1)
+- **Deployment:** Docker → Google Cloud Run (Asia Southeast 1)
+- **Streaming:** MediaMTX (WebRTC) + FFmpeg on GCE VM
 
-## Development Commands
-
-### Backend (from `/backend`)
+## Quick Start
 ```bash
-npm run dev        # Start development server with auto-reload (ts-node + nodemon)
-npm run build      # Compile TypeScript to dist/
-npm start          # Run compiled production build
-```
-
-### Frontend (from `/frontend`)
-```bash
-npm start          # Start development server (port 3000, proxies API to localhost:8080)
-npm run build      # Create production build
-npm run tailwind   # Watch and compile Tailwind CSS changes
-npm test           # Run Jest tests
-```
-
-### Full Application
-```bash
-# Terminal 1 (Backend)
+# Backend (Terminal 1)
 cd backend && npm run dev
 
-# Terminal 2 (Frontend)
+# Frontend (Terminal 2)
 cd frontend && npm start
 
-# Terminal 3 (Optional - Tailwind watch)
+# Tailwind (Terminal 3 - optional)
 cd frontend && npm run tailwind
 ```
 
-### Docker & Deployment
+## Monorepo Structure
+```
+frontend/       # React SPA
+  ├── components/   # Feature-based: login, dashboard, farm-management, etc.
+  ├── services/     # API clients (farmService, authService, etc.)
+  └── App.tsx       # Router + auth logic
+
+backend/        # Express API
+  ├── models/       # Mongoose schemas (User, Farm, Worker, CCTV)
+  ├── controllers/  # Business logic
+  ├── routes/       # API endpoints
+  └── middleware/   # Auth (protect middleware)
+```
+
+## Key Patterns
+- **Auth:** JWT in localStorage → Axios interceptor → `protect` middleware → `req.user`
+- **API Base:** `/api` → Standard response: `{ success, data?, error? }`
+- **Services:** All API calls go through `services/*.tsx` (never direct axios in components)
+- **Nested Routes:** Workers live under farms: `/api/farms/:farmId/workers`
+- **GeoJSON:** Farm boundaries stored as polygons for Google Maps
+- **WebRTC:** Shared stream provider (1 connection for 16 cameras)
+
+## Key Files
+- Backend entry: `backend/src/index.ts`
+- Frontend entry: `frontend/src/App.tsx`
+- Auth middleware: `backend/src/middleware/auth.ts`
+- WebRTC components: `frontend/src/components/farm-management/components/camera/`
+
+## Environment Variables
 ```bash
-# Local Docker build (requires build args)
-docker build --build-arg REACT_APP_GOOGLE_MAPS_API_KEY=<key> \
-  --build-arg MONGODB_URI=<uri> -t cultivo .
+# frontend/.env
+REACT_APP_GOOGLE_MAPS_API_KEY=your_key
 
-# Run container
-docker run -p 8080:8080 -e MONGODB_URI=<uri> cultivo
+# backend/.env
+MONGODB_URI=mongodb://localhost:27017/cultivo
+PORT=8080
+JWT_SECRET=your_secret
+```
 
-# Deploy to Cloud Run (via Cloud Build)
+## Development Guidelines
+- **TypeScript:** All new code (Props interfaces: `{Component}Props`)
+- **Styling:** Tailwind utility classes only
+- **Icons:** Lucide React (`import { IconName } from 'lucide-react'`)
+- **Components:** Functional with hooks, feature-based organization
+- **Error Handling:** 400 (validation), 401 (auth), 404 (not found), 500 (server)
+
+## Detailed Documentation
+
+For comprehensive information, refer to these docs in `.claude/`:
+
+1. **[01-PROJECT-OVERVIEW.md](./01-PROJECT-OVERVIEW.md)** - Project vision, tech stack, features, architecture
+2. **[02-GETTING-STARTED.md](./02-GETTING-STARTED.md)** - Setup, prerequisites, running locally
+3. **[03-ARCHITECTURE.md](./03-ARCHITECTURE.md)** - Three-tier architecture, deployment, design patterns
+4. **[04-FRONTEND-GUIDE.md](./04-FRONTEND-GUIDE.md)** - React components, routing, state management
+5. **[05-BACKEND-API.md](./05-BACKEND-API.md)** - API endpoints reference, auth flow, error handling
+6. **[06-DATABASE-MODELS.md](./06-DATABASE-MODELS.md)** - Mongoose schemas, relationships, indexes
+7. **[07-DEPLOYMENT.md](./07-DEPLOYMENT.md)** - Docker builds, Cloud Run, MediaMTX server, CI/CD
+8. **[08-FEATURES-GUIDE.md](./08-FEATURES-GUIDE.md)** - Feature implementations, maps, CCTV, workers
+9. **[WebRTC.md](./WebRTC.md)** - WebRTC streaming architecture, FFmpeg, MediaMTX config, shared streams
+
+## Common Tasks
+
+**Add API Endpoint:**
+1. Define route in `backend/src/routes/{resource}Routes.ts`
+2. Implement controller in `backend/src/controllers/{resource}Controller.ts`
+3. Add `protect` middleware if auth required
+4. Create service in `frontend/src/services/{resource}Service.tsx`
+5. Call from component
+
+**Add Component:**
+1. Create in `frontend/src/components/{feature}/`
+2. Define TypeScript props interface
+3. Use existing services for API calls
+4. Apply Tailwind for styling
+
+**Modify Schema:**
+1. Update model in `backend/src/models/{Model}.ts`
+2. Update controller validation
+3. Update frontend TypeScript types
+
+**Deploy:**
+```bash
 gcloud builds submit --config cloudbuild.yaml \
   --substitutions _MONGODB_URI=<uri>,_REACT_APP_GOOGLE_MAPS_API_KEY=<key>
 ```
 
-## Architecture
-
-### Monorepo Structure
-```
-cultivo-capstone/
-├── frontend/       # React SPA (Create React App)
-│   ├── src/
-│   │   ├── components/      # Feature-based components
-│   │   ├── services/        # API client modules
-│   │   └── App.tsx          # Router + auth logic
-│   └── package.json
-├── backend/        # Express API server
-│   ├── src/
-│   │   ├── models/          # Mongoose schemas
-│   │   ├── controllers/     # Business logic
-│   │   ├── routes/          # API endpoints
-│   │   ├── middleware/      # Auth middleware
-│   │   └── index.ts         # Express app setup
-│   └── package.json
-├── Dockerfile              # Multi-stage build
-└── cloudbuild.yaml        # GCP deployment config
-```
-
-### API Architecture
-
-**Base URL:** `/api`
-
-**Authentication Flow:**
-1. Client calls `POST /api/auth/login` → receives JWT token
-2. Token stored in localStorage
-3. Axios interceptor adds `Authorization: Bearer {token}` header to all requests
-4. Backend `protect` middleware verifies JWT and attaches user to `req.user`
-
-**Key Endpoints:**
-- `/api/auth` - login, register, getMe
-- `/api/farms` - Farm CRUD + boundary operations (GeoJSON polygons)
-- `/api/farms/:farmId/workers` - Worker CRUD (nested under farms)
-- `/api/users` - User management
-
-**Response Format:**
-```typescript
-{
-  success: boolean,
-  data?: T,
-  error?: string
-}
-```
-
-### Data Models
-
-**User** (`backend/src/models/User.ts`)
-- Fields: name, email (unique), password (bcrypt hashed), phone, role, avatarUrl
-- Middleware: Auto-hash password on save
-- Method: `comparePassword()` for login verification
-
-**Farm** (`backend/src/models/Farm.ts`)
-- Fields: name, type, operationDate, areaSize, coordinates, farmBoundary (GeoJSON Polygon), owner (user ID)
-- Special: Stores polygon coordinates for interactive map boundaries
-
-**Worker** (`backend/src/models/Worker.ts`)
-- Fields: id (unique short string), name, role, email, phone, joinDate, status, farmId (ObjectId reference)
-- Indexed: Compound index on (id, farmId) ensures unique worker IDs per farm
-
-### Frontend Architecture
-
-**Component Organization:**
-- `components/login/` - Authentication UI
-- `components/layout/` - Header, Sidebar, main Layout wrapper
-- `components/dashboard/` - Overview with sensor/weather cards
-- `components/farm-management/` - Core feature with map, CCTV, workers
-- `components/devices/` - Sensor and camera device management
-- `components/analytics/` - Farm analytics + weather forecasting
-- `components/settings/` - Account and farm configuration
-
-**Service Layer Pattern:**
-All API calls abstracted into service modules (`services/*.tsx`):
-```typescript
-// Example: farmService.tsx
-import axios from 'axios';
-
-export const getFarms = async () => {
-  const response = await axios.get('/api/farms');
-  return response.data;
-};
-```
-
-**Authentication State:**
-- Token stored in `localStorage` as "token"
-- `App.tsx` checks token on mount and redirects to `/login` if missing
-- `authService.tsx` handles login/register and token management
-
-### Key Features Implementation
-
-**Google Maps Integration:**
-- `farm-management/components/farm-map/FarmMap.tsx` - Main map component
-- `farm-management/components/farm-map/polygon/` - Drawing tools for farm boundaries
-- Uses `@react-google-maps/api` library
-- Requires `REACT_APP_GOOGLE_MAPS_API_KEY` env var
-
-**WebRTC CCTV Streaming:**
-- `farm-management/components/camera/FarmCCTV.tsx` - Main CCTV view
-- `WebRTCPlayer.tsx` - Handles WebRTC connection and playback
-- Status indicators and troubleshooting tips included
-
-**Worker Management:**
-- Nested resource: `/api/farms/:farmId/workers`
-- Full CRUD with status filtering (active/inactive) and search
-- Table view with pagination
-
-## Environment Variables
-
-### Frontend (`.env` in `/frontend`)
-```env
-REACT_APP_GOOGLE_MAPS_API_KEY=your_google_maps_api_key
-```
-
-### Backend (`.env` in `/backend`)
-```env
-MONGODB_URI=mongodb://localhost:27017/cultivo  # or Atlas URI
-PORT=8080                                       # Optional, defaults to 8080
-JWT_SECRET=your_secret_key                      # Optional, has default
-```
-
-## Important Patterns & Conventions
-
-### Authentication Middleware
-Protected routes use `protect` middleware (`backend/src/middleware/auth.ts`):
-```typescript
-// In routes:
-router.get('/farms', protect, getFarms);
-
-// Middleware attaches user:
-req.user // Current authenticated user
-```
-
-### Error Handling
-- 400: Validation errors
-- 401: Authentication failures
-- 404: Resource not found
-- 500: Server errors
-- Always include descriptive error messages in response
-
-### Database Queries
-- Use Mongoose methods: `Model.find()`, `Model.findById()`, etc.
-- Apply filters via query params (e.g., `?owner=userId`, `?status=active`)
-- Populate references where needed (e.g., farm owner)
-
-### Component Conventions
-- Use TypeScript for all new components
-- Props interfaces named `{ComponentName}Props`
-- Prefer functional components with hooks
-- Extract reusable logic into custom hooks
-- Use Lucide React for icons (`import { IconName } from 'lucide-react'`)
-
-### Styling
-- Tailwind CSS utility classes (configured in `tailwind.config.js`)
-- Custom CSS in `index.css` (imports Tailwind layers)
-- Run `npm run tailwind` in frontend to watch CSS changes
-- Generated output: `src/output.css`
-
-## Deployment Architecture
-
-**Multi-Stage Docker Build:**
-1. **Stage 1:** Build React app → `/app/frontend/build`
-2. **Stage 2:** Compile TypeScript backend → `/app/backend/dist`
-3. **Stage 3:** Node.js slim image with:
-   - Backend server (`dist/index.js`)
-   - Static frontend files served from `/public`
-   - Single process serving both API and SPA
-
-**Cloud Run Configuration:**
-- Port: 8080 (Cloud Run default)
-- Region: asia-southeast1
-- Artifact Registry: `asia-southeast1-docker.pkg.dev`
-- Build args required: `MONGODB_URI`, `REACT_APP_GOOGLE_MAPS_API_KEY`
-
-**SPA Routing:**
-Backend serves `index.html` for all non-API routes (see `backend/src/index.ts:44-46`), enabling client-side routing with React Router.
-
-## Testing
-
-**Frontend:**
-- Jest + React Testing Library configured
-- Run: `npm test` from `/frontend`
-- Test files: `*.test.tsx` or `*.test.ts`
-
-**Backend:**
-- No test suite currently configured
-- Test script placeholder in `package.json`
-
-## Recent Development Focus
-
-Based on git history:
-- WebRTC camera streaming implementation
-- Worker management CRUD operations
-- UI improvements for worker cards
-- Mixed content (HTTPS/HTTP) security fixes
-- Pagination features
-
-## Working with the Codebase
-
-**Adding a New API Endpoint:**
-1. Define route in `backend/src/routes/{resource}Routes.ts`
-2. Implement controller in `backend/src/controllers/{resource}Controller.ts`
-3. Add middleware (e.g., `protect`) if authentication required
-4. Update frontend service in `frontend/src/services/{resource}Service.tsx`
-5. Call service from React component
-
-**Adding a New Component:**
-1. Create component in appropriate feature directory (`components/{feature}/`)
-2. Define TypeScript interface for props
-3. Import and use in parent component or add route in `App.tsx`
-4. Use existing services for API calls
-5. Apply Tailwind classes for styling
-
-**Modifying Database Schema:**
-1. Update Mongoose model in `backend/src/models/{Model}.ts`
-2. If changing required fields, ensure controllers handle validation
-3. Test with existing data to avoid migration issues
-4. Update TypeScript interfaces in frontend if needed
+## Critical Notes
+- **WebRTC:** See `WebRTC.md` for full streaming setup (FFmpeg bridge → MediaMTX → React)
+- **Maps:** Requires `REACT_APP_GOOGLE_MAPS_API_KEY` and enabled Maps JavaScript API
+- **Workers:** Compound unique index on (id, farmId) - unique per farm, not globally
+- **Deployment:** Multi-stage Docker serves both frontend (static) and backend (Express) on port 8080
+- **Auth:** Token in localStorage, checked in `App.tsx`, protected by middleware
