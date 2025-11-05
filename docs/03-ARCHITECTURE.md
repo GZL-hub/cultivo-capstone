@@ -242,7 +242,6 @@ Workers are **nested under farms** with the route pattern `/api/farms/:farmId/wo
 - **Nested Routes**: Workers accessed via `/api/farms/:farmId/workers`
 - **farmId Association**: Every worker has a `farmId` reference to its parent farm
 - **Unique Constraint**: Compound index `(id, farmId)` ensures unique worker IDs per farm
-- **Cascade Consideration**: Deleting a farm should handle associated workers (future enhancement)
 
 ### 4. WebRTC Streaming Flow
 
@@ -267,7 +266,7 @@ Detailed in the [WebRTC.md](./.claude/WebRTC.md) file. High-level flow:
 
 ## Design Patterns
 
-### 1. MVC-like Pattern (Backend)
+### MVC-like Pattern (Backend)
 
 ```
 Routes (Entry Point)
@@ -279,111 +278,6 @@ Controllers (Business Logic)
 Models (Data Access)
     ↓
 Database
-```
-
-**Example: Farm CRUD**
-
-```typescript
-// Route (farmRoutes.ts)
-router.route('/').get(getAllFarms).post(createFarm);
-
-// Controller (farmController.ts)
-export const createFarm = async (req, res) => {
-  const farm = await Farm.create(req.body);
-  res.json({ success: true, data: farm });
-};
-
-// Model (Farm.ts)
-const FarmSchema = new Schema({ name, type, owner, ... });
-export default mongoose.model('Farm', FarmSchema);
-```
-
-### 2. Service Layer Pattern (Frontend)
-
-All API communication abstracted into service modules:
-
-```typescript
-// Service (farmService.tsx)
-export const getFarms = async (ownerId?: string) => {
-  const url = ownerId ? `/api/farms?owner=${ownerId}` : '/api/farms';
-  const response = await axios.get(url);
-  return response.data;
-};
-
-// Component (FarmOverview.tsx)
-import { getFarms } from '../../services/farmService';
-
-const loadFarms = async () => {
-  const data = await getFarms(ownerId);
-  setFarms(data);
-};
-```
-
-**Benefits:**
-- Centralized API logic
-- Easy to mock for testing
-- Consistent error handling
-- Single source of truth for endpoints
-
-### 3. Provider Pattern (React Context)
-
-Used for sharing WebRTC streams across components:
-
-```typescript
-// SharedStreamProvider.tsx
-const SharedStreamContext = createContext<SharedStreamContextType | undefined>(undefined);
-
-export const SharedStreamProvider: React.FC<{ children, streamUrl }> = ({ children, streamUrl }) => {
-  const [stream, setStream] = useState<MediaStream | null>(null);
-  const [connectionState, setConnectionState] = useState<ConnectionState>('idle');
-
-  // Single WebRTC connection logic
-  const connect = async () => { /* ... */ };
-
-  return (
-    <SharedStreamContext.Provider value={{ stream, connectionState, connect, disconnect }}>
-      {children}
-    </SharedStreamContext.Provider>
-  );
-};
-
-// Consumer (SharedVideoPlayer.tsx)
-const { stream, connectionState } = useContext(SharedStreamContext);
-```
-
-**Benefits:**
-- Single WebRTC connection for multiple video players
-- Centralized connection state management
-- 16x bandwidth and CPU reduction for 4x4 grid
-
-### 4. Middleware Pattern (Express)
-
-Chain of responsibility for request processing:
-
-```typescript
-// Auth Middleware (auth.ts)
-export const protect = async (req, res, next) => {
-  const token = req.headers.authorization?.split(' ')[1];
-  if (!token) return res.status(401).json({ success: false });
-
-  const decoded = verifyToken(token);
-  req.user = await User.findById(decoded.id);
-  next();
-};
-
-// Route with Middleware
-router.get('/farms', protect, getAllFarms);
-```
-
-### 5. Repository Pattern (Mongoose Models)
-
-Models act as data access layer:
-
-```typescript
-// Direct database interaction through model
-const farms = await Farm.find({ owner: userId })
-  .populate('owner', 'name email')
-  .sort({ createdAt: -1 });
 ```
 
 ## Security Architecture
@@ -450,17 +344,6 @@ const farms = await Farm.find({ owner: userId })
 └─────────────┘   └─────────────┘
 ```
 
-### Indexing Strategy
-
-```typescript
-// Worker compound index for unique IDs per farm
-WorkerSchema.index({ id: 1, farmId: 1 }, { unique: true });
-
-// Future indexes (recommended):
-// Farm.index({ owner: 1, createdAt: -1 });
-// CCTV.index({ farmId: 1, status: 1 });
-```
-
 ## API Design Principles
 
 ### 1. RESTful Conventions
@@ -479,20 +362,7 @@ WorkerSchema.index({ id: 1, farmId: 1 }, { unique: true });
 /api/{parent}/:id/{nested}   # Nested resource
 ```
 
-### 3. Response Format
-
-Consistent JSON structure across all endpoints:
-
-```typescript
-{
-  success: boolean,
-  data?: T,
-  error?: string,
-  message?: string
-}
-```
-
-### 4. Error Handling
+### 3. Error Handling
 
 ```typescript
 // Standard error responses
@@ -501,29 +371,6 @@ Consistent JSON structure across all endpoints:
 404 Not Found         // Resource doesn't exist
 500 Internal Error    // Server-side errors
 ```
-
-## Performance Considerations
-
-### 1. Frontend Optimization
-
-- **Code Splitting**: Route-based lazy loading (future)
-- **Memoization**: React.memo for expensive components (future)
-- **Debouncing**: Search inputs to reduce API calls
-- **Caching**: Browser HTTP cache for static assets
-
-### 2. Backend Optimization
-
-- **Database Indexes**: Compound indexes for frequent queries
-- **Connection Pooling**: Mongoose connection pooling
-- **Lean Queries**: `.lean()` for read-only data (future)
-- **Pagination**: Limit + skip for large datasets (future)
-
-### 3. Network Optimization
-
-- **HTTP/2**: Supported by Cloud Run
-- **Compression**: gzip/brotli compression
-- **CDN**: Static assets served from Cloud Run edge locations
-- **WebRTC**: Peer-to-peer media streaming (NAT traversal via STUN)
 
 ## Scalability Strategy
 

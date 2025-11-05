@@ -1,24 +1,20 @@
 # Getting Started Guide
 
 ## Prerequisites
-
-Before you begin, ensure you have the following installed on your development machine:
-
 ### Required Software
 
-| Software | Minimum Version | Download Link | Purpose |
+| Software | Minimum Version | Purpose |
 |----------|----------------|---------------|---------|
-| **Node.js** | 16.x or higher | [nodejs.org](https://nodejs.org/) | JavaScript runtime |
-| **npm** | 8.x or higher | Included with Node.js | Package manager |
-| **Git** | 2.x or higher | [git-scm.com](https://git-scm.com/) | Version control |
-| **MongoDB** | 5.x or higher | [mongodb.com](https://www.mongodb.com/try/download/community) | Database (or use Atlas) |
+| **Node.js** | 16.x or higher | JavaScript runtime |
+| **npm** | 8.x or higher | Package manager |
+| **Git** | 2.x or higher | Version control |
+| **MongoDB** | 5.x or higher | Database (or use Atlas) |
 
 ### Optional Tools
 
 - **Docker**: For containerized development and deployment
 - **MongoDB Compass**: GUI for MongoDB database management
 - **Postman/Thunder Client**: API testing tools
-- **VS Code**: Recommended IDE with TypeScript support
 
 ## Project Setup
 
@@ -98,35 +94,8 @@ REACT_APP_GOOGLE_MAPS_API_KEY=your_google_maps_api_key
 REACT_APP_API_URL=http://localhost:8080
 ```
 
-### Obtaining Google Maps API Key
-
-1. Go to [Google Cloud Console](https://console.cloud.google.com/)
-2. Create a new project or select existing one
-3. Enable the following APIs:
-   - Maps JavaScript API
-   - Places API
-   - Geocoding API (optional)
-4. Create credentials (API Key)
-5. Add API key restrictions (HTTP referrers for production)
-6. Copy the API key to your `.env` file
-
 ### MongoDB Setup
-
-#### Option 1: Local MongoDB
-
-```bash
-# Install MongoDB Community Edition
-# On macOS with Homebrew:
-brew install mongodb-community
-
-# Start MongoDB service
-brew services start mongodb-community
-
-# Verify MongoDB is running
-mongosh
-```
-
-#### Option 2: MongoDB Atlas (Cloud)
+#### MongoDB Atlas (Cloud)
 
 1. Create account at [mongodb.com/atlas](https://www.mongodb.com/atlas)
 2. Create a free cluster (M0 Sandbox)
@@ -167,36 +136,6 @@ The backend server will:
 cd frontend
 npm start
 ```
-
-**Expected Output:**
-```
-Compiled successfully!
-
-You can now view frontend in the browser.
-
-  Local:            http://localhost:3000
-  On Your Network:  http://192.168.1.x:3000
-```
-
-The frontend will:
-- Run on `http://localhost:3000`
-- Auto-reload on code changes (hot module replacement)
-- Proxy API requests to `http://localhost:8080` (configured in package.json)
-
-#### Terminal 3: Tailwind CSS Watch (Optional)
-
-```bash
-cd frontend
-npm run tailwind
-```
-
-**Expected Output:**
-```
-Rebuilding...
-Done in 45ms.
-```
-
-This watches for CSS changes and recompiles Tailwind classes. Only needed if modifying styles.
 
 ### Access the Application
 
@@ -301,113 +240,11 @@ docker run -p 8080:8080 \
 
 Access the application at `http://localhost:8080`
 
-## Common Issues & Troubleshooting
-
-### Issue: MongoDB Connection Error
-
-**Error:**
-```
-MongoNetworkError: connect ECONNREFUSED 127.0.0.1:27017
-```
-
-**Solution:**
-- Verify MongoDB is running: `brew services list` (macOS) or `systemctl status mongod` (Linux)
-- Check `MONGODB_URI` in `backend/.env`
-- Try connecting with MongoDB Compass to verify connection string
-
-### Issue: Google Maps Not Loading
-
-**Error:**
-```
-Error loading maps. Please check the API key and network connection.
-```
-
-**Solution:**
-- Verify `REACT_APP_GOOGLE_MAPS_API_KEY` is set in `frontend/.env`
-- Ensure Maps JavaScript API is enabled in Google Cloud Console
-- Restart the frontend dev server after adding/changing `.env`
-
-### Issue: API Requests Failing
-
-**Error:**
-```
-Network Error / CORS Error
-```
-
-**Solution:**
-- Verify backend is running on port 8080
-- Check `proxy` setting in `frontend/package.json` (should be `"http://localhost:8080"`)
-- Clear browser cache and restart dev servers
-
-### Issue: Port Already in Use
-
-**Error:**
-```
-Error: listen EADDRINUSE: address already in use :::8080
-```
-
-**Solution:**
-```bash
-# Find process using the port
-lsof -i :8080        # macOS/Linux
-netstat -ano | findstr :8080   # Windows
-
-# Kill the process
-kill -9 <PID>        # macOS/Linux
-taskkill /PID <PID> /F   # Windows
-
-# Or change port in backend/.env
-PORT=8081
-```
-
-### Issue: TypeScript Compilation Errors
-
-**Error:**
-```
-Error: Cannot find module '@types/...'
-```
-
-**Solution:**
-```bash
-# Reinstall dependencies
-cd backend  # or frontend
-rm -rf node_modules package-lock.json
-npm install
-```
-
-## Development Workflow
-
-### Making Changes
-
-1. **Create a feature branch:**
-   ```bash
-   git checkout -b feature/your-feature-name
-   ```
-
-2. **Make your changes** in the appropriate directory (frontend or backend)
-
-3. **Test your changes:**
-   ```bash
-   # Run frontend tests
-   cd frontend
-   npm test
-   ```
-
-4. **Commit your changes:**
-   ```bash
-   git add .
-   git commit -m "feat: description of your changes"
-   ```
-
-5. **Push and create a pull request:**
-   ```bash
-   git push origin feature/your-feature-name
-   ```
+ origin feature/your-feature-name
 
 ### Code Style
 
 - **TypeScript**: Follow TSConfig settings (strict mode enabled)
-- **Formatting**: Prettier recommended (install ESLint + Prettier extensions in VS Code)
 - **Naming Conventions**:
   - Components: PascalCase (e.g., `FarmMap.tsx`)
   - Services: camelCase with Service suffix (e.g., `farmService.tsx`)

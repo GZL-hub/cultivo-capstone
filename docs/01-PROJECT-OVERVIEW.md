@@ -2,7 +2,7 @@
 
 ## What is Cultivo?
 
-Cultivo is a comprehensive full-stack farm management platform designed to empower farmers with modern technology for efficient farm operations. The platform provides a centralized dashboard for monitoring farms through interactive maps and sensors, managing workers, tracking equipment (sensors/cameras), analyzing weather data, and monitoring live CCTV feeds via WebRTC streaming.
+Cultivo is a full-stack farm management platform designed to help farmers with modern technology for efficient farm operations. The platform provides a centralized dashboard for monitoring farms through interactive maps and sensors, managing workers, tracking equipment (sensors/cameras), analyzing weather data, and monitoring live CCTV feeds via WebRTC streaming.
 
 ## Project Vision
 
@@ -153,18 +153,6 @@ cultivo-capstone/
 - **Account Settings**: Customize user preferences
 - **Farm Ownership**: Users own and manage their farms
 
-## Response Format Standard
-
-All API endpoints follow a consistent response structure:
-
-```typescript
-{
-  success: boolean,      // Indicates request success/failure
-  data?: T,             // Response payload (on success)
-  error?: string,       // Error message (on failure)
-  message?: string      // Additional context message
-}
-```
 
 ## Development Philosophy
 
@@ -199,22 +187,6 @@ All API endpoints follow a consistent response structure:
 - **HTTPS Required**: WebRTC streaming requires secure context
 - **Self-Signed Certs**: Development setup uses self-signed certificates (requires manual acceptance)
 - **Responsive Design**: Tailwind CSS ensures mobile-friendly UI
-
-## Project Status
-
-**Current Version**: 1.0.0
-
-**Active Development Areas**:
-- WebRTC camera streaming improvements
-- Worker management enhancements
-- UI/UX refinements
-- Analytics dashboard expansion
-
-**Deployment**:
-- **Production**: Cloud Run (cultivo-capstone service)
-- **Region**: Asia Southeast 1
-- **Database**: MongoDB Atlas (cloud-hosted)
-- **Media Server**: GCP Compute Engine (us-central1)
 
 ## Next Steps
 

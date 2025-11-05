@@ -30,40 +30,6 @@ Cultivo uses a **containerized deployment** strategy with Google Cloud Platform 
 │      └─► React Frontend (Static files)                         │
 └─────────────────────────────────────────────────────────────────┘
 ```
-
----
-
-## Prerequisites
-
-### Required Accounts & Tools
-
-1. **Google Cloud Platform Account**
-   - Create account at [cloud.google.com](https://cloud.google.com)
-   - Enable billing
-   - Create a new GCP project
-
-2. **Google Cloud CLI (gcloud)**
-   ```bash
-   # Install gcloud CLI
-   # macOS
-   brew install --cask google-cloud-sdk
-
-   # Linux
-   curl https://sdk.cloud.google.com | bash
-
-   # Initialize gcloud
-   gcloud init
-   gcloud auth login
-   ```
-
-3. **Docker Desktop** (for local builds)
-   - Download from [docker.com](https://www.docker.com/products/docker-desktop)
-
-4. **Environment Variables**
-   - `MONGODB_URI` - MongoDB Atlas connection string
-   - `REACT_APP_GOOGLE_MAPS_API_KEY` - Google Maps API key
-   - `JWT_SECRET` - Secret key for JWT signing (optional, has default)
-
 ---
 
 ## Docker Multi-Stage Build
@@ -177,19 +143,6 @@ curl http://localhost:8080/api/message
 
 # Expected response:
 # {"message":"ok","success":true}
-```
-
-### View Container Logs
-
-```bash
-# List running containers
-docker ps
-
-# View logs
-docker logs <container_id>
-
-# Follow logs (real-time)
-docker logs -f <container_id>
 ```
 
 ---
@@ -547,19 +500,6 @@ gcloud run services update cultivo-capstone \
 
 ## Monitoring & Logging
 
-### View Logs
-
-```bash
-# View Cloud Run logs
-gcloud run services logs read cultivo-capstone \
-  --region asia-southeast1 \
-  --limit=50
-
-# Follow logs (real-time)
-gcloud run services logs tail cultivo-capstone \
-  --region asia-southeast1
-```
-
 ### Cloud Run Metrics
 
 Access metrics in GCP Console:
@@ -573,56 +513,6 @@ Access metrics in GCP Console:
 - **Container instances**: Auto-scaling instances
 - **Memory utilization**: RAM usage
 - **CPU utilization**: CPU usage
-
-### Custom Monitoring
-
-**Add logging to your application:**
-
-```typescript
-// backend/src/index.ts
-app.use((req, res, next) => {
-  console.log(`${req.method} ${req.path} - ${new Date().toISOString()}`);
-  next();
-});
-```
-
----
-
-## Rollback & Version Management
-
-### Rollback to Previous Version
-
-```bash
-# List revisions
-gcloud run revisions list \
-  --service cultivo-capstone \
-  --region asia-southeast1
-
-# Rollback to specific revision
-gcloud run services update-traffic cultivo-capstone \
-  --region asia-southeast1 \
-  --to-revisions REVISION_NAME=100
-```
-
-### Traffic Splitting (Canary Deployment)
-
-```bash
-# Deploy new version
-gcloud run deploy cultivo-capstone \
-  --image new_image \
-  --region asia-southeast1 \
-  --no-traffic
-
-# Split traffic: 90% old, 10% new
-gcloud run services update-traffic cultivo-capstone \
-  --region asia-southeast1 \
-  --to-revisions REVISION_OLD=90,REVISION_NEW=10
-
-# If stable, move 100% to new
-gcloud run services update-traffic cultivo-capstone \
-  --region asia-southeast1 \
-  --to-latest
-```
 
 ---
 
@@ -703,5 +593,4 @@ gcloud run services logs read cultivo-capstone --region asia-southeast1
 
 ## Next Steps
 
-- **[Development Workflow](./09-DEVELOPMENT-WORKFLOW.md)** - Git workflow and best practices
-- **[Features Guide](./10-FEATURES-GUIDE.md)** - Feature implementation details
+- **[Features Guide](./8-FEATURES-GUIDE.md)** - Feature implementation details

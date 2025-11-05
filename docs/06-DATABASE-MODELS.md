@@ -100,58 +100,10 @@ const UserSchema = new Schema({
 ### Middleware & Methods
 
 #### Pre-Save Hook (Password Hashing)
-
-```typescript
-UserSchema.pre<IUser>('save', async function(next) {
-  // Only hash if password is modified
-  if (!this.isModified('password')) return next();
-
-  try {
-    const salt = await bcrypt.genSalt(10);
-    this.password = await bcrypt.hash(this.password, salt);
-    next();
-  } catch (error: any) {
-    next(error);
-  }
-});
-```
-
 **Purpose:** Automatically hash passwords before saving to database
 
 #### Instance Method: comparePassword
-
-```typescript
-UserSchema.methods.comparePassword = async function(
-  candidatePassword: string
-): Promise<boolean> {
-  return bcrypt.compare(candidatePassword, this.password);
-};
-```
-
 **Purpose:** Verify password during login (compares plaintext with hashed)
-
-### Indexes
-
-```typescript
-// MongoDB creates unique index on email automatically
-db.users.createIndex({ email: 1 }, { unique: true })
-```
-
-### Example Documents
-
-```json
-{
-  "_id": ObjectId("60f7b3b3b3b3b3b3b3b3b3b3"),
-  "name": "John Doe",
-  "email": "john.doe@example.com",
-  "password": "$2b$10$XYZ...hashed_password",
-  "phone": "+1234567890",
-  "role": "User",
-  "avatarUrl": "https://images.unsplash.com/photo-1758551051834-61f10a361b73?w=150",
-  "createdAt": ISODate("2023-10-01T12:00:00.000Z"),
-  "updatedAt": ISODate("2023-10-15T14:30:00.000Z")
-}
-```
 
 ---
 
@@ -234,23 +186,6 @@ const FarmSchema = new Schema({
 The `farmBoundary` field stores **GeoJSON Polygon** data for drawing farm boundaries on maps.
 
 **Structure:**
-
-```typescript
-{
-  type: "Polygon",
-  coordinates: [
-    [  // Outer ring (boundary)
-      [longitude, latitude],  // Point 1
-      [longitude, latitude],  // Point 2
-      [longitude, latitude],  // Point 3
-      [longitude, latitude],  // Point 4
-      [longitude, latitude]   // Point 1 (close the polygon)
-    ],
-    // Optional: inner rings (holes) can be added here
-  ]
-}
-```
-
 **Example:**
 
 ```json
@@ -275,13 +210,6 @@ The `farmBoundary` field stores **GeoJSON Polygon** data for drawing farm bounda
 - Coordinates must follow right-hand rule for exterior rings
 
 ### Indexes
-
-```typescript
-// Recommended indexes (not yet implemented)
-db.farms.createIndex({ owner: 1, createdAt: -1 })  // Query farms by owner
-db.farms.createIndex({ "farmBoundary.coordinates": "2dsphere" })  // Geospatial queries
-```
-
 ### Example Document
 
 ```json
@@ -389,11 +317,6 @@ const WorkerSchema = new Schema({
 ### Unique Constraint
 
 **Compound Index** ensures worker IDs are unique **per farm**:
-
-```typescript
-WorkerSchema.index({ id: 1, farmId: 1 }, { unique: true });
-```
-
 **Why:** Different farms can have workers with the same ID (e.g., "W001"), but within a single farm, worker IDs must be unique.
 
 **Example:**
@@ -401,27 +324,7 @@ WorkerSchema.index({ id: 1, farmId: 1 }, { unique: true });
 - Farm B: Worker with id="W001" ✅
 - Farm A: Another worker with id="W001" ❌ (Duplicate)
 
-### Email Validation
-
-```typescript
-email: {
-  match: [/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/, 'Please provide a valid email']
-}
-```
-
 **Behavior:** Mongoose validates email format on save. Invalid emails are rejected.
-
-### Indexes
-
-```typescript
-// Compound unique index
-db.workers.createIndex({ id: 1, farmId: 1 }, { unique: true })
-
-// Recommended additional indexes
-db.workers.createIndex({ farmId: 1, status: 1 })  // Filter by farm and status
-db.workers.createIndex({ name: "text" })  // Text search on name
-```
-
 ### Example Document
 
 ```json
@@ -583,52 +486,6 @@ const farm = await Farm.findById(farmId).populate('owner', 'name email');
   }
 }
 ```
-
-### Cascade Delete Considerations
-
-**Current Behavior:** No cascade delete implemented.
-
-**Recommendation:** Implement cascade delete middleware:
-
-```typescript
-FarmSchema.pre('remove', async function(next) {
-  // Delete all workers associated with this farm
-  await Worker.deleteMany({ farmId: this._id });
-  // Delete all CCTVs associated with this farm
-  await CCTV.deleteMany({ farmId: this._id });
-  next();
-});
-```
-
----
-
-## Indexing Strategy
-
-### Current Indexes
-
-```typescript
-// User Model
-db.users.createIndex({ email: 1 }, { unique: true })
-
-// Worker Model
-db.workers.createIndex({ id: 1, farmId: 1 }, { unique: true })
-```
-
-### Recommended Future Indexes
-
-```typescript
-// Farm Model
-db.farms.createIndex({ owner: 1, createdAt: -1 })  // Query farms by owner
-db.farms.createIndex({ "farmBoundary.coordinates": "2dsphere" })  // Geo queries
-
-// Worker Model
-db.workers.createIndex({ farmId: 1, status: 1 })  // Filter by farm & status
-db.workers.createIndex({ name: "text", role: "text" })  // Full-text search
-
-// CCTV Model
-db.cctvs.createIndex({ farmId: 1, status: 1 })  // Filter by farm & status
-```
-
 ---
 
 ## Data Validation
@@ -692,38 +549,6 @@ const cameras = await CCTV.find({ farmId: farmId, status: 'online' });
 ```
 
 ---
-
-## Migration Considerations
-
-### Schema Changes
-
-**Adding a new field:**
-```typescript
-// 1. Add field to schema with default value
-newField: {
-  type: String,
-  default: 'default_value'
-}
-
-// 2. Existing documents will use default value
-// No migration script needed
-```
-
-**Renaming a field:**
-```typescript
-// 1. Update MongoDB documents
-db.farms.updateMany({}, { $rename: { "oldField": "newField" } })
-
-// 2. Update Mongoose schema
-```
-
-**Changing field type:**
-```typescript
-// 1. Create new field with new type
-// 2. Migrate data from old field to new field
-// 3. Remove old field
-```
-
 ## Next Steps
 
 - **[Deployment Guide](./07-DEPLOYMENT.md)** - Production deployment

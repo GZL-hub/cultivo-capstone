@@ -62,18 +62,7 @@ Welcome to the comprehensive documentation for Cultivo, a full-stack farm manage
    - Environment management
    - Monitoring & logging
 
-### Development
-
-8. **[Development Workflow](./08-DEVELOPMENT-WORKFLOW.md)**
-   - Git workflow and branching
-   - Commit message conventions
-   - Code review guidelines
-   - Testing strategy
-   - Code quality tools
-   - Pre-commit hooks
-   - Continuous Integration
-
-9. **[Features Implementation Guide](./09-FEATURES-GUIDE.md)**
+8. **[Features Implementation Guide](./08-FEATURES-GUIDE.md)**
    - Authentication system
    - Farm management
    - Interactive maps with polygons
@@ -90,7 +79,7 @@ Welcome to the comprehensive documentation for Cultivo, a full-stack farm manage
 
 - **Run the app locally**: [Getting Started → Running the Application](./02-GETTING-STARTED.md#running-the-application)
 - **Deploy to production**: [Deployment Guide → Google Cloud Platform](./07-DEPLOYMENT.md#google-cloud-platform-setup)
-- **Add a new API endpoint**: [Backend API → Adding Endpoints](./05-BACKEND-API.md) + [Development Workflow](./08-DEVELOPMENT-WORKFLOW.md)
+- **Add a new API endpoint**: [Backend API → Adding Endpoints](./05-BACKEND-API.md)
 - **Create a new component**: [Frontend Guide → Component Design](./04-FRONTEND-GUIDE.md#component-organization-principles)
 - **Understand WebRTC streaming**: See `.claude/WebRTC.md` (detailed WebRTC implementation)
 
@@ -120,41 +109,6 @@ docs/
 ```
 
 ---
-
-## For New Developers
-
-If you're new to the Cultivo project, follow this learning path:
-
-### Phase 1: Understanding (Day 1)
-
-1. **Read** [Project Overview](./01-PROJECT-OVERVIEW.md) to understand what Cultivo does
-2. **Review** [Architecture](./03-ARCHITECTURE.md) to understand how it's built
-3. **Skim** [Frontend Guide](./04-FRONTEND-GUIDE.md) and [Backend API](./05-BACKEND-API.md) to see the codebase structure
-
-### Phase 2: Setup (Day 1-2)
-
-1. **Follow** [Getting Started Guide](./02-GETTING-STARTED.md) to set up your local environment
-2. **Run** the application locally (backend + frontend)
-3. **Create** a test account and explore the UI
-4. **Test** API endpoints using Postman or Thunder Client
-
-### Phase 3: First Contribution (Week 1)
-
-1. **Read** [Development Workflow](./08-DEVELOPMENT-WORKFLOW.md) to understand Git workflow
-2. **Pick** a "good first issue" from GitHub Issues
-3. **Create** a feature branch and make your changes
-4. **Submit** a pull request following PR guidelines
-
-### Phase 4: Deep Dive (Week 2+)
-
-1. **Study** [Features Guide](./09-FEATURES-GUIDE.md) to understand feature implementations
-2. **Review** [Database Models](./06-DATABASE-MODELS.md) to understand data structure
-3. **Explore** the codebase with your newfound knowledge
-4. **Contribute** more significant features or refactoring
-
----
-
-## For Experienced Developers
 
 ### Quick Start
 
@@ -342,40 +296,6 @@ Error loading maps
 
 ---
 
-## Contributing
-
-### Reporting Issues
-
-1. Check existing issues on GitHub
-2. Create new issue with:
-   - Clear title and description
-   - Steps to reproduce
-   - Expected vs actual behavior
-   - Screenshots (if applicable)
-   - Environment details (OS, browser, Node version)
-
-### Submitting Pull Requests
-
-1. Fork the repository
-2. Create feature branch: `git checkout -b feature/your-feature`
-3. Make changes following code style guidelines
-4. Write tests for new functionality
-5. Update documentation if needed
-6. Commit with descriptive messages (see [Development Workflow](./08-DEVELOPMENT-WORKFLOW.md))
-7. Push and create pull request
-8. Respond to code review feedback
-
-### Code Style
-
-- **TypeScript**: Strict mode enabled
-- **Formatting**: Prettier (run `npm run format`)
-- **Linting**: ESLint (run `npm run lint`)
-- **Components**: PascalCase (e.g., `FarmMap.tsx`)
-- **Services**: camelCase with suffix (e.g., `farmService.tsx`)
-- **Commit Messages**: Conventional Commits format
-
----
-
 ## Support & Resources
 
 ### Documentation
@@ -438,6 +358,4 @@ See [CHANGELOG.md](../CHANGELOG.md) for release history (if exists).
 
 ---
 
-**Last Updated:** November 2025
-
-**Documentation Version:** 1.0.0
+**Last Updated:** 6th November 2025

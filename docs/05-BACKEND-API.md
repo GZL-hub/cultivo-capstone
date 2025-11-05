@@ -2,7 +2,7 @@
 
 ## API Overview
 
-The Cultivo backend provides a RESTful API built with Express.js and TypeScript. All endpoints follow consistent patterns for requests, responses, and error handling.
+The Cultivo backend provides a RESTful API built with Express.js and TypeScript. All endpoints follow patterns for requests, responses, and error handling.
 
 **Base URL:**
 - Development: `http://localhost:8080/api`
@@ -15,15 +15,6 @@ The Cultivo backend provides a RESTful API built with Express.js and TypeScript.
 ## Response Format
 
 All API responses follow this standardized structure:
-
-```typescript
-interface ApiResponse<T> {
-  success: boolean;      // Indicates request success/failure
-  data?: T;             // Response payload (on success)
-  error?: string;       // Error message (on failure)
-  message?: string;     // Additional context message
-}
-```
 
 ### Success Response Example
 
@@ -127,22 +118,6 @@ Create a new user account.
     "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
   },
   "message": "User registered successfully"
-}
-```
-
-**Error Responses:**
-
-```json
-// 400 - Validation Error
-{
-  "success": false,
-  "error": "Please provide all required fields"
-}
-
-// 409 - Duplicate Email
-{
-  "success": false,
-  "error": "Email already exists"
 }
 ```
 
@@ -884,66 +859,6 @@ Update user profile.
 ```
 
 ---
-
-## Error Handling
-
-### Common Error Responses
-
-**401 Unauthorized:**
-
-```json
-{
-  "success": false,
-  "message": "Not authorized to access this route"
-}
-```
-
-**404 Not Found:**
-
-```json
-{
-  "success": false,
-  "error": "Resource not found"
-}
-```
-
-**500 Internal Server Error:**
-
-```json
-{
-  "success": false,
-  "error": "Server error",
-  "message": "An unexpected error occurred"
-}
-```
-
-## Testing the API
-
-### Using cURL
-
-```bash
-# Register a new user
-curl -X POST http://localhost:8080/api/auth/register \
-  -H "Content-Type: application/json" \
-  -d '{"name":"John Doe","email":"john@example.com","password":"password123"}'
-
-# Login
-curl -X POST http://localhost:8080/api/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{"email":"john@example.com","password":"password123"}'
-
-# Get farms (with token)
-curl -X GET http://localhost:8080/api/farms \
-  -H "Authorization: Bearer <your_token_here>"
-```
-
-### Using Postman
-
-1. Create a new request
-2. Set method and URL
-3. Add `Authorization` header for protected routes
-4. Add request body (JSON) for POST/PUT requests
-5. Send request and inspect response
 
 ## Next Steps
 
