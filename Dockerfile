@@ -9,9 +9,9 @@ RUN npm install
 # Copy the frontend code
 COPY frontend/ ./
 
-# Create .env file with API key
+# Set API key as environment variable for build
 ARG REACT_APP_GOOGLE_MAPS_API_KEY
-RUN echo "REACT_APP_GOOGLE_MAPS_API_KEY=$REACT_APP_GOOGLE_MAPS_API_KEY" > .env
+ENV REACT_APP_GOOGLE_MAPS_API_KEY=$REACT_APP_GOOGLE_MAPS_API_KEY
 
 RUN npm run build
 
