@@ -1,6 +1,4 @@
-import axios from 'axios';
-
-const API_URL = '/api';
+import api from './api';
 
 export interface IFarm {
   _id: string;
@@ -21,8 +19,8 @@ export interface IFarm {
 export const getFarms = async (ownerId?: string): Promise<IFarm[]> => {
   try {
     // Add support for filtering by owner
-    const url = ownerId ? `${API_URL}/farms?owner=${ownerId}` : `${API_URL}/farms`;
-    const response = await axios.get(url);
+    const url = ownerId ? `/farms?owner=${ownerId}` : `/farms`;
+    const response = await api.get(url);
     return response.data.data;
   } catch (error) {
     console.error('Error fetching farms:', error);
@@ -32,7 +30,7 @@ export const getFarms = async (ownerId?: string): Promise<IFarm[]> => {
 
 export const getFarm = async (id: string): Promise<IFarm> => {
   try {
-    const response = await axios.get(`${API_URL}/farms/${id}`);
+    const response = await api.get(`/farms/${id}`);
     return response.data.data;
   } catch (error) {
     console.error(`Error fetching farm with id ${id}:`, error);
@@ -46,7 +44,7 @@ export const createFarm = async (farmData: Omit<IFarm, '_id' | 'createdAt' | 'up
     if (!farmData.owner) {
       throw new Error('Owner ID is required');
     }
-    const response = await axios.post(`${API_URL}/farms`, farmData);
+    const response = await api.post(`/farms`, farmData);
     return response.data.data;
   } catch (error) {
     console.error('Error creating farm:', error);
@@ -55,7 +53,7 @@ export const createFarm = async (farmData: Omit<IFarm, '_id' | 'createdAt' | 'up
 };
 export const updateFarm = async (id: string, farmData: Partial<IFarm>): Promise<IFarm> => {
   try {
-    const response = await axios.put(`${API_URL}/farms/${id}`, farmData);
+    const response = await api.put(`/farms/${id}`, farmData);
     return response.data.data;
   } catch (error) {
     console.error(`Error updating farm with id ${id}:`, error);

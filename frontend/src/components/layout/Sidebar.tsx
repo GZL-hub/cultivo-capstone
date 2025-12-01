@@ -9,7 +9,7 @@ import {
   Camera,
   LayoutDashboard,
   CloudSun,
-  Cpu,
+  Activity,
   VideoIcon,
   Users,
 } from 'lucide-react';
@@ -82,8 +82,8 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed }) => {
                 Device Management
               </div>
               <div className="space-y-1">
-                <NavItem to="/device-settings/sensors" icon={Cpu}>Sensor Management</NavItem>
                 <NavItem to="/device-settings/cameras" icon={VideoIcon}>Camera Management</NavItem>
+                <NavItem to="/device-settings/sensors" icon={Activity}>Sensor Management</NavItem>
               </div>
             </div>
 

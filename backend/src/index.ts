@@ -8,6 +8,7 @@ import authRoutes from './routes/authRoutes';
 import userRoutes from './routes/userRoutes';
 import workerRoutes from './routes/workerRoutes';
 import cctvRoutes from './routes/cctvRoutes';
+import sensorRoutes from './routes/sensorRoutes';
 
 // Load environment variables
 dotenv.config();
@@ -32,6 +33,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/workers', workerRoutes);
 app.use('/api/cctvs', cctvRoutes);
+app.use('/api', sensorRoutes);
 
 // Basic route for testing
 app.get('/api/message', (req, res) => {
