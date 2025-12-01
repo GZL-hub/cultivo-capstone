@@ -5,7 +5,6 @@ import {
   Thermometer,
   FlaskConical,
   Activity,
-  Power,
   Loader
 } from 'lucide-react';
 
@@ -134,14 +133,6 @@ const SensorCard: React.FC<SensorCardProps> = ({ sensor, status, onClick }) => {
               </span>
             </div>
           </div>
-
-          {/* Pump Status */}
-          {sensor.lastReading.pumpStatus && (
-            <div className="flex items-center justify-center mt-2 p-2 bg-blue-100 rounded">
-              <Power className="w-4 h-4 text-blue-600 mr-2" />
-              <span className="text-xs font-semibold text-blue-700">Pump Active</span>
-            </div>
-          )}
 
           {/* Last Update */}
           <div className="text-xs text-gray-500 text-center mt-2">

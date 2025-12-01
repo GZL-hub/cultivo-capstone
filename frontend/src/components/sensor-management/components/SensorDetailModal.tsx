@@ -3,7 +3,6 @@ import { ISensor } from '../../../services/sensorService';
 import { getSensorReadings, getSensorStats, updateSensor, deleteSensor } from '../../../services/sensorService';
 import NPKChart from './NPKChart';
 import SensorHistoryChart from './SensorHistoryChart';
-import PumpControl from './PumpControl';
 import {
   X,
   Droplets,
@@ -13,7 +12,6 @@ import {
   Trash2,
   Settings,
   TrendingUp,
-  Power,
   Save,
   Edit
 } from 'lucide-react';
@@ -250,9 +248,6 @@ const SensorDetailModal: React.FC<SensorDetailModalProps> = ({ sensor, onClose, 
                   <p className="text-xs text-gray-500 mt-1">µS/cm</p>
                 </div>
               </div>
-
-              {/* Pump Control */}
-              <PumpControl sensor={sensor} />
             </div>
           )}
 
@@ -280,7 +275,7 @@ const SensorDetailModal: React.FC<SensorDetailModalProps> = ({ sensor, onClose, 
                   disabled={!isEditing}
                   className="w-full p-2 border rounded-lg disabled:bg-gray-100"
                 />
-                <p className="text-xs text-gray-500 mt-1">Pump activates when moisture falls below this value</p>
+                <p className="text-xs text-gray-500 mt-1">Alert threshold for low moisture conditions</p>
               </div>
 
               <div>

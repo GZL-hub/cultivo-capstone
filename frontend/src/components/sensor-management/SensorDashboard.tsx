@@ -6,10 +6,8 @@ import { getFarms } from '../../services/farmService';
 import SensorCard from './components/SensorCard';
 import SensorDetailModal from './components/SensorDetailModal';
 import AddSensorModal from './components/AddSensorModal';
+import MonitoringOverview from './components/MonitoringOverview';
 import {
-  Droplets,
-  Thermometer,
-  FlaskConical,
   Activity,
   Plus,
   AlertCircle,
@@ -236,56 +234,15 @@ const SensorDashboard: React.FC<SensorDashboardProps> = () => {
         </div>
       ) : (
         <>
-          {/* Summary Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-            <div className="bg-white p-4 rounded-lg shadow">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-gray-500 text-sm">Total Sensors</p>
-                  <p className="text-2xl font-bold text-gray-800">{sensors.length}</p>
-                </div>
-                <Activity className="w-10 h-10 text-blue-600" />
-              </div>
-            </div>
-
-            <div className="bg-white p-4 rounded-lg shadow">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-gray-500 text-sm">Active</p>
-                  <p className="text-2xl font-bold text-green-600">
-                    {sensors.filter(s => s.isActive && s.lastReading).length}
-                  </p>
-                </div>
-                <Droplets className="w-10 h-10 text-green-600" />
-              </div>
-            </div>
-
-            <div className="bg-white p-4 rounded-lg shadow">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-gray-500 text-sm">Warnings</p>
-                  <p className="text-2xl font-bold text-yellow-600">
-                    {sensors.filter(s => getStatusColor(s) === 'warning').length}
-                  </p>
-                </div>
-                <AlertCircle className="w-10 h-10 text-yellow-600" />
-              </div>
-            </div>
-
-            <div className="bg-white p-4 rounded-lg shadow">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-gray-500 text-sm">Alerts</p>
-                  <p className="text-2xl font-bold text-red-600">
-                    {sensors.filter(s => getStatusColor(s) === 'alert').length}
-                  </p>
-                </div>
-                <AlertCircle className="w-10 h-10 text-red-600" />
-              </div>
-            </div>
-          </div>
+          {/* Monitoring Overview Component */}
+          <MonitoringOverview sensors={sensors} />
 
           {/* Sensor Grid */}
+          <div className="mt-6 mb-2">
+            <h2 className="text-lg font-semibold text-gray-800 mb-3">
+              All Sensors ({sensors.length})
+            </h2>
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {sensors.map((sensor) => (
               <SensorCard
