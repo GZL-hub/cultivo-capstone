@@ -11,6 +11,22 @@ steps:
   - name: 'gcr.io/cloud-builders/docker'
     args: ['push', '${_AR_HOSTNAME}/${PROJECT_ID}/${_AR_REPOSITORY}/${_SERVICE_NAME}:latest']
 
+  # Verify API key was passed correctly (debugging step)
+  - name: 'gcr.io/cloud-builders/docker'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        echo "=== Verifying Build Arguments ==="
+        echo "API key length: ${#_REACT_APP_GOOGLE_MAPS_API_KEY}"
+        if [ -z "${_REACT_APP_GOOGLE_MAPS_API_KEY}" ]; then
+          echo "❌ ERROR: API key is empty!"
+          exit 1
+        else
+          echo "✅ API key exists (starts with: ${_REACT_APP_GOOGLE_MAPS_API_KEY:0:10}...)"
+        fi
+        echo "MongoDB URI configured: $([ -z "${_MONGODB_URI}" ] && echo "NO" || echo "YES")"
+
 substitutions:
   _AR_HOSTNAME: asia-southeast1-docker.pkg.dev
   _AR_REPOSITORY: cloud-run-source-deploy
