@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import GoogleMap from '../../../googlemap/GoogleMap';
-import { Wifi, WifiOff, Plus, Map } from 'lucide-react';
+import { Wifi, WifiOff, Plus, Map, Activity } from 'lucide-react';
 import { IFarm, getFarms } from '../../../../services/farmService';
 import axios from 'axios';
 import CalendarCard from './calendar/CalendarCard';
@@ -180,6 +180,12 @@ const FarmOverview: React.FC<FarmOverviewProps> = ({ farmId, ownerId }) => {
     navigate('/farm/map');
   };
 
+  const handleManageSensors = () => {
+    if (workerFarmId) {
+      navigate(`/farm/${workerFarmId}/sensors`);
+    }
+  };
+
   // Render loading state
   if (isLoading) {
     return (
@@ -314,6 +320,15 @@ const FarmOverview: React.FC<FarmOverviewProps> = ({ farmId, ownerId }) => {
               </span>
             </div>
             <div className="text-xs text-gray-400 mt-2">Last activity: {farm.lastActivity}</div>
+          </div>
+          <div className="flex flex-col gap-2">
+            <button
+              onClick={handleManageSensors}
+              className="flex items-center justify-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
+            >
+              <Activity className="mr-2" size={18} />
+              Manage Sensors
+            </button>
           </div>
         </div>
       </div>

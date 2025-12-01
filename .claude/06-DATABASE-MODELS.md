@@ -552,4 +552,3 @@ const cameras = await CCTV.find({ farmId: farmId, status: 'online' });
 ## Next Steps
 
 - **[Deployment Guide](./07-DEPLOYMENT.md)** - Production deployment
-- **[Development Workflow](./09-DEVELOPMENT-WORKFLOW.md)** - Git workflow and testing

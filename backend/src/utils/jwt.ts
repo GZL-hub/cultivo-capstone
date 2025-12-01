@@ -19,7 +19,14 @@ export const generateToken = (user: IUser): string => {
 export const verifyToken = (token: string): any => {
   try {
     return jwt.verify(token, JWT_SECRET);
-  } catch (error) {
+  } catch (error: any) {
+    if (error.name === 'TokenExpiredError') {
+      console.error('❌ JWT Error: Token expired at', error.expiredAt);
+    } else if (error.name === 'JsonWebTokenError') {
+      console.error('❌ JWT Error: Invalid token -', error.message);
+    } else {
+      console.error('❌ JWT Error:', error.message);
+    }
     return null;
   }
 };

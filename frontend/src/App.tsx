@@ -8,12 +8,9 @@ import Analytics from './components/analytics/Analytics';
 import FarmAnalytics from './components/analytics/FarmAnalytics';
 import WeatherAnalytics from './components/analytics/weather/WeatherAnalytics';
 import Alerts from './components/alerts/Alerts';
-
-// Import the device management components
 import Device from './components/devices/Devices';
-import SensorDevices from './components/devices/sensor/SensorDevices';
 import CameraDevices from './components/devices/camera/CameraDevices';
-// Import the farm management components
+import SensorDashboard from './components/sensor-management/SensorDashboard';
 import FarmManagement from './components/farm-management/FarmManagement';
 import FarmOverview from './components/farm-management/components/farm-overview/FarmOverview';
 import WorkerManagement from './components/farm-management/components/worker/WorkerManagement';
@@ -138,11 +135,11 @@ function App() {
             
             {/* Devices Nested Routes */}
             <Route path="/device-settings" element={<Device />}>
-              <Route path="sensors" element={<SensorDevices />} />
               <Route path="cameras" element={<CameraDevices />} />
+              <Route path="sensors" element={<SensorDashboard />} />
               <Route index element={<Device />} />
             </Route>
-            
+
             {/* Farm Management Nested Routes */}
             <Route path="/farm" element={<FarmManagement />}>
               <Route
@@ -154,8 +151,9 @@ function App() {
                 element={<FarmMap ownerId={userId}/>}
               />
               <Route path="cctv" element={<FarmCCTV />} />
+              <Route path="workers" element={<WorkerManagement />} />
+              <Route path=":farmId/sensors" element={<SensorDashboard />} />
               <Route index element={<Navigate to="overview" replace />} />
-              <Route path="/farm/workers" element={<WorkerManagement />} />
             </Route>
             
             <Route path="/settings" element={<Settings />} />

@@ -6,40 +6,40 @@ Cultivo follows a **three-tier architecture** with clear separation between pres
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                        CLIENT TIER                               │
+│                        CLIENT TIER                              │
 │  ┌──────────────────────────────────────────────────────────┐   │
-│  │   React SPA (Browser)                                     │   │
-│  │   - React Router (Client-side routing)                    │   │
-│  │   - Context API (State management)                        │   │
-│  │   - Axios (HTTP client with interceptors)                 │   │
-│  │   - Google Maps API (Interactive maps)                    │   │
-│  │   - WebRTC (Media streaming)                              │   │
+│  │   React SPA (Browser)                                    │   │
+│  │   - React Router (Client-side routing)                   │   │
+│  │   - Context API (State management)                       │   │ 
+│  │   - Axios (HTTP client with interceptors)                │   │
+│  │   - Google Maps API (Interactive maps)                   │   │
+│  │   - WebRTC (Media streaming)                             │   │
 │  └──────────────────────────────────────────────────────────┘   │
 └─────────────────────────────────────────────────────────────────┘
                               │
                               ├─── HTTPS/REST API
                               │
 ┌─────────────────────────────────────────────────────────────────┐
-│                     APPLICATION TIER                             │
+│                     APPLICATION TIER                            │
 │  ┌──────────────────────────────────────────────────────────┐   │
-│  │   Express.js Server (Node.js)                             │   │
-│  │   ├── Routes (API endpoints)                              │   │
-│  │   ├── Controllers (Business logic)                        │   │
+│  │   Express.js Server (Node.js)                            │   │
+│  │   ├── Routes (API endpoints)                             │   │
+│  │   ├── Controllers (Business logic)                       │   │
 │  │   ├── Middleware (Auth, CORS, JSON parsing)              │   │
-│  │   └── Utils (JWT, helpers)                                │   │
+│  │   └── Utils (JWT, helpers)                               │   │
 │  └──────────────────────────────────────────────────────────┘   │
 └─────────────────────────────────────────────────────────────────┘
                               │
                               ├─── MongoDB Protocol
                               │
 ┌─────────────────────────────────────────────────────────────────┐
-│                        DATA TIER                                 │
+│                        DATA TIER                                │
 │  ┌──────────────────────────────────────────────────────────┐   │
-│  │   MongoDB Database                                         │   │
-│  │   ├── Users Collection                                     │   │
-│  │   ├── Farms Collection                                     │   │
-│  │   ├── Workers Collection                                   │   │
-│  │   └── CCTVs Collection                                     │   │
+│  │   MongoDB Database                                       │   │
+│  │   ├── Users Collection                                   │   │
+│  │   ├── Farms Collection                                   │   │
+│  │   ├── Workers Collection                                 │   │
+│  │   └── CCTVs Collection                                   │   │
 │  └──────────────────────────────────────────────────────────┘   │
 └─────────────────────────────────────────────────────────────────┘
 ```
@@ -53,28 +53,28 @@ Cultivo uses a **hybrid cloud architecture** with services distributed across GC
 ```
 ┌───────────────────────────────────────────────────────────────────┐
 │                    LOCAL NETWORK (Farm Site)                      │
-│  ┌─────────────────┐        ┌────────────────────────────────┐   │
+│  ┌─────────────────┐        ┌────────────────────────────────┐    │
 │  │ Hikvision Camera│─RTSP──▶│ FFmpeg Bridge (Desktop/RPi)    │   │
-│  │ 192.168.68.112  │        │ - H.265 to H.264 transcoding   │   │
-│  └─────────────────┘        └────────────────────────────────┘   │
+│  │ 192.168.68.112  │        │ - H.265 to H.264 transcoding   │    │
+│  └─────────────────┘        └────────────────────────────────┘    │
 └───────────────────────────────────────│───────────────────────────┘
                                         │ RTSP Push (TCP)
                                         │ (via Public IP)
                                         ▼
-┌───────────────────────────────────────────────────────────────────┐
-│             GOOGLE CLOUD PLATFORM (asia-southeast1)               │
-│                                                                   │
+┌──────────────────────────────────────────────────────────────────┐
+│             GOOGLE CLOUD PLATFORM (asia-southeast1)              │
+│                                                                  │
 │  ┌─────────────────────────────────────────────────────────────┐ │
 │  │  COMPUTE ENGINE VM (us-central1)                            │ │
 │  │  ┌───────────────────────────────────────────────────────┐  │ │
 │  │  │ MediaMTX Server (136.110.0.27:8889)                   │  │ │
-│  │  │ - Receives RTSP stream from FFmpeg                     │  │ │
-│  │  │ - Serves WebRTC (WHEP) to browsers                     │  │ │
-│  │  │ - Self-signed TLS certificates                         │  │ │
-│  │  │ - STUN server for NAT traversal                        │  │ │
+│  │  │ - Receives RTSP stream from FFmpeg                    │  │ │
+│  │  │ - Serves WebRTC (WHEP) to browsers                    │  │ │
+│  │  │ - Self-signed TLS certificates                        │  │ │
+│  │  │ - STUN server for NAT traversal                       │  │ │
 │  │  └───────────────────────────────────────────────────────┘  │ │
 │  └─────────────────────────────────────────────────────────────┘ │
-│                                                                   │
+│                                                                  │
 │  ┌─────────────────────────────────────────────────────────────┐ │
 │  │  CLOUD RUN SERVICE (cultivo-capstone)                       │ │
 │  │  ┌───────────────────────────────────────────────────────┐  │ │
@@ -86,19 +86,19 @@ Cultivo uses a **hybrid cloud architecture** with services distributed across GC
 │  │  - Managed HTTPS/TLS                                        │ │
 │  │  - Request routing                                          │ │
 │  └─────────────────────────────────────────────────────────────┘ │
-│                                                                   │
+│                                                                  │
 │  ┌─────────────────────────────────────────────────────────────┐ │
 │  │  ARTIFACT REGISTRY                                          │ │
 │  │  - Docker image storage                                     │ │
 │  │  - Version history                                          │ │
 │  └─────────────────────────────────────────────────────────────┘ │
-│                                                                   │
+│                                                                  │
 │  ┌─────────────────────────────────────────────────────────────┐ │
 │  │  CLOUD BUILD                                                │ │
 │  │  - Automated builds from GitHub                             │ │
 │  │  - Multi-stage Docker builds                                │ │
 │  └─────────────────────────────────────────────────────────────┘ │
-└───────────────────────────────────────────────────────────────────┘
+└──────────────────────────────────────────────────────────────────┘
                                         │
                                         │ MongoDB Protocol
                                         ▼

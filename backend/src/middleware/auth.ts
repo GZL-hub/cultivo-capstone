@@ -20,9 +20,12 @@ export const protect = async (req: Request, res: Response, next: NextFunction): 
     // Verify token
     const decoded = verifyToken(token);
     if (!decoded) {
+      console.error('Token verification failed. Token preview:', token.substring(0, 20) + '...');
       res.status(401).json({ success: false, message: 'Invalid token' });
       return;
     }
+
+    console.log('✓ Token verified successfully for user:', decoded.id);
 
     // Add user to request object
     const user = await User.findById(decoded.id).select('-password');
