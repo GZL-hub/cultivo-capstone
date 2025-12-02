@@ -12,11 +12,13 @@ interface LoginProps {
 const Login: React.FC<LoginProps> = ({ onLogin, onRegister, loading = false, error = null }) => {
   return (
     <div className="min-h-screen flex font-sans">
-      {/* Left side banner */}
-      <SidePanel />
+      {/* Left side banner - 65% */}
+      <div className="hidden lg:block lg:w-[65%] min-h-screen">
+        <SidePanel />
+      </div>
 
-      {/* Right side login form */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-white">
+      {/* Right side login form - 35% */}
+      <div className="w-full lg:w-[35%] flex items-center justify-center p-8 bg-white">
         <LoginForm 
           onLogin={onLogin} 
           onRegister={onRegister}

@@ -28,7 +28,7 @@ const SidePanel: React.FC = () => {
   return (
     <div 
       ref={containerRef}
-      className="hidden lg:block lg:w-1/2 relative overflow-hidden bg-green-950 font-figtree"
+      className="w-full h-full relative overflow-hidden bg-green-950 font-figtree"
     >
       {/* SVG Filters */}
       <svg className="absolute inset-0 w-0 h-0">
@@ -72,30 +72,19 @@ const SidePanel: React.FC = () => {
 
       {/* Content Layer */}
       <div className="relative z-10 flex flex-col justify-between w-full h-full px-12 py-12">
-        <div className="flex items-center">
-          <div className="flex items-center mr-4">
-            <img 
-              src="/Cultivo2.png" 
-              alt="Cultivo Logo" 
-              className="h-10 drop-shadow-md" 
-            />
-          </div>
-          <h1 className="text-3xl font-semibold text-white">Cultivo</h1>
-        </div>
-
         <div className="flex-1 flex flex-col justify-center">
           <div className="p-6">
-            <h2 className="text-4xl font-bold text-white mb-6 leading-tight drop-shadow-lg text-shadow-dark">
-              Smart farm management made simple.
+            <h2 className="text-4xl font-bold text-white mb-6 leading-tight drop-shadow-lg text-shadow-dark font-chivo">
+              Cloud-Driven insights for smarter agriculture.
             </h2>
-            <p className="text-white/90 text-base leading-relaxed text-shadow-sm font-noto-sans">
-              Log in to access your farm dashboard, monitor crops, and manage your agricultural operations.
+            <p className="text-white text-lg text-base leading-relaxed text-shadow-sm">
+              Access your cloud dashboard to monitor crops, track sensors, and manage your farm operations.
             </p>
           </div>
         </div>
 
         <div className="flex justify-between items-center text-white/70 text-sm font-noto-sans">
-          <span>Capstone Project 2025</span>
+          <span>PRJ3223 Capstone Project</span>
           <span className="cursor-pointer hover:text-white/90">Designed By: Goo Zong Lin</span>
         </div>
       </div>

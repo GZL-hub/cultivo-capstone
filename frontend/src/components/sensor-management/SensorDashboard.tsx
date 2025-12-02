@@ -186,7 +186,6 @@ const SensorDashboard: React.FC<SensorDashboardProps> = () => {
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <div className="flex-1">
-          <h1 className="text-2xl font-bold text-gray-800">Soil Sensor Dashboard</h1>
           <p className="text-gray-600 mt-1">Monitor your farm's soil conditions in real-time</p>
         </div>
 

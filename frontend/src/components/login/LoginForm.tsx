@@ -74,12 +74,14 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLogin, onRegister, loading = fa
   };
 
   return (
-    <div className="w-full max-w-md space-y-8 font-figtree">
-      <div className="lg:hidden text-center mb-8">
-        <div className="w-8 h-8 rounded-lg flex items-center justify-center mx-auto mb-3 bg-primary">
-          <div className="w-4 h-4 bg-white rounded-sm"></div>
-        </div>
-        <h1 className="text-xl font-semibold text-text">Cultivo</h1>
+    <div className="w-full max-w-md space-y-8">
+      {/* Cultivo Logo - Always visible */}
+      <div className="flex items-center justify-center mb-8 gap-3">
+        <img
+          src="/Cultivo2.png"
+          alt="Cultivo Logo"
+          className="h-12 drop-shadow-md"
+        />
       </div>
 
       <div className="space-y-6">

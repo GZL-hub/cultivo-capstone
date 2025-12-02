@@ -9,8 +9,8 @@ module.exports = {
   theme: {
     extend: {
       fontFamily: {
-        figtree: ['var(--font-figtree)', 'sans-serif'],
-        'noto-sans': ['var(--font-noto-sans)', 'sans-serif'],
+        sans: ['Plus Jakarta Sans', 'sans-serif'],
+        chivo: ['Chivo', 'sans-serif'],
       },
       colors: {
         text: 'var(--text)',
