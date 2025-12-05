@@ -1,7 +1,7 @@
 # Multi-stage build for both frontend and backend
 
 # Build frontend
-FROM node:18 AS frontend-builder
+FROM node:20 AS frontend-builder
 WORKDIR /app/frontend
 COPY frontend/package*.json ./
 RUN npm install
@@ -16,7 +16,7 @@ ENV REACT_APP_GOOGLE_MAPS_API_KEY=$REACT_APP_GOOGLE_MAPS_API_KEY
 RUN npm run build
 
 # Build backend
-FROM node:18 AS backend-builder
+FROM node:20 AS backend-builder
 WORKDIR /app/backend
 
 # Add MongoDB URI as build argument
@@ -33,7 +33,7 @@ RUN echo "MONGODB_URI=$MONGODB_URI" > .env
 RUN npm run build
 
 # Final image
-FROM node:18-slim
+FROM node:20-slim
 WORKDIR /app
 
 # Pass the MongoDB URI to the final image
