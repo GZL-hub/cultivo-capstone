@@ -4,7 +4,10 @@
 FROM node:20 AS frontend-builder
 WORKDIR /app/frontend
 COPY frontend/package*.json ./
-RUN npm install
+RUN npm config set fetch-retries 5 && \
+    npm config set fetch-retry-mintimeout 20000 && \
+    npm config set fetch-retry-maxtimeout 120000 && \
+    npm install
 
 # Copy the frontend code
 COPY frontend/ ./
@@ -24,7 +27,10 @@ ARG MONGODB_URI
 ENV MONGODB_URI=$MONGODB_URI
 
 COPY backend/package*.json ./
-RUN npm install
+RUN npm config set fetch-retries 5 && \
+    npm config set fetch-retry-mintimeout 20000 && \
+    npm config set fetch-retry-maxtimeout 120000 && \
+    npm install
 COPY backend/ ./
 
 # Create .env file for backend
@@ -45,8 +51,11 @@ COPY --from=backend-builder /app/backend/dist ./dist
 COPY --from=backend-builder /app/backend/package*.json ./
 COPY --from=backend-builder /app/backend/.env ./
 
-# Install production dependencies only
-RUN npm install --only=production
+# Install production dependencies only with retry logic
+RUN npm config set fetch-retries 5 && \
+    npm config set fetch-retry-mintimeout 20000 && \
+    npm config set fetch-retry-maxtimeout 120000 && \
+    npm install --only=production
 
 # Copy frontend build to be served by the backend
 COPY --from=frontend-builder /app/frontend/build ./public
