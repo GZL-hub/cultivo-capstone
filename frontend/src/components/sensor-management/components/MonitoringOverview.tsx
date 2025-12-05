@@ -17,7 +17,19 @@ interface MonitoringOverviewProps {
 }
 
 const MonitoringOverview: React.FC<MonitoringOverviewProps> = ({ sensors }) => {
-  const activeSensors = sensors.filter(s => s.lastReading);
+  // Helper function to check if sensor is online based on last update time
+  const isSensorOnline = (sensor: ISensor, thresholdMinutes: number = 5): boolean => {
+    if (!sensor.isActive) return false;
+    if (!sensor.lastReading?.timestamp) return false;
+
+    const lastUpdate = new Date(sensor.lastReading.timestamp);
+    const now = new Date();
+    const minutesAgo = (now.getTime() - lastUpdate.getTime()) / 60000;
+
+    return minutesAgo < thresholdMinutes;
+  };
+
+  const activeSensors = sensors.filter(s => s.lastReading && isSensorOnline(s));
 
   const calculateAverages = () => {
     if (activeSensors.length === 0) {
@@ -39,8 +51,8 @@ const MonitoringOverview: React.FC<MonitoringOverviewProps> = ({ sensors }) => {
 
   const getHealthStatus = () => {
     const normal = sensors.filter(s => {
-      if (!s.lastReading || !s.isActive) return false;
-      const { moisture, ph, temperature } = s.lastReading;
+      if (!isSensorOnline(s)) return false;
+      const { moisture, ph, temperature } = s.lastReading!;
       const { moistureThreshold, optimalPh, optimalTemperature } = s.settings;
 
       return moisture >= moistureThreshold &&
@@ -49,8 +61,8 @@ const MonitoringOverview: React.FC<MonitoringOverviewProps> = ({ sensors }) => {
     }).length;
 
     const warning = sensors.filter(s => {
-      if (!s.lastReading || !s.isActive) return false;
-      const { moisture, ph, temperature } = s.lastReading;
+      if (!isSensorOnline(s)) return false;
+      const { moisture, ph, temperature } = s.lastReading!;
       const { moistureThreshold, optimalPh, optimalTemperature } = s.settings;
 
       return (ph < optimalPh.min || ph > optimalPh.max) ||
@@ -58,8 +70,8 @@ const MonitoringOverview: React.FC<MonitoringOverviewProps> = ({ sensors }) => {
     }).length;
 
     const alert = sensors.filter(s => {
-      if (!s.lastReading || !s.isActive) return false;
-      const { moisture, ph, temperature } = s.lastReading;
+      if (!isSensorOnline(s)) return false;
+      const { moisture, ph, temperature } = s.lastReading!;
       const { moistureThreshold, optimalPh, optimalTemperature } = s.settings;
 
       return moisture < moistureThreshold ||
@@ -67,7 +79,8 @@ const MonitoringOverview: React.FC<MonitoringOverviewProps> = ({ sensors }) => {
              temperature < optimalTemperature.min - 5 || temperature > optimalTemperature.max + 5;
     }).length;
 
-    const offline = sensors.filter(s => !s.isActive || !s.lastReading).length;
+    // Count offline sensors (including those with stale data)
+    const offline = sensors.filter(s => !isSensorOnline(s)).length;
 
     return { normal, warning, alert, offline };
   };

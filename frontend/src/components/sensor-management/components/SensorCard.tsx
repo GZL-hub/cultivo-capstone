@@ -52,6 +52,17 @@ const SensorCard: React.FC<SensorCardProps> = ({ sensor, status, onClick }) => {
     return date.toLocaleDateString();
   };
 
+  // Check if sensor is online (data received within last 5 minutes)
+  const isOnline = () => {
+    if (!sensor.isActive || !sensor.lastReading?.timestamp) return false;
+    const lastUpdate = new Date(sensor.lastReading.timestamp);
+    const now = new Date();
+    const minutesAgo = (now.getTime() - lastUpdate.getTime()) / 60000;
+    return minutesAgo < 5;
+  };
+
+  const online = isOnline();
+
   return (
     <div
       onClick={onClick}
@@ -60,7 +71,13 @@ const SensorCard: React.FC<SensorCardProps> = ({ sensor, status, onClick }) => {
       {/* Header */}
       <div className="flex justify-between items-start mb-3">
         <div className="flex-1">
-          <h3 className="text-lg font-semibold text-gray-800 truncate">{sensor.deviceName}</h3>
+          <div className="flex items-center gap-2 mb-1">
+            <h3 className="text-lg font-semibold text-gray-800 truncate">{sensor.deviceName}</h3>
+            {/* Online/Offline Indicator */}
+            <div className="flex items-center">
+              <div className={`w-2 h-2 rounded-full ${online ? 'bg-green-500 animate-pulse' : 'bg-gray-400'}`} title={online ? 'Online' : 'Offline'} />
+            </div>
+          </div>
           <p className="text-xs text-gray-500 truncate">{sensor.deviceId}</p>
         </div>
         {getStatusBadge()}
@@ -135,7 +152,7 @@ const SensorCard: React.FC<SensorCardProps> = ({ sensor, status, onClick }) => {
           </div>
 
           {/* Last Update */}
-          <div className="text-xs text-gray-500 text-center mt-2">
+          <div className={`text-xs text-center mt-2 font-medium ${online ? 'text-green-600' : 'text-gray-500'}`}>
             Updated {formatTimestamp(sensor.lastReading.timestamp)}
           </div>
         </div>

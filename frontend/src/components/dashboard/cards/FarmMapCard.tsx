@@ -264,11 +264,12 @@ const FarmMapCard: React.FC<FarmMapCardProps> = ({
           <GoogleMap
             mapContainerStyle={mapContainerStyle}
             center={getMapCenter()}
-            zoom={15}
+            zoom={17}
             options={{
               fullscreenControl: false,
               mapTypeControl: false,
               streetViewControl: false,
+              mapTypeId: 'satellite',
             }}
           >
             {/* Farm Boundary Polygon */}

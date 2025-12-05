@@ -99,8 +99,24 @@ const SensorDashboard: React.FC<SensorDashboardProps> = () => {
     setSelectedSensor(null);
   };
 
+  // Helper function to check if sensor is online based on last update time
+  const getSensorOnlineStatus = (sensor: ISensor, thresholdMinutes: number = 5): boolean => {
+    if (!sensor.isActive) return false;
+    if (!sensor.lastReading?.timestamp) return false;
+
+    const lastUpdate = new Date(sensor.lastReading.timestamp);
+    const now = new Date();
+    const minutesAgo = (now.getTime() - lastUpdate.getTime()) / 60000;
+
+    return minutesAgo < thresholdMinutes;
+  };
+
   const getStatusColor = (sensor: ISensor): 'normal' | 'warning' | 'alert' | 'offline' => {
-    if (!sensor.isActive) return 'offline';
+    // First check if sensor is online based on last update time
+    const isOnline = getSensorOnlineStatus(sensor, 5); // 5 minute threshold
+    if (!isOnline) return 'offline';
+
+    // TypeScript safety check (should always exist if isOnline is true)
     if (!sensor.lastReading) return 'offline';
 
     const { moisture, ph, temperature } = sensor.lastReading;
