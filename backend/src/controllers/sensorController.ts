@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { Sensor, SensorReading, ISensor } from '../models/Sensor';
 import mongoose from 'mongoose';
+import { io } from '../index';
 
 // Custom request type with user
 interface AuthRequest extends Request {
@@ -211,20 +212,36 @@ export const recordReading = async (req: Request, res: Response): Promise<void> 
     });
 
     // Update sensor's last reading
-    await Sensor.findByIdAndUpdate(sensorId, {
-      lastReading: {
-        timestamp: reading.timestamp,
-        moisture,
-        temperature,
-        ph,
-        ec,
-        nitrogen,
-        phosphorus,
-        potassium,
-        pumpStatus: pumpStatus || false
+    const updatedSensor = await Sensor.findByIdAndUpdate(
+      sensorId,
+      {
+        lastReading: {
+          timestamp: reading.timestamp,
+          moisture,
+          temperature,
+          ph,
+          ec,
+          nitrogen,
+          phosphorus,
+          potassium,
+          pumpStatus: pumpStatus || false
+        },
+        updatedAt: new Date()
       },
-      updatedAt: new Date()
-    });
+      { new: true }
+    );
+
+    // Emit real-time update via Socket.IO
+    if (updatedSensor) {
+      const updatePayload = {
+        sensorId: updatedSensor._id,
+        deviceName: updatedSensor.deviceName,
+        lastReading: updatedSensor.lastReading,
+        timestamp: new Date()
+      };
+      console.log(`[Socket.IO] Emitting sensor-update to farm-${updatedSensor.farmId}:`, updatePayload);
+      io.to(`farm-${updatedSensor.farmId}`).emit('sensor-update', updatePayload);
+    }
 
     res.status(201).json({ success: true, data: reading });
   } catch (error) {
@@ -430,20 +447,36 @@ export const recordDataByDevice = async (req: Request, res: Response): Promise<v
     });
 
     // Update sensor's last reading
-    await Sensor.findByIdAndUpdate(sensor._id, {
-      lastReading: {
-        timestamp: reading.timestamp,
-        moisture,
-        temperature,
-        ph,
-        ec,
-        nitrogen,
-        phosphorus,
-        potassium,
-        pumpStatus: pumpStatus || false
+    const updatedSensor = await Sensor.findByIdAndUpdate(
+      sensor._id,
+      {
+        lastReading: {
+          timestamp: reading.timestamp,
+          moisture,
+          temperature,
+          ph,
+          ec,
+          nitrogen,
+          phosphorus,
+          potassium,
+          pumpStatus: pumpStatus || false
+        },
+        updatedAt: new Date()
       },
-      updatedAt: new Date()
-    });
+      { new: true }
+    );
+
+    // Emit real-time update via Socket.IO
+    if (updatedSensor) {
+      const updatePayload = {
+        sensorId: updatedSensor._id,
+        deviceName: updatedSensor.deviceName,
+        lastReading: updatedSensor.lastReading,
+        timestamp: new Date()
+      };
+      console.log(`[Socket.IO] Emitting sensor-update to farm-${updatedSensor.farmId}:`, updatePayload);
+      io.to(`farm-${updatedSensor.farmId}`).emit('sensor-update', updatePayload);
+    }
 
     res.status(201).json({
       success: true,

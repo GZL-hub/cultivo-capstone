@@ -31,6 +31,7 @@ router.get('/sensors/:sensorId/readings/latest', protect, getLatestReading);
 router.get('/sensors/:sensorId/stats', protect, getSensorStats);
 
 // IoT device data ingestion (using deviceId instead of sensorId)
-router.post('/sensors/data', recordDataByDevice); // No auth - for ESP32 devices
+router.post('/sensors/record-data', recordDataByDevice); // No auth - for ESP32 devices
+router.post('/sensors/data', recordDataByDevice); // Alias for backward compatibility
 
 export default router;

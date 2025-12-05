@@ -1,23 +1,25 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { getSensorsByFarm } from '../../services/sensorService';
-import { ISensor } from '../../services/sensorService';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { getSensorsByFarm, ISensor, getSensorStatus } from '../../services/sensorService';
 import { getFarms } from '../../services/farmService';
 import SensorCard from './components/SensorCard';
 import SensorDetailModal from './components/SensorDetailModal';
 import AddSensorModal from './components/AddSensorModal';
 import MonitoringOverview from './components/MonitoringOverview';
+import authService from '../../services/authService';
+import socketService from '../../services/socketService';
 import {
   Activity,
   Plus,
   AlertCircle,
-  Loader
+  Loader,
+  Wifi,
+  WifiOff
 } from 'lucide-react';
 
 interface SensorDashboardProps {}
 
 const SensorDashboard: React.FC<SensorDashboardProps> = () => {
-  const { farmId } = useParams<{ farmId: string }>();
   const navigate = useNavigate();
 
   const [sensors, setSensors] = useState<ISensor[]>([]);
@@ -26,44 +28,93 @@ const SensorDashboard: React.FC<SensorDashboardProps> = () => {
   const [selectedSensor, setSelectedSensor] = useState<ISensor | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
-  const [selectedFarmId, setSelectedFarmId] = useState<string | undefined>(farmId);
-  const [farms, setFarms] = useState<any[]>([]);
+  const [farmId, setFarmId] = useState<string | null>(null);
+  const [farmName, setFarmName] = useState<string>('');
+  const [isSocketConnected, setIsSocketConnected] = useState(false);
 
+  // Fetch user's farm on mount
   useEffect(() => {
-    // If no farmId in URL, fetch farms for dropdown
-    if (!farmId) {
-      fetchFarms();
+    fetchUserFarm();
+  }, []);
+
+  // Fetch sensors when farmId changes
+  useEffect(() => {
+    if (farmId) {
+      fetchSensors();
     }
-  }, [farmId]);
+  }, [farmId, refreshKey]);
 
+  // Handle real-time sensor updates
+  const handleSensorUpdate = useCallback((data: any) => {
+    console.log('[Real-time] Sensor update received:', data);
+
+    // Update the sensor in the list
+    setSensors((prevSensors) =>
+      prevSensors.map((sensor) =>
+        sensor._id === data.sensorId
+          ? { ...sensor, lastReading: data.lastReading }
+          : sensor
+      )
+    );
+  }, []);
+
+  // Set up Socket.IO connection and listeners
   useEffect(() => {
-    fetchSensors();
-  }, [farmId, selectedFarmId, refreshKey]);
+    if (!farmId) return;
 
-  const fetchFarms = async () => {
+    // Connect to Socket.IO
+    socketService.connect();
+    socketService.joinFarm(farmId);
+    setIsSocketConnected(socketService.isConnected());
+
+    // Subscribe to sensor updates
+    socketService.onSensorUpdate(handleSensorUpdate);
+
+    // Cleanup on unmount
+    return () => {
+      socketService.offSensorUpdate(handleSensorUpdate);
+      socketService.leaveFarm();
+    };
+  }, [farmId, handleSensorUpdate]);
+
+  const fetchUserFarm = async () => {
     try {
-      const farmsData = await getFarms();
-      setFarms(farmsData);
-      // Auto-select first farm if available
-      if (farmsData.length > 0 && !selectedFarmId) {
-        setSelectedFarmId(farmsData[0]._id);
+      setLoading(true);
+      setError(null);
+
+      const currentUser = authService.getCurrentUser();
+      if (!currentUser || !currentUser.id) {
+        setError('Please log in to view sensors');
+        setLoading(false);
+        return;
       }
-    } catch (err) {
-      console.error('Error fetching farms:', err);
+
+      // Fetch user's farm (one user = one farm)
+      const farmsData = await getFarms();
+
+      if (farmsData.length === 0) {
+        setError('No farm found. Please create a farm first.');
+        setLoading(false);
+        return;
+      }
+
+      // Use the first (and only) farm
+      setFarmId(farmsData[0]._id);
+      setFarmName(farmsData[0].name);
+    } catch (err: any) {
+      console.error('Error fetching farm:', err);
+      setError(err.response?.data?.error || 'Failed to load farm');
+      setLoading(false);
     }
   };
 
   const fetchSensors = async () => {
-    const activeFarmId = farmId || selectedFarmId;
-    if (!activeFarmId) {
-      setLoading(false);
-      return;
-    }
+    if (!farmId) return;
 
     try {
       setLoading(true);
       setError(null);
-      const data = await getSensorsByFarm(activeFarmId);
+      const data = await getSensorsByFarm(farmId);
       setSensors(data);
     } catch (err: any) {
       console.error('Error fetching sensors:', err);
@@ -99,77 +150,7 @@ const SensorDashboard: React.FC<SensorDashboardProps> = () => {
     setSelectedSensor(null);
   };
 
-  // Helper function to check if sensor is online based on last update time
-  const getSensorOnlineStatus = (sensor: ISensor, thresholdMinutes: number = 5): boolean => {
-    if (!sensor.isActive) return false;
-    if (!sensor.lastReading?.timestamp) return false;
-
-    const lastUpdate = new Date(sensor.lastReading.timestamp);
-    const now = new Date();
-    const minutesAgo = (now.getTime() - lastUpdate.getTime()) / 60000;
-
-    return minutesAgo < thresholdMinutes;
-  };
-
-  const getStatusColor = (sensor: ISensor): 'normal' | 'warning' | 'alert' | 'offline' => {
-    // First check if sensor is online based on last update time
-    const isOnline = getSensorOnlineStatus(sensor, 5); // 5 minute threshold
-    if (!isOnline) return 'offline';
-
-    // TypeScript safety check (should always exist if isOnline is true)
-    if (!sensor.lastReading) return 'offline';
-
-    const { moisture, ph, temperature } = sensor.lastReading;
-    const { moistureThreshold, optimalPh, optimalTemperature } = sensor.settings;
-
-    // Check for critical conditions
-    if (moisture < moistureThreshold) return 'alert';
-    if (ph < optimalPh.min - 0.5 || ph > optimalPh.max + 0.5) return 'alert';
-    if (temperature < optimalTemperature.min - 5 || temperature > optimalTemperature.max + 5) return 'alert';
-
-    // Check for warning conditions
-    if (ph < optimalPh.min || ph > optimalPh.max) return 'warning';
-    if (temperature < optimalTemperature.min || temperature > optimalTemperature.max) return 'warning';
-
-    return 'normal';
-  };
-
-  // Show farm selector screen when no farm is selected
-  if (!farmId && !selectedFarmId && !loading) {
-    return (
-      <div className="w-full h-full flex items-center justify-center bg-background">
-        <div className="text-center max-w-md">
-          <Activity className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">Select a Farm</h2>
-          <p className="text-gray-600 mb-6">Choose a farm to view its sensor data</p>
-          {farms.length > 0 ? (
-            <select
-              value={selectedFarmId || ''}
-              onChange={(e) => setSelectedFarmId(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-lg"
-            >
-              <option value="">Select a farm</option>
-              {farms.map((farm) => (
-                <option key={farm._id} value={farm._id}>
-                  {farm.name}
-                </option>
-              ))}
-            </select>
-          ) : (
-            <div>
-              <p className="text-gray-500 mb-4">No farms available. Create a farm first.</p>
-              <button
-                onClick={() => navigate('/farm/overview')}
-                className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700"
-              >
-                Go to Farm Management
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
-    );
-  }
+  // Use consolidated service function for sensor status
 
   if (loading) {
     return (
@@ -183,55 +164,69 @@ const SensorDashboard: React.FC<SensorDashboardProps> = () => {
   if (error) {
     return (
       <div className="flex items-center justify-center h-full">
-        <div className="text-center">
+        <div className="text-center max-w-md">
           <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-3" />
-          <p className="text-red-600 font-medium">{error}</p>
-          <button
-            onClick={fetchSensors}
-            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-          >
-            Retry
-          </button>
+          <p className="text-red-600 font-medium mb-2">{error}</p>
+          {error.includes('No farm found') ? (
+            <div>
+              <p className="text-gray-600 mb-4">Create your farm to start adding sensors</p>
+              <button
+                onClick={() => navigate('/farm/overview')}
+                className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700"
+              >
+                Create Farm
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={fetchUserFarm}
+              className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            >
+              Retry
+            </button>
+          )}
         </div>
       </div>
     );
   }
 
   return (
-    <div className="w-full h-full overflow-auto flex flex-col px-4 py-4 bg-background">
+    <div className="w-full h-full overflow-auto flex flex-col bg-background">
       {/* Header */}
-      <div className="flex justify-between items-center mb-6">
-        <div className="flex-1">
-          <p className="text-gray-600 mt-1">Monitor your farm's soil conditions in real-time</p>
-        </div>
-
-        {/* Farm Selector (only show when no farmId in URL) */}
-        {!farmId && farms.length > 0 && (
-          <div className="mx-4">
-            <select
-              value={selectedFarmId || ''}
-              onChange={(e) => setSelectedFarmId(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+      <div className="bg-white shadow-sm border-b border-gray-200 z-10">
+        <div className="w-full px-4 py-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center space-x-3">
+              <h1 className="text-2xl font-bold text-gray-800">{farmName} - Sensor Management</h1>
+              {/* Real-time connection indicator */}
+              <div className="flex items-center space-x-1">
+                {isSocketConnected ? (
+                  <>
+                    <Wifi className="w-4 h-4 text-green-600" />
+                    <span className="text-xs text-green-600 font-medium">Live</span>
+                  </>
+                ) : (
+                  <>
+                    <WifiOff className="w-4 h-4 text-gray-400" />
+                    <span className="text-xs text-gray-400">Offline</span>
+                  </>
+                )}
+              </div>
+            </div>
+            <button
+              onClick={handleAddSensor}
+              disabled={!farmId}
+              className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition disabled:bg-gray-400 disabled:cursor-not-allowed"
             >
-              <option value="">Select a farm</option>
-              {farms.map((farm) => (
-                <option key={farm._id} value={farm._id}>
-                  {farm.name}
-                </option>
-              ))}
-            </select>
+              <Plus className="w-5 h-5 mr-2" />
+              Add Sensor
+            </button>
           </div>
-        )}
-
-        <button
-          onClick={handleAddSensor}
-          disabled={!farmId && !selectedFarmId}
-          className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition disabled:bg-gray-400 disabled:cursor-not-allowed"
-        >
-          <Plus className="w-5 h-5 mr-2" />
-          Add Sensor
-        </button>
+        </div>
       </div>
+
+      {/* Content */}
+      <div className="px-4 py-4">
 
       {sensors.length === 0 ? (
         <div className="flex-1 flex items-center justify-center">
@@ -263,13 +258,15 @@ const SensorDashboard: React.FC<SensorDashboardProps> = () => {
               <SensorCard
                 key={sensor._id}
                 sensor={sensor}
-                status={getStatusColor(sensor)}
+                status={getSensorStatus(sensor)}
                 onClick={() => handleSensorClick(sensor)}
               />
             ))}
           </div>
         </>
       )}
+
+      </div>
 
       {/* Modals */}
       {selectedSensor && (
@@ -280,9 +277,9 @@ const SensorDashboard: React.FC<SensorDashboardProps> = () => {
         />
       )}
 
-      {showAddModal && (farmId || selectedFarmId) && (
+      {showAddModal && farmId && (
         <AddSensorModal
-          farmId={farmId || selectedFarmId || ''}
+          farmId={farmId}
           onClose={handleCloseAddModal}
           onSuccess={handleSensorAdded}
         />

@@ -1,5 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { ISensor } from '../../../services/sensorService';
+import {
+  ISensor,
+  getActiveSensors,
+  calculateSensorAverages,
+  getSensorHealthCounts
+} from '../../../services/sensorService';
 import {
   Droplets,
   Thermometer,
@@ -17,76 +22,10 @@ interface MonitoringOverviewProps {
 }
 
 const MonitoringOverview: React.FC<MonitoringOverviewProps> = ({ sensors }) => {
-  // Helper function to check if sensor is online based on last update time
-  const isSensorOnline = (sensor: ISensor, thresholdMinutes: number = 5): boolean => {
-    if (!sensor.isActive) return false;
-    if (!sensor.lastReading?.timestamp) return false;
-
-    const lastUpdate = new Date(sensor.lastReading.timestamp);
-    const now = new Date();
-    const minutesAgo = (now.getTime() - lastUpdate.getTime()) / 60000;
-
-    return minutesAgo < thresholdMinutes;
-  };
-
-  const activeSensors = sensors.filter(s => s.lastReading && isSensorOnline(s));
-
-  const calculateAverages = () => {
-    if (activeSensors.length === 0) {
-      return {
-        moisture: 0,
-        temperature: 0,
-        ph: 0,
-        ec: 0
-      };
-    }
-
-    return {
-      moisture: activeSensors.reduce((acc, s) => acc + s.lastReading!.moisture, 0) / activeSensors.length,
-      temperature: activeSensors.reduce((acc, s) => acc + s.lastReading!.temperature, 0) / activeSensors.length,
-      ph: activeSensors.reduce((acc, s) => acc + s.lastReading!.ph, 0) / activeSensors.length,
-      ec: activeSensors.reduce((acc, s) => acc + s.lastReading!.ec, 0) / activeSensors.length
-    };
-  };
-
-  const getHealthStatus = () => {
-    const normal = sensors.filter(s => {
-      if (!isSensorOnline(s)) return false;
-      const { moisture, ph, temperature } = s.lastReading!;
-      const { moistureThreshold, optimalPh, optimalTemperature } = s.settings;
-
-      return moisture >= moistureThreshold &&
-             ph >= optimalPh.min && ph <= optimalPh.max &&
-             temperature >= optimalTemperature.min && temperature <= optimalTemperature.max;
-    }).length;
-
-    const warning = sensors.filter(s => {
-      if (!isSensorOnline(s)) return false;
-      const { moisture, ph, temperature } = s.lastReading!;
-      const { moistureThreshold, optimalPh, optimalTemperature } = s.settings;
-
-      return (ph < optimalPh.min || ph > optimalPh.max) ||
-             (temperature < optimalTemperature.min || temperature > optimalTemperature.max);
-    }).length;
-
-    const alert = sensors.filter(s => {
-      if (!isSensorOnline(s)) return false;
-      const { moisture, ph, temperature } = s.lastReading!;
-      const { moistureThreshold, optimalPh, optimalTemperature } = s.settings;
-
-      return moisture < moistureThreshold ||
-             ph < optimalPh.min - 0.5 || ph > optimalPh.max + 0.5 ||
-             temperature < optimalTemperature.min - 5 || temperature > optimalTemperature.max + 5;
-    }).length;
-
-    // Count offline sensors (including those with stale data)
-    const offline = sensors.filter(s => !isSensorOnline(s)).length;
-
-    return { normal, warning, alert, offline };
-  };
-
-  const averages = calculateAverages();
-  const health = getHealthStatus();
+  // Use consolidated service functions
+  const activeSensors = getActiveSensors(sensors);
+  const averages = calculateSensorAverages(sensors);
+  const health = getSensorHealthCounts(sensors);
 
   const getMoistureStatus = (moisture: number) => {
     if (moisture < 30) return { color: 'text-red-600', icon: TrendingDown, label: 'Low' };
