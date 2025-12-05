@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import DeviceStatistics from './cards/DeviceStatistics';
 import WeatherCard from './cards/WeatherCard';
@@ -7,7 +7,6 @@ import SensorCard from './cards/SensorCard';
 import FarmMapCard from './cards/FarmMapCard';
 import axios from 'axios';
 import authService from '../../services/authService';
-import socketService from '../../services/socketService';
 import {
   getSensorsByFarm,
   ISensor,
@@ -68,38 +67,6 @@ const Dashboard: React.FC<DashboardProps> = ({ isLoaded }) => {
 
   // Use consolidated service functions
   const activeSensors = getActiveSensors(sensors);
-
-  // Handle real-time sensor updates
-  const handleSensorUpdate = useCallback((data: any) => {
-    console.log('[Real-time] Sensor update received:', data);
-
-    // Update the sensor in the list
-    setSensors((prevSensors) =>
-      prevSensors.map((sensor) =>
-        sensor._id === data.sensorId
-          ? { ...sensor, lastReading: data.lastReading }
-          : sensor
-      )
-    );
-  }, []);
-
-  // Set up Socket.IO connection and listeners
-  useEffect(() => {
-    if (!selectedFarmId) return;
-
-    // Connect to Socket.IO
-    socketService.connect();
-    socketService.joinFarm(selectedFarmId);
-
-    // Subscribe to sensor updates
-    socketService.onSensorUpdate(handleSensorUpdate);
-
-    // Cleanup on unmount
-    return () => {
-      socketService.offSensorUpdate(handleSensorUpdate);
-      socketService.leaveFarm();
-    };
-  }, [selectedFarmId, handleSensorUpdate]);
 
   // Fetch farm data on component mount
   useEffect(() => {

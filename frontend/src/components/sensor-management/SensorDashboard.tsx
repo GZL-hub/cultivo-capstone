@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getSensorsByFarm, ISensor, getSensorStatus } from '../../services/sensorService';
 import { getFarms } from '../../services/farmService';
@@ -7,14 +7,11 @@ import SensorDetailModal from './components/SensorDetailModal';
 import AddSensorModal from './components/AddSensorModal';
 import MonitoringOverview from './components/MonitoringOverview';
 import authService from '../../services/authService';
-import socketService from '../../services/socketService';
 import {
   Activity,
   Plus,
   AlertCircle,
-  Loader,
-  Wifi,
-  WifiOff
+  Loader
 } from 'lucide-react';
 
 interface SensorDashboardProps {}
@@ -30,52 +27,30 @@ const SensorDashboard: React.FC<SensorDashboardProps> = () => {
   const [refreshKey, setRefreshKey] = useState(0);
   const [farmId, setFarmId] = useState<string | null>(null);
   const [farmName, setFarmName] = useState<string>('');
-  const [isSocketConnected, setIsSocketConnected] = useState(false);
 
   // Fetch user's farm on mount
   useEffect(() => {
     fetchUserFarm();
   }, []);
 
-  // Fetch sensors when farmId changes
+  // Fetch sensors when farmId changes or refresh is triggered
   useEffect(() => {
     if (farmId) {
       fetchSensors();
     }
   }, [farmId, refreshKey]);
 
-  // Handle real-time sensor updates
-  const handleSensorUpdate = useCallback((data: any) => {
-    console.log('[Real-time] Sensor update received:', data);
-
-    // Update the sensor in the list
-    setSensors((prevSensors) =>
-      prevSensors.map((sensor) =>
-        sensor._id === data.sensorId
-          ? { ...sensor, lastReading: data.lastReading }
-          : sensor
-      )
-    );
-  }, []);
-
-  // Set up Socket.IO connection and listeners
+  // Auto-refresh sensors every 5 seconds
   useEffect(() => {
     if (!farmId) return;
 
-    // Connect to Socket.IO
-    socketService.connect();
-    socketService.joinFarm(farmId);
-    setIsSocketConnected(socketService.isConnected());
+    const intervalId = setInterval(() => {
+      fetchSensors();
+    }, 5000); // 5 seconds
 
-    // Subscribe to sensor updates
-    socketService.onSensorUpdate(handleSensorUpdate);
-
-    // Cleanup on unmount
-    return () => {
-      socketService.offSensorUpdate(handleSensorUpdate);
-      socketService.leaveFarm();
-    };
-  }, [farmId, handleSensorUpdate]);
+    // Cleanup interval on unmount
+    return () => clearInterval(intervalId);
+  }, [farmId]);
 
   const fetchUserFarm = async () => {
     try {
@@ -198,20 +173,6 @@ const SensorDashboard: React.FC<SensorDashboardProps> = () => {
           <div className="flex justify-between items-center">
             <div className="flex items-center space-x-3">
               <h1 className="text-2xl font-bold text-gray-800">{farmName} - Sensor Management</h1>
-              {/* Real-time connection indicator */}
-              <div className="flex items-center space-x-1">
-                {isSocketConnected ? (
-                  <>
-                    <Wifi className="w-4 h-4 text-green-600" />
-                    <span className="text-xs text-green-600 font-medium">Live</span>
-                  </>
-                ) : (
-                  <>
-                    <WifiOff className="w-4 h-4 text-gray-400" />
-                    <span className="text-xs text-gray-400">Offline</span>
-                  </>
-                )}
-              </div>
             </div>
             <button
               onClick={handleAddSensor}

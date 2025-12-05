@@ -22,6 +22,13 @@ interface MonitoringOverviewProps {
 }
 
 const MonitoringOverview: React.FC<MonitoringOverviewProps> = ({ sensors }) => {
+  const [lastUpdateTime, setLastUpdateTime] = useState<Date>(new Date());
+
+  // Update timestamp whenever sensors prop changes
+  useEffect(() => {
+    setLastUpdateTime(new Date());
+  }, [sensors]);
+
   // Use consolidated service functions
   const activeSensors = getActiveSensors(sensors);
   const averages = calculateSensorAverages(sensors);
@@ -53,11 +60,11 @@ const MonitoringOverview: React.FC<MonitoringOverviewProps> = ({ sensors }) => {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h2 className="text-xl font-bold text-gray-800">Farm Monitoring Overview</h2>
-          <p className="text-sm text-gray-600 mt-1">Real-time soil condition analysis</p>
+          <p className="text-sm text-gray-600 mt-1">Auto-refreshing every 5 seconds</p>
         </div>
         <div className="flex items-center space-x-2">
           <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
-          <span className="text-sm font-semibold text-gray-600">Live Data</span>
+          <span className="text-sm font-semibold text-gray-600">Auto-refresh</span>
         </div>
       </div>
 
@@ -239,9 +246,11 @@ const MonitoringOverview: React.FC<MonitoringOverviewProps> = ({ sensors }) => {
             {/* Last Update */}
             <div className="pt-3 border-t">
               <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Last Update</span>
-                <span className="text-xs font-semibold text-gray-500">
-                  {activeSensors.length > 0 ? 'Real-time' : 'No data'}
+                <span className="text-sm text-gray-600">Last Refresh</span>
+                <span className="text-xs font-semibold text-gray-700">
+                  {activeSensors.length > 0
+                    ? lastUpdateTime.toLocaleTimeString()
+                    : 'No data'}
                 </span>
               </div>
             </div>
