@@ -1,13 +1,10 @@
 # Multi-stage build for both frontend and backend
 
 # Build frontend
-FROM node:20 AS frontend-builder
+FROM node:18 AS frontend-builder
 WORKDIR /app/frontend
 COPY frontend/package*.json ./
-RUN npm config set fetch-retries 5 && \
-    npm config set fetch-retry-mintimeout 20000 && \
-    npm config set fetch-retry-maxtimeout 120000 && \
-    npm install
+RUN npm install
 
 # Copy the frontend code
 COPY frontend/ ./
@@ -19,7 +16,7 @@ ENV REACT_APP_GOOGLE_MAPS_API_KEY=$REACT_APP_GOOGLE_MAPS_API_KEY
 RUN npm run build
 
 # Build backend
-FROM node:20 AS backend-builder
+FROM node:18 AS backend-builder
 WORKDIR /app/backend
 
 # Add MongoDB URI as build argument
@@ -27,10 +24,7 @@ ARG MONGODB_URI
 ENV MONGODB_URI=$MONGODB_URI
 
 COPY backend/package*.json ./
-RUN npm config set fetch-retries 5 && \
-    npm config set fetch-retry-mintimeout 20000 && \
-    npm config set fetch-retry-maxtimeout 120000 && \
-    npm install
+RUN npm install
 COPY backend/ ./
 
 # Create .env file for backend
@@ -39,7 +33,7 @@ RUN echo "MONGODB_URI=$MONGODB_URI" > .env
 RUN npm run build
 
 # Final image
-FROM node:20-slim
+FROM node:18-slim
 WORKDIR /app
 
 # Pass the MongoDB URI to the final image
@@ -51,11 +45,8 @@ COPY --from=backend-builder /app/backend/dist ./dist
 COPY --from=backend-builder /app/backend/package*.json ./
 COPY --from=backend-builder /app/backend/.env ./
 
-# Install production dependencies only with retry logic
-RUN npm config set fetch-retries 5 && \
-    npm config set fetch-retry-mintimeout 20000 && \
-    npm config set fetch-retry-maxtimeout 120000 && \
-    npm install --only=production
+# Install production dependencies only
+RUN npm install --only=production
 
 # Copy frontend build to be served by the backend
 COPY --from=frontend-builder /app/frontend/build ./public
