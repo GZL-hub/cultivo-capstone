@@ -25,7 +25,7 @@ This document describes the complete architecture for integrating ESP32 sensors 
                            │            │
                   ┌────────┘            └────────┐
                   │                              │
-                  │ 2s Interval                  │ 30s Interval
+                  │ 2s Interval                  │ 5min Interval
                   │ Real-time                    │ Historical
                   │                              │
                   ▼                              ▼
@@ -81,7 +81,7 @@ This document describes the complete architecture for integrating ESP32 sensors 
 │  │  • For real-time mobile monitoring      │        │
 │  └─────────────────────────────────────────┘        │
 │                                                      │
-│  Every 30 seconds:                                   │
+│  Every 5 minutes:                                    │
 │  ┌─────────────────────────────────────────┐        │
 │  │  sendToCloudRun()                       │        │
 │  │  • Create JSON payload                  │        │
@@ -365,7 +365,7 @@ ESP32 → HTTPS (TLS 1.2) → Cloud Run
 │  Estimated Device Capacity:                          │
 │  • 30s interval: ~2,000 concurrent devices           │
 │  • 60s interval: ~4,000 concurrent devices           │
-│  • 5min interval: ~40,000 concurrent devices         │
+│  • 5min interval: ~40,000 concurrent devices (current)│
 │                                                      │
 └──────────────────────────────────────────────────────┘
 ```
@@ -410,7 +410,7 @@ Serial Monitor Output:
 ├─ WiFi connection status
 ├─ Sensor readings (every 1s)
 ├─ Blynk send confirmation (every 2s)
-├─ Cloud Run response (every 30s)
+├─ Cloud Run response (every 5 minutes)
 │  ├─ HTTP status code (201, 404, 400, etc.)
 │  ├─ Response message
 │  └─ Round-trip time

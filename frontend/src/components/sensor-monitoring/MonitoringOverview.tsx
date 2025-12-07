@@ -4,7 +4,7 @@ import {
   getActiveSensors,
   calculateSensorAverages,
   getSensorHealthCounts
-} from '../../../services/sensorService';
+} from '../../services/sensorService';
 import {
   Droplets,
   Thermometer,
@@ -60,7 +60,7 @@ const MonitoringOverview: React.FC<MonitoringOverviewProps> = ({ sensors }) => {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h2 className="text-xl font-bold text-gray-800">Farm Monitoring Overview</h2>
-          <p className="text-sm text-gray-600 mt-1">Auto-refreshing every 5 seconds</p>
+          <p className="text-sm text-gray-600 mt-1">Auto-refreshing every 1 minute</p>
         </div>
         <div className="flex items-center space-x-2">
           <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>

@@ -11,6 +11,7 @@ import Alerts from './components/alerts/Alerts';
 import Device from './components/devices/Devices';
 import CameraDevices from './components/devices/camera/CameraDevices';
 import SensorDashboard from './components/sensor-management/SensorDashboard';
+import SensorMonitoringDashboard from './components/sensor-monitoring/SensorMonitoringDashboard';
 import FarmManagement from './components/farm-management/FarmManagement';
 import FarmOverview from './components/farm-management/components/farm-overview/FarmOverview';
 import WorkerManagement from './components/farm-management/components/worker/WorkerManagement';
@@ -132,7 +133,10 @@ function App() {
             </Route>
             
             <Route path="/alerts" element={<Alerts />} />
-            
+
+            {/* Sensor Monitoring Dashboard */}
+            <Route path="/sensor-monitoring" element={<SensorMonitoringDashboard />} />
+
             {/* Devices Nested Routes */}
             <Route path="/device-settings" element={<Device />}>
               <Route path="cameras" element={<CameraDevices />} />

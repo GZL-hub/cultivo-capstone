@@ -1,19 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { ISensor } from '../../../services/sensorService';
-import { getSensorReadings, getSensorStats, updateSensor, deleteSensor } from '../../../services/sensorService';
-import NPKChart from './NPKChart';
+import { updateSensor } from '../../../services/sensorService';
 import SensorHistoryChart from './SensorHistoryChart';
 import {
   X,
-  Droplets,
-  Thermometer,
-  FlaskConical,
-  Activity,
-  Trash2,
-  Settings,
   TrendingUp,
   Save,
-  Edit
+  Edit,
+  Settings
 } from 'lucide-react';
 
 interface SensorDetailModalProps {
@@ -22,10 +16,10 @@ interface SensorDetailModalProps {
   onUpdate: () => void;
 }
 
-type TabType = 'current' | 'history' | 'npk' | 'settings';
+type TabType = 'history' | 'settings';
 
 const SensorDetailModal: React.FC<SensorDetailModalProps> = ({ sensor, onClose, onUpdate }) => {
-  const [activeTab, setActiveTab] = useState<TabType>('current');
+  const [activeTab, setActiveTab] = useState<TabType>('history');
   const [isEditing, setIsEditing] = useState(false);
   const [editedSettings, setEditedSettings] = useState(sensor.settings);
   const [editedName, setEditedName] = useState(sensor.deviceName);
@@ -48,36 +42,6 @@ const SensorDetailModal: React.FC<SensorDetailModalProps> = ({ sensor, onClose, 
     }
   };
 
-  const handleDelete = async () => {
-    if (!window.confirm(`Are you sure you want to delete "${sensor.deviceName}"? This action cannot be undone.`)) {
-      return;
-    }
-
-    try {
-      await deleteSensor(sensor._id);
-      onUpdate();
-      onClose();
-    } catch (error) {
-      console.error('Error deleting sensor:', error);
-      alert('Failed to delete sensor');
-    }
-  };
-
-  const getStatusColor = () => {
-    if (!sensor.lastReading) return 'text-gray-500';
-
-    const { moisture, ph, temperature } = sensor.lastReading;
-    const { moistureThreshold, optimalPh, optimalTemperature } = sensor.settings;
-
-    if (moisture < moistureThreshold) return 'text-red-600';
-    if (ph < optimalPh.min - 0.5 || ph > optimalPh.max + 0.5) return 'text-red-600';
-    if (temperature < optimalTemperature.min - 5 || temperature > optimalTemperature.max + 5) return 'text-red-600';
-    if (ph < optimalPh.min || ph > optimalPh.max) return 'text-yellow-600';
-    if (temperature < optimalTemperature.min || temperature > optimalTemperature.max) return 'text-yellow-600';
-
-    return 'text-green-600';
-  };
-
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[80] p-4">
       <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
@@ -89,18 +53,12 @@ const SensorDetailModal: React.FC<SensorDetailModalProps> = ({ sensor, onClose, 
                 type="text"
                 value={editedName}
                 onChange={(e) => setEditedName(e.target.value)}
-                className="text-2xl font-bold text-gray-800 border-b-2 border-blue-500 focus:outline-none w-full"
+                className="text-2xl font-bold text-gray-800 border-b-2 border-green-500 focus:outline-none w-full"
               />
             ) : (
               <h2 className="text-2xl font-bold text-gray-800">{sensor.deviceName}</h2>
             )}
             <p className="text-sm text-gray-500 mt-1">{sensor.deviceId}</p>
-            {sensor.lastReading && (
-              <p className={`text-sm font-semibold mt-1 ${getStatusColor()}`}>
-                Status: {getStatusColor() === 'text-green-600' ? 'Normal' :
-                         getStatusColor() === 'text-yellow-600' ? 'Warning' : 'Alert'}
-              </p>
-            )}
           </div>
           <div className="flex items-center space-x-2">
             {isEditing ? (
@@ -127,15 +85,9 @@ const SensorDetailModal: React.FC<SensorDetailModalProps> = ({ sensor, onClose, 
               <>
                 <button
                   onClick={() => setIsEditing(true)}
-                  className="p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                  className="p-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
                 >
                   <Edit className="w-5 h-5" />
-                </button>
-                <button
-                  onClick={handleDelete}
-                  className="p-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
-                >
-                  <Trash2 className="w-5 h-5" />
                 </button>
                 <button
                   onClick={onClose}
@@ -151,21 +103,10 @@ const SensorDetailModal: React.FC<SensorDetailModalProps> = ({ sensor, onClose, 
         {/* Tabs */}
         <div className="flex border-b">
           <button
-            onClick={() => setActiveTab('current')}
-            className={`flex-1 px-4 py-3 font-semibold transition ${
-              activeTab === 'current'
-                ? 'text-blue-600 border-b-2 border-blue-600'
-                : 'text-gray-600 hover:text-gray-800'
-            }`}
-          >
-            <Activity className="w-4 h-4 inline mr-2" />
-            Current Data
-          </button>
-          <button
             onClick={() => setActiveTab('history')}
             className={`flex-1 px-4 py-3 font-semibold transition ${
               activeTab === 'history'
-                ? 'text-blue-600 border-b-2 border-blue-600'
+                ? 'text-green-600 border-b-2 border-green-600'
                 : 'text-gray-600 hover:text-gray-800'
             }`}
           >
@@ -173,21 +114,10 @@ const SensorDetailModal: React.FC<SensorDetailModalProps> = ({ sensor, onClose, 
             History
           </button>
           <button
-            onClick={() => setActiveTab('npk')}
-            className={`flex-1 px-4 py-3 font-semibold transition ${
-              activeTab === 'npk'
-                ? 'text-blue-600 border-b-2 border-blue-600'
-                : 'text-gray-600 hover:text-gray-800'
-            }`}
-          >
-            <FlaskConical className="w-4 h-4 inline mr-2" />
-            NPK Levels
-          </button>
-          <button
             onClick={() => setActiveTab('settings')}
             className={`flex-1 px-4 py-3 font-semibold transition ${
               activeTab === 'settings'
-                ? 'text-blue-600 border-b-2 border-blue-600'
+                ? 'text-green-600 border-b-2 border-green-600'
                 : 'text-gray-600 hover:text-gray-800'
             }`}
           >
@@ -198,65 +128,8 @@ const SensorDetailModal: React.FC<SensorDetailModalProps> = ({ sensor, onClose, 
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-6">
-          {activeTab === 'current' && sensor.lastReading && (
-            <div className="space-y-6">
-              {/* Current Readings Grid */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {/* Moisture */}
-                <div className="bg-blue-50 p-4 rounded-lg">
-                  <Droplets className="w-8 h-8 text-blue-600 mb-2" />
-                  <p className="text-sm text-gray-600">Moisture</p>
-                  <p className="text-2xl font-bold text-gray-800">
-                    {sensor.lastReading.moisture.toFixed(1)}%
-                  </p>
-                  <p className="text-xs text-gray-500 mt-1">
-                    Threshold: {sensor.settings.moistureThreshold}%
-                  </p>
-                </div>
-
-                {/* Temperature */}
-                <div className="bg-orange-50 p-4 rounded-lg">
-                  <Thermometer className="w-8 h-8 text-orange-600 mb-2" />
-                  <p className="text-sm text-gray-600">Temperature</p>
-                  <p className="text-2xl font-bold text-gray-800">
-                    {sensor.lastReading.temperature.toFixed(1)}°C
-                  </p>
-                  <p className="text-xs text-gray-500 mt-1">
-                    Optimal: {sensor.settings.optimalTemperature.min}-{sensor.settings.optimalTemperature.max}°C
-                  </p>
-                </div>
-
-                {/* pH */}
-                <div className="bg-purple-50 p-4 rounded-lg">
-                  <FlaskConical className="w-8 h-8 text-purple-600 mb-2" />
-                  <p className="text-sm text-gray-600">pH Level</p>
-                  <p className="text-2xl font-bold text-gray-800">
-                    {sensor.lastReading.ph.toFixed(2)}
-                  </p>
-                  <p className="text-xs text-gray-500 mt-1">
-                    Optimal: {sensor.settings.optimalPh.min}-{sensor.settings.optimalPh.max}
-                  </p>
-                </div>
-
-                {/* EC */}
-                <div className="bg-teal-50 p-4 rounded-lg">
-                  <Activity className="w-8 h-8 text-teal-600 mb-2" />
-                  <p className="text-sm text-gray-600">EC</p>
-                  <p className="text-2xl font-bold text-gray-800">
-                    {sensor.lastReading.ec}
-                  </p>
-                  <p className="text-xs text-gray-500 mt-1">µS/cm</p>
-                </div>
-              </div>
-            </div>
-          )}
-
           {activeTab === 'history' && (
             <SensorHistoryChart sensorId={sensor._id} />
-          )}
-
-          {activeTab === 'npk' && sensor.lastReading && (
-            <NPKChart sensor={sensor} />
           )}
 
           {activeTab === 'settings' && (
@@ -351,18 +224,11 @@ const SensorDetailModal: React.FC<SensorDetailModalProps> = ({ sensor, onClose, 
               {!isEditing && (
                 <button
                   onClick={() => setIsEditing(true)}
-                  className="w-full py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                  className="w-full py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
                 >
                   Edit Settings
                 </button>
               )}
-            </div>
-          )}
-
-          {activeTab === 'current' && !sensor.lastReading && (
-            <div className="text-center text-gray-500 py-12">
-              <Activity className="w-16 h-16 mx-auto mb-4 text-gray-400" />
-              <p>No sensor data available yet</p>
             </div>
           )}
         </div>

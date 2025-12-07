@@ -245,14 +245,14 @@ export const recordReading = async (req: Request, res: Response): Promise<void> 
 export const getSensorReadings = async (req: Request, res: Response): Promise<void> => {
   try {
     const { sensorId } = req.params;
-    const { startDate, endDate, limit = 100, page = 1 } = req.query;
+    const { startDate, endDate, limit = 100, page = 1, aggregation } = req.query;
 
     if (!mongoose.Types.ObjectId.isValid(sensorId)) {
       res.status(400).json({ success: false, error: 'Invalid sensor ID' });
       return;
     }
 
-    const query: any = { sensorId };
+    const query: any = { sensorId: new mongoose.Types.ObjectId(sensorId) };
 
     // Add time filters if provided
     if (startDate || endDate) {
@@ -261,6 +261,117 @@ export const getSensorReadings = async (req: Request, res: Response): Promise<vo
       if (endDate) query.timestamp.$lte = new Date(endDate as string);
     }
 
+    // If aggregation is requested, use MongoDB aggregation pipeline
+    if (aggregation) {
+      const aggregationInterval = aggregation as string;
+      let groupByFormat: string;
+
+      switch (aggregationInterval) {
+        case '5min':
+          groupByFormat = '%Y-%m-%dT%H:%M'; // Group by 5-minute intervals (handled below)
+          break;
+        case '1hour':
+          groupByFormat = '%Y-%m-%dT%H:00:00';
+          break;
+        case '4hour':
+          groupByFormat = '%Y-%m-%d'; // Will handle 4-hour grouping separately
+          break;
+        case '1day':
+          groupByFormat = '%Y-%m-%d';
+          break;
+        default:
+          groupByFormat = '%Y-%m-%dT%H:%M';
+      }
+
+      const matchQuery: any = {
+        sensorId: new mongoose.Types.ObjectId(sensorId)
+      };
+
+      if (startDate || endDate) {
+        matchQuery.timestamp = {};
+        if (startDate) matchQuery.timestamp.$gte = new Date(startDate as string);
+        if (endDate) matchQuery.timestamp.$lte = new Date(endDate as string);
+      }
+
+      // Special handling for 5-minute intervals
+      let groupBy: any;
+      if (aggregationInterval === '5min') {
+        groupBy = {
+          year: { $year: '$timestamp' },
+          month: { $month: '$timestamp' },
+          day: { $dayOfMonth: '$timestamp' },
+          hour: { $hour: '$timestamp' },
+          interval: {
+            $subtract: [
+              { $minute: '$timestamp' },
+              { $mod: [{ $minute: '$timestamp' }, 5] }
+            ]
+          }
+        };
+      } else if (aggregationInterval === '4hour') {
+        groupBy = {
+          year: { $year: '$timestamp' },
+          month: { $month: '$timestamp' },
+          day: { $dayOfMonth: '$timestamp' },
+          interval: {
+            $subtract: [
+              { $hour: '$timestamp' },
+              { $mod: [{ $hour: '$timestamp' }, 4] }
+            ]
+          }
+        };
+      } else {
+        groupBy = { $dateToString: { format: groupByFormat, date: '$timestamp' } };
+      }
+
+      const aggregatedData = await SensorReading.aggregate([
+        { $match: matchQuery },
+        {
+          $group: {
+            _id: groupBy,
+            timestamp: { $first: '$timestamp' },
+            moisture: { $avg: '$moisture' },
+            temperature: { $avg: '$temperature' },
+            ph: { $avg: '$ph' },
+            ec: { $avg: '$ec' },
+            nitrogen: { $avg: '$nitrogen' },
+            phosphorus: { $avg: '$phosphorus' },
+            potassium: { $avg: '$potassium' },
+            pumpStatus: { $last: '$pumpStatus' },
+            count: { $sum: 1 }
+          }
+        },
+        { $sort: { timestamp: -1 } },
+        { $limit: 1000 } // Max 1000 aggregated points
+      ]);
+
+      res.status(200).json({
+        success: true,
+        data: aggregatedData.map(item => ({
+          timestamp: item.timestamp,
+          moisture: Math.round(item.moisture * 10) / 10,
+          temperature: Math.round(item.temperature * 10) / 10,
+          ph: Math.round(item.ph * 100) / 100,
+          ec: Math.round(item.ec),
+          nitrogen: Math.round(item.nitrogen * 10) / 10,
+          phosphorus: Math.round(item.phosphorus * 10) / 10,
+          potassium: Math.round(item.potassium * 10) / 10,
+          pumpStatus: item.pumpStatus,
+          _id: item._id
+        })),
+        pagination: {
+          total: aggregatedData.length,
+          page: 1,
+          pages: 1,
+          limit: aggregatedData.length
+        },
+        aggregated: true,
+        aggregationInterval
+      });
+      return;
+    }
+
+    // Regular non-aggregated query
     const pageNum = parseInt(page as string);
     const limitNum = parseInt(limit as string);
     const skip = (pageNum - 1) * limitNum;

@@ -127,6 +127,9 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, setCollapsed }) => {
                   <NavItem to="/" icon={Home}>
                     Dashboard
                   </NavItem>
+                  <NavItem to="/sensor-monitoring" icon={Activity}>
+                    Sensor Monitoring
+                  </NavItem>
                   <NavItem to="/alerts" icon={Bell}>
                     Alerts
                   </NavItem>

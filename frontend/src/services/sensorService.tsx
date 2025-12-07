@@ -105,7 +105,7 @@ export const isSensorOnline = (sensor: ISensor, thresholdMinutes: number = 5): b
  * @returns Status: 'normal', 'warning', 'alert', or 'offline'
  */
 export const getSensorStatus = (sensor: ISensor): SensorStatus => {
-  // First check if sensor is online
+  // First check if sensor is online (5 minute threshold to match ESP32 polling rate)
   const isOnline = isSensorOnline(sensor, 5);
   if (!isOnline) return 'offline';
 
@@ -302,6 +302,7 @@ export const getSensorReadings = async (
     endDate?: string;
     limit?: number;
     page?: number;
+    aggregation?: string;
   }
 ): Promise<PaginatedReadings> => {
   try {
@@ -310,6 +311,7 @@ export const getSensorReadings = async (
     if (options?.endDate) params.append('endDate', options.endDate);
     if (options?.limit) params.append('limit', options.limit.toString());
     if (options?.page) params.append('page', options.page.toString());
+    if (options?.aggregation) params.append('aggregation', options.aggregation);
 
     const response = await api.get(
       `/sensors/${sensorId}/readings?${params.toString()}`

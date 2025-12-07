@@ -443,14 +443,16 @@ Adjust timing in the configuration section:
 
 ```cpp
 const unsigned long BLYNK_INTERVAL = 2000;      // 2 seconds
-const unsigned long CLOUD_INTERVAL = 30000;     // 30 seconds (recommended)
+const unsigned long CLOUD_INTERVAL = 300000;    // 5 minutes (300000ms) - recommended
 const unsigned long SENSOR_READ_INTERVAL = 1000; // 1 second
 ```
 
 **Recommendations:**
 - **Blynk:** 2-5 seconds (for real-time app updates)
-- **Cloud Run:** 30-60 seconds (to reduce API calls and costs)
+- **Cloud Run:** 5 minutes (300000ms) - optimal balance between data freshness and API costs
 - **Sensor Read:** 1 second (for responsive pump control)
+
+**Note:** The Cultivo dashboard auto-refreshes sensor data every 1 minute and considers sensors offline if no data is received within 5 minutes.
 
 ### Sensor Calibration
 
