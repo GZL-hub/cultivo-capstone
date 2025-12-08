@@ -3,6 +3,8 @@ import { Bell, User, LogOut, ChevronRight } from 'lucide-react';
 import { useLocation, Link } from 'react-router-dom';
 import authService from '../../services/authService';
 import { getUserById } from '../../services/userService';
+import { getAlertStats, AlertStats } from '../../services/alertService';
+import { getFarms } from '../../services/farmService';
 
 interface HeaderProps {
   onLogout: () => void;
@@ -24,6 +26,7 @@ const Header: React.FC<HeaderProps> = ({ onLogout }) => {
   const location = useLocation();
   const [user, setUser] = useState<UserData | null>(null);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [alertStats, setAlertStats] = useState<AlertStats | null>(null);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -50,6 +53,7 @@ const Header: React.FC<HeaderProps> = ({ onLogout }) => {
     };
 
     fetchUserData();
+    fetchAlertStats();
 
     // Listen for avatar and profile update events
     const handleAvatarUpdate = (event: CustomEvent) => {
@@ -71,6 +75,30 @@ const Header: React.FC<HeaderProps> = ({ onLogout }) => {
       window.removeEventListener('avatarUpdated' as any, handleAvatarUpdate as any);
     };
   }, []);
+
+  // Fetch alert stats and refresh every 30 seconds
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      fetchAlertStats();
+    }, 30000); // 30 seconds
+
+    return () => clearInterval(intervalId);
+  }, []);
+
+  const fetchAlertStats = async () => {
+    try {
+      const currentUser = authService.getCurrentUser();
+      if (!currentUser) return;
+
+      const farmsData = await getFarms();
+      if (farmsData.length === 0) return;
+
+      const stats = await getAlertStats(farmsData[0]._id);
+      setAlertStats(stats);
+    } catch (error) {
+      console.error('Failed to fetch alert stats:', error);
+    }
+  };
 
   // Get user initials from name
   const getInitials = (name: string): string => {
@@ -131,14 +159,20 @@ const Header: React.FC<HeaderProps> = ({ onLogout }) => {
 
       {/* Right side actions */}
       <div className="flex items-center gap-2 ml-auto sm:ml-0">
+
         {/* Notifications */}
-        <button
-          type="button"
-          className="p-2 hover:bg-gray-200 rounded-lg transition-colors flex items-center justify-center"
+        <Link
+          to="/alerts"
+          className="relative p-2 hover:bg-gray-200 rounded-lg transition-colors flex items-center justify-center"
           aria-label="Notifications"
         >
           <Bell className="h-5 w-5 text-gray-700" />
-        </button>
+          {alertStats && alertStats.unread > 0 && (
+            <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center animate-pulse">
+              {alertStats.unread > 9 ? '9+' : alertStats.unread}
+            </span>
+          )}
+        </Link>
 
         {/* User Profile */}
         <div className="relative">
