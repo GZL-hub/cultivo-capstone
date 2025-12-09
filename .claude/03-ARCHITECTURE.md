@@ -2,7 +2,7 @@
 
 ## Architecture Overview
 
-Cultivo follows a **three-tier architecture** with clear separation between presentation, business logic, and data layers. The system employs a **client-server model** with RESTful API communication and a hybrid cloud infrastructure for media streaming.
+Cultivo follows a **three-tier architecture** with client-server model, RESTful API communication, and hybrid cloud infrastructure.
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
@@ -10,7 +10,7 @@ Cultivo follows a **three-tier architecture** with clear separation between pres
 │  ┌──────────────────────────────────────────────────────────┐   │
 │  │   React SPA (Browser)                                    │   │
 │  │   - React Router (Client-side routing)                   │   │
-│  │   - Context API (State management)                       │   │ 
+│  │   - Context API (State management)                       │   │
 │  │   - Axios (HTTP client with interceptors)                │   │
 │  │   - Google Maps API (Interactive maps)                   │   │
 │  │   - WebRTC (Media streaming)                             │   │
@@ -47,8 +47,6 @@ Cultivo follows a **three-tier architecture** with clear separation between pres
 ## Deployment Architecture
 
 ### Cloud Infrastructure
-
-Cultivo uses a **hybrid cloud architecture** with services distributed across GCP:
 
 ```
 ┌───────────────────────────────────────────────────────────────────┐
@@ -122,130 +120,45 @@ Cultivo uses a **hybrid cloud architecture** with services distributed across GC
      │ POST /api/auth/login           │                               │
      │ { email, password }            │                               │
      ├───────────────────────────────▶│                               │
-     │                                │                               │
      │                                │ Find user by email            │
      │                                ├──────────────────────────────▶│
-     │                                │                               │
      │                                │ User document                 │
      │                                │◀──────────────────────────────┤
-     │                                │                               │
      │                                │ Compare passwords (bcrypt)    │
-     │                                │                               │
      │                                │ Generate JWT token            │
      │                                │                               │
      │ { success: true, token, user } │                               │
      │◀───────────────────────────────┤                               │
-     │                                │                               │
      │ Store token in localStorage    │                               │
-     │                                │                               │
      │                                │                               │
      │ GET /api/farms                 │                               │
      │ Authorization: Bearer <token>  │                               │
      ├───────────────────────────────▶│                               │
-     │                                │                               │
      │                                │ Verify JWT (middleware)       │
-     │                                │                               │
      │                                │ Query farms                   │
      │                                ├──────────────────────────────▶│
-     │                                │                               │
      │                                │ Farm documents                │
      │                                │◀──────────────────────────────┤
-     │                                │                               │
      │ { success: true, data: farms } │                               │
      │◀───────────────────────────────┤                               │
-     │                                │                               │
 ```
 
 **Key Components:**
-- **Client**: Stores JWT in `localStorage` as "token"
-- **Axios Interceptor**: Automatically adds `Authorization: Bearer {token}` header
-- **Protect Middleware**: Verifies JWT and attaches `req.user` for all protected routes
-- **JWT Payload**: `{ id: userId, iat: issuedAt, exp: expiresAt }`
+- Client stores JWT in `localStorage` as "token"
+- Axios interceptor adds `Authorization: Bearer {token}` header
+- Protect middleware verifies JWT and attaches `req.user`
+- JWT payload: `{ id: userId, iat: issuedAt, exp: expiresAt }`
 
-### 2. Farm Management Flow
+### 2. Worker Management Flow (Nested Resource)
 
-```
-┌──────────┐                     ┌──────────┐                    ┌──────────┐
-│  Client  │                     │  Backend │                    │ Database │
-└────┬─────┘                     └────┬─────┘                    └────┬─────┘
-     │                                │                               │
-     │ 1. Get all farms               │                               │
-     │ GET /api/farms?owner=userId    │                               │
-     ├───────────────────────────────▶│                               │
-     │                                │ Farm.find({ owner: userId })  │
-     │                                ├──────────────────────────────▶│
-     │                                │ [farms...]                    │
-     │                                │◀──────────────────────────────┤
-     │ [farms...]                     │                               │
-     │◀───────────────────────────────┤                               │
-     │                                │                               │
-     │ 2. Create new farm             │                               │
-     │ POST /api/farms                │                               │
-     │ { name, type, area, owner }    │                               │
-     ├───────────────────────────────▶│                               │
-     │                                │ new Farm().save()             │
-     │                                ├──────────────────────────────▶│
-     │                                │ farm document                 │
-     │                                │◀──────────────────────────────┤
-     │ { success: true, data: farm }  │                               │
-     │◀───────────────────────────────┤                               │
-     │                                │                               │
-     │ 3. Draw farm boundary          │                               │
-     │ PUT /api/farms/:id/boundary    │                               │
-     │ { farmBoundary: GeoJSON }      │                               │
-     ├───────────────────────────────▶│                               │
-     │                                │ Farm.findByIdAndUpdate()      │
-     │                                ├──────────────────────────────▶│
-     │                                │ updated farm                  │
-     │                                │◀──────────────────────────────┤
-     │ { success: true, data: farm }  │                               │
-     │◀───────────────────────────────┤                               │
-```
+Workers are nested under farms: `/api/farms/:farmId/workers`
 
-### 3. Worker Management Flow (Nested Resource)
+**Key Design:**
+- Nested routes structure
+- farmId association for every worker
+- Compound index `(id, farmId)` ensures unique worker IDs per farm
 
-Workers are **nested under farms** with the route pattern `/api/farms/:farmId/workers`:
-
-```
-┌──────────┐                     ┌──────────┐                    ┌──────────┐
-│  Client  │                     │  Backend │                    │ Database │
-└────┬─────┘                     └────┬─────┘                    └────┬─────┘
-     │                                │                               │
-     │ GET /api/farms/123/workers     │                               │
-     ├───────────────────────────────▶│                               │
-     │                                │ Worker.find({ farmId: 123 })  │
-     │                                ├──────────────────────────────▶│
-     │                                │ [workers...]                  │
-     │                                │◀──────────────────────────────┤
-     │ [workers...]                   │                               │
-     │◀───────────────────────────────┤                               │
-     │                                │                               │
-     │ POST /api/farms/123/workers    │                               │
-     │ { id, name, role, email }      │                               │
-     ├───────────────────────────────▶│                               │
-     │                                │ Check duplicate ID            │
-     │                                │ Worker.findOne({id, farmId})  │
-     │                                ├──────────────────────────────▶│
-     │                                │ null (not found)              │
-     │                                │◀──────────────────────────────┤
-     │                                │                               │
-     │                                │ new Worker({ ...data,         │
-     │                                │   farmId: 123 }).save()       │
-     │                                ├──────────────────────────────▶│
-     │                                │ worker document               │
-     │                                │◀──────────────────────────────┤
-     │ { success: true, data: worker }│                               │
-     │◀───────────────────────────────┤                               │
-```
-
-**Key Design Decisions:**
-- **Nested Routes**: Workers accessed via `/api/farms/:farmId/workers`
-- **farmId Association**: Every worker has a `farmId` reference to its parent farm
-- **Unique Constraint**: Compound index `(id, farmId)` ensures unique worker IDs per farm
-
-### 4. WebRTC Streaming Flow
-
-Detailed in the [WebRTC.md](./.claude/WebRTC.md) file. High-level flow:
+### 3. WebRTC Streaming Flow
 
 ```
 ┌─────────────┐        ┌─────────────┐       ┌─────────────┐       ┌─────────┐
@@ -256,13 +169,13 @@ Detailed in the [WebRTC.md](./.claude/WebRTC.md) file. High-level flow:
                        H.264/AAC              Port 8889            SharedStream
 ```
 
-**Flow Steps:**
-1. FFmpeg pulls RTSP stream from camera (local network)
+**Flow:**
+1. FFmpeg pulls RTSP from camera (local network)
 2. Transcodes H.265 → H.264 for browser compatibility
-3. Pushes transcoded stream to MediaMTX on GCE VM
-4. React app creates WebRTC connection via WHEP endpoint
-5. MediaMTX streams video to browser with ~0.5-1.5s latency
-6. Single WebRTC connection shared across multiple video players (16x efficiency)
+3. Pushes to MediaMTX on GCE VM
+4. React app creates WebRTC connection via WHEP
+5. MediaMTX streams to browser (~0.5-1.5s latency)
+6. Single WebRTC connection shared across multiple video players
 
 ## Design Patterns
 
@@ -282,31 +195,27 @@ Database
 
 ## Security Architecture
 
-### 1. Authentication Security
+### Authentication Security
+- Password hashing: bcrypt with 10 salt rounds
+- JWT tokens: Signed with expiration
+- Token storage: localStorage (client)
+- Token transmission: Authorization header (`Bearer <token>`)
 
-- **Password Hashing**: bcrypt with 10 salt rounds
-- **JWT Tokens**: Signed tokens with expiration
-- **Token Storage**: localStorage (client-side)
-- **Token Transmission**: Authorization header (`Bearer <token>`)
+### Authorization
+- Middleware protection: `protect` middleware verifies JWT
+- User context: `req.user` attached after verification
+- Resource ownership: Queries filtered by `owner` field
 
-### 2. Authorization
+### API Security
+- CORS configured for cross-origin requests
+- Mongoose schema validation
+- Generic error messages prevent information leakage
+- Rate limiting: Not implemented (future)
 
-- **Middleware Protection**: `protect` middleware verifies JWT
-- **User Context**: Authenticated user attached to `req.user`
-- **Resource Ownership**: Queries filtered by `owner` field (future enhancement: explicit checks)
-
-### 3. API Security
-
-- **CORS**: Configured to allow cross-origin requests
-- **Input Validation**: Mongoose schema validation
-- **Error Handling**: Generic error messages to prevent information leakage
-- **Rate Limiting**: Not implemented (future enhancement)
-
-### 4. Data Security
-
-- **Password Exclusion**: `.select('-password')` in user queries
-- **Environment Variables**: Secrets stored in `.env` (not committed to Git)
-- **Build-time Secrets**: API keys passed as build args in Docker
+### Data Security
+- Password exclusion: `.select('-password')` in queries
+- Environment variables: Secrets in `.env` (not committed)
+- Build-time secrets: API keys as Docker build args
 
 ## Database Schema Design
 
@@ -346,15 +255,13 @@ Database
 
 ## API Design Principles
 
-### 1. RESTful Conventions
+### RESTful Conventions
+- GET: Retrieve resources
+- POST: Create new resources
+- PUT: Update existing resources
+- DELETE: Remove resources
 
-- **GET**: Retrieve resources
-- **POST**: Create new resources
-- **PUT**: Update existing resources
-- **DELETE**: Remove resources
-
-### 2. URL Structure
-
+### URL Structure
 ```
 /api/{resource}              # Collection endpoint
 /api/{resource}/:id          # Single resource endpoint
@@ -362,35 +269,23 @@ Database
 /api/{parent}/:id/{nested}   # Nested resource
 ```
 
-### 3. Error Handling
-
-```typescript
-// Standard error responses
-400 Bad Request       // Validation errors
-401 Unauthorized      // Missing or invalid token
-404 Not Found         // Resource doesn't exist
-500 Internal Error    // Server-side errors
-```
+### Error Handling
+- 400 Bad Request: Validation errors
+- 401 Unauthorized: Missing/invalid token
+- 404 Not Found: Resource doesn't exist
+- 500 Internal Error: Server-side errors
 
 ## Scalability Strategy
 
 ### Current Limitations
-
-- **Single Cloud Run Instance**: Can scale to N instances automatically
-- **Single MediaMTX Instance**: Single point of failure for streaming
-- **No Load Balancer**: Cloud Run handles load balancing automatically
-- **No Caching Layer**: Redis not implemented
+- Single Cloud Run instance (auto-scales to N)
+- Single MediaMTX instance (single point of failure)
+- No load balancer (Cloud Run handles automatically)
+- No caching layer (Redis not implemented)
 
 ### Future Enhancements
-
-1. **Multiple MediaMTX Instances**: Load balance across multiple VMs
-2. **Redis Caching**: Cache user sessions, farm data
-3. **Database Sharding**: Distribute data across multiple MongoDB instances
-4. **CDN for Assets**: CloudFlare/CloudFront for static files
-5. **Queue System**: Bull/BullMQ for async tasks (email, notifications)
-
-## Next Steps
-
-- **[Frontend Guide](./04-FRONTEND-GUIDE.md)** - Frontend component architecture
-- **[Backend API](./05-BACKEND-API.md)** - Complete API reference
-- **[Database Models](./06-DATABASE-MODELS.md)** - Detailed schema documentation
+1. Multiple MediaMTX instances with load balancing
+2. Redis caching for sessions and farm data
+3. Database sharding across MongoDB instances
+4. CDN for static assets
+5. Queue system (Bull/BullMQ) for async tasks

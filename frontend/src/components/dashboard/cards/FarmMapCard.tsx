@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { GoogleMap, Polygon } from '@react-google-maps/api';
-import axios from 'axios';
+import api from '../../../services/api';
 import { Map, MapPin } from 'lucide-react';
 
 // Define device status type
@@ -27,13 +27,11 @@ interface FarmInfo {
 }
 
 interface FarmMapCardProps {
-  farmId?: string; // Add farmId prop
+  farmId?: string;
   devices: Device[];
   isLoaded: boolean;
   onViewFullMap?: () => void;
 }
-
-const API_URL = '/api';
 
 const FarmMapCard: React.FC<FarmMapCardProps> = ({
   farmId,
@@ -41,7 +39,6 @@ const FarmMapCard: React.FC<FarmMapCardProps> = ({
   isLoaded,
   onViewFullMap
 }) => {
-  // Add state for farm info
   const [farmInfo, setFarmInfo] = useState<FarmInfo>({
     name: "Loading...",
     type: "Loading...",
@@ -55,29 +52,24 @@ const FarmMapCard: React.FC<FarmMapCardProps> = ({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch farm data when component mounts or farmId changes
   useEffect(() => {
     const fetchFarmData = async () => {
+      if (!farmId) {
+        setLoading(false);
+        setError('No farm registered. Please create a farm in Farm Management.');
+        return;
+      }
+
       try {
         setLoading(true);
         setError(null);
         
-        let response;
+        console.log(`Fetching farm with ID: ${farmId}`);
+        // Use response.data.data to access the farm data
+        const response = await api.get(`/farms/${farmId}`);
+        const farm = response.data.data;
         
-        // If farmId is provided, fetch specific farm
-        if (farmId) {
-          response = await axios.get(`${API_URL}/farms/${farmId}`);
-          console.log(`Fetching farm with ID: ${farmId}`);
-        } else {
-          // Otherwise fetch all farms and use the first one
-          response = await axios.get(`${API_URL}/farms`);
-          console.log('No farmId provided, fetching all farms');
-        }
-        
-        // Handle farm data from response
-        if (farmId && response.data.success && response.data.data) {
-          // Single farm response format
-          const farm = response.data.data;
+        if (farm) {
           setFarmInfo({
             name: farm.name || "Unknown",
             type: farm.type || "Unknown",
@@ -89,40 +81,20 @@ const FarmMapCard: React.FC<FarmMapCardProps> = ({
             }
           });
           console.log('Farm data received:', farm);
-        } else if (!farmId && response.data.success && response.data.data && response.data.data.length > 0) {
-          // Multiple farms response format - take first farm
-          const farm = response.data.data[0];
-          setFarmInfo({
-            name: farm.name || "Unknown",
-            type: farm.type || "Unknown",
-            operationDate: farm.operationDate || "Unknown",
-            areaSize: farm.areaSize || "Unknown",
-            farmBoundary: farm.farmBoundary || {
-              type: "Polygon",
-              coordinates: [[[0, 0], [0, 0], [0, 0], [0, 0]]]
-            }
-          });
-          console.log('Multiple farms found, using first farm:', farm);
         } else {
-          setError('No farm registered. Please create a farm in Farm Management.');
+          setError('No farm data found');
         }
       } catch (err: any) {
         console.error('Error fetching farm data:', err);
-        const errorMessage = err.response?.data?.error || 'Failed to load farm data';
+        const errorMessage = err.response?.data?.error || err.response?.data?.message || 'Failed to load farm data';
         setError(errorMessage);
       } finally {
         setLoading(false);
       }
     };
 
-    // Only fetch if we have a farmId
-    if (farmId) {
-      fetchFarmData();
-    } else {
-      setLoading(false);
-      setError('No farm registered. Please create a farm in Farm Management.');
-    }
-  }, [farmId]); // Re-fetch when farmId changes
+    fetchFarmData();
+  }, [farmId]);
 
   // Helper function to get status styles
   const getStatusStyles = (status: DeviceStatus) => {
@@ -215,11 +187,23 @@ const FarmMapCard: React.FC<FarmMapCardProps> = ({
     strokeWeight: 2,
   };
 
+  // Check if farm boundary is drawn (not all zeros)
+  const hasBoundary = farmInfo.farmBoundary?.coordinates?.[0]?.some(
+    coord => coord[0] !== 0 || coord[1] !== 0
+  );
+
   // Show empty state if no farm is registered
   if (error && (error.includes('No farm registered') || error.includes('No farm data found'))) {
     return (
       <div className="bg-white p-4 rounded-lg shadow-md w-full h-full flex flex-col items-center justify-center">
         <div className="text-center max-w-md">
+          {/* Step Indicator */}
+          <div className="mb-2">
+            <span className="inline-block px-3 py-1 bg-blue-100 text-blue-700 text-xs font-semibold rounded-full">
+              Step 1 of 4
+            </span>
+          </div>
+
           {/* Icon */}
           <div className="mb-4 text-gray-300">
             <Map className="h-24 w-24 mx-auto" strokeWidth={1.5} />
@@ -237,6 +221,41 @@ const FarmMapCard: React.FC<FarmMapCardProps> = ({
             className="px-6 py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors"
           >
             Go to Farm Management
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Show empty state if farm exists but boundary not drawn
+  if (!loading && !error && !hasBoundary) {
+    return (
+      <div className="bg-white p-4 rounded-lg shadow-md w-full h-full flex flex-col items-center justify-center">
+        <div className="text-center max-w-md">
+          {/* Step Indicator */}
+          <div className="mb-2">
+            <span className="inline-block px-3 py-1 bg-blue-100 text-blue-700 text-xs font-semibold rounded-full">
+              Step 2 of 4
+            </span>
+          </div>
+
+          {/* Icon */}
+          <div className="mb-4 text-gray-300">
+            <MapPin className="h-24 w-24 mx-auto" strokeWidth={1.5} />
+          </div>
+
+          {/* Message */}
+          <h3 className="text-xl font-semibold text-gray-700 mb-2">Farm Boundary Not Drawn</h3>
+          <p className="text-gray-500 mb-4">
+            Complete your farm setup by drawing the boundary on the map for accurate monitoring and analytics.
+          </p>
+
+          {/* Action button */}
+          <button
+            onClick={onViewFullMap}
+            className="px-6 py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors"
+          >
+            Draw Boundary
           </button>
         </div>
       </div>

@@ -1,11 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import DeviceStatistics from './cards/DeviceStatistics';
 import WeatherCard from './cards/WeatherCard';
 import SensorAlerts from './cards/SensorAlerts';
 import SensorCard from './cards/SensorCard';
 import FarmMapCard from './cards/FarmMapCard';
-import axios from 'axios';
+import OnboardingChecklist from './cards/OnboardingChecklist';
+import api from '../../services/api';
 import authService from '../../services/authService';
 import {
   getSensorsByFarm,
@@ -23,9 +24,6 @@ import {
   FaVial,
   FaTint
 } from 'react-icons/fa';
-
-// API URL
-const API_URL = '/api';
 
 // Farm interface
 interface Farm {
@@ -64,9 +62,31 @@ const Dashboard: React.FC<DashboardProps> = ({ isLoaded }) => {
   const [sensors, setSensors] = useState<ISensor[]>([]);
   const [cameras, setCameras] = useState<CCTV[]>([]);
 
+  // Onboarding checklist state
+  const [checklistDismissed, setChecklistDismissed] = useState<boolean>(
+    localStorage.getItem('cultivoDashboard.checklistDismissed') === 'true'
+  );
+  const [checklistCollapsed, setChecklistCollapsed] = useState<boolean>(
+    localStorage.getItem('cultivoDashboard.checklistCollapsed') === 'true'
+  );
 
   // Use consolidated service functions
   const activeSensors = getActiveSensors(sensors);
+
+  // Calculate onboarding data
+  const onboardingData = useMemo(() => ({
+    hasFarm: selectedFarmId !== null,
+    hasFarmBoundary: selectedFarmId !== null &&
+      farmInfo.farmBoundary?.coordinates?.[0]?.some(coord => coord[0] !== 0 || coord[1] !== 0),
+    sensorCount: sensors.length,
+    cameraCount: cameras.length,
+    isComplete: selectedFarmId !== null &&
+      farmInfo.farmBoundary?.coordinates?.[0]?.some(coord => coord[0] !== 0 || coord[1] !== 0) &&
+      sensors.length > 0 &&
+      cameras.length > 0
+  }), [selectedFarmId, farmInfo, sensors, cameras]);
+
+  const showChecklist = !onboardingData.isComplete && !checklistDismissed;
 
   // Fetch farm data on component mount
   useEffect(() => {
@@ -82,8 +102,8 @@ const Dashboard: React.FC<DashboardProps> = ({ isLoaded }) => {
           return;
         }
 
-        // Fetch farms for the current user only
-        const response = await axios.get(`${API_URL}/farms?owner=${currentUser.id}`);
+        // Fetch farms using api instance (with JWT)
+        const response = await api.get(`/farms?owner=${currentUser.id}`);
         const farms = response.data.data;
 
         if (farms && farms.length > 0) {
@@ -133,7 +153,6 @@ const Dashboard: React.FC<DashboardProps> = ({ isLoaded }) => {
     totalRegistered: sensors.length,
     totalOnline: activeSensors.length
   };
-
 
   // Transform sensors and cameras into device format for FarmMapCard
   const devices = [
@@ -192,20 +211,51 @@ const Dashboard: React.FC<DashboardProps> = ({ isLoaded }) => {
     navigate('/farm/map');
   };
 
+  // Onboarding checklist handlers
+  const handleToggleCollapse = () => {
+    const newCollapsed = !checklistCollapsed;
+    setChecklistCollapsed(newCollapsed);
+    localStorage.setItem('cultivoDashboard.checklistCollapsed', newCollapsed.toString());
+  };
+
+  const handleDismissChecklist = () => {
+    setChecklistDismissed(true);
+    localStorage.setItem('cultivoDashboard.checklistDismissed', 'true');
+  };
+
+  const handleOnboardingNavigate = (route: string) => {
+    navigate(route);
+  };
+
   return (
-    <div className="w-full h-full overflow-auto flex flex-col px-4 py-4 bg-background">    
+    <div className="w-full h-full overflow-auto flex flex-col px-4 py-4 bg-background">
+      {/* Onboarding Checklist - Full width at top */}
+      {showChecklist && (
+        <OnboardingChecklist
+          hasFarm={onboardingData.hasFarm}
+          hasFarmBoundary={onboardingData.hasFarmBoundary}
+          sensorCount={onboardingData.sensorCount}
+          cameraCount={onboardingData.cameraCount}
+          isCollapsed={checklistCollapsed}
+          onToggleCollapse={handleToggleCollapse}
+          onDismiss={handleDismissChecklist}
+          onNavigate={handleOnboardingNavigate}
+        />
+      )}
+
       {/* Top row - devices stats and weather */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
         {/* Device Statistics Component */}
-        <DeviceStatistics 
-          totalRegistered={deviceStats.totalRegistered} 
-          totalOnline={deviceStats.totalOnline} 
+        <DeviceStatistics
+          totalRegistered={deviceStats.totalRegistered}
+          totalOnline={deviceStats.totalOnline}
+          onAddDevices={() => navigate('/device-settings/sensors')}
         />
-      
+
         {/* Weather Card Component */}
         <WeatherCard />
       </div>
-      
+
       {/* Main content area - flex-grow to take remaining height */}
       <div className="grid grid-cols-1 md:grid-cols-12 gap-4 flex-grow">
         {/* Left column - Sensor Alerts and Sensor Dashboard */}
@@ -220,6 +270,7 @@ const Dashboard: React.FC<DashboardProps> = ({ isLoaded }) => {
                   navigate('/device-settings/sensors');
                 }
               }}
+              onSetupDevices={() => navigate('/device-settings/sensors')}
             />
           </div>
           

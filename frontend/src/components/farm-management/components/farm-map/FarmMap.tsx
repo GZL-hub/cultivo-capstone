@@ -5,7 +5,8 @@ import FarmMapToolbar, { MapType } from './FarmMapToolBar';
 import { DrawingManager } from '@react-google-maps/api';
 import PolygonDataPanel from './polygon/PolygonDataPanel';
 import { toast } from 'react-hot-toast';
-import axios from 'axios';
+import api from '../../../../services/api';
+import axios from 'axios'; // Keep for axios.isCancel check
 import { MapPin, ArrowRight } from 'lucide-react';
 // Import the polygon service
 import { 
@@ -162,9 +163,9 @@ const FarmMap: React.FC<FarmMapProps> = ({ coordinates, farmId: propFarmId, owne
       
       try {
         // Fetch the farm to check if it belongs to this owner
-        const response = await fetch(`/api/farms/${farmId}`);
-        const data = await response.json();
-        
+        const response = await api.get(`/farms/${farmId}`);
+        const data = response.data;
+
         if (data.success && data.data) {
           // Check if the farm belongs to the current user
           setIsAuthorized(data.data.owner === ownerId);
@@ -346,8 +347,8 @@ useEffect(() => {
 
       console.log(`Fetching boundary for farm: ${farmId}, owner: ${ownerId}`);
 
-      // Direct API call with abort signal for race condition protection
-      const response = await axios.get(`/api/farms/${farmId}`, {
+      // API call with abort signal for race condition protection
+      const response = await api.get(`/farms/${farmId}`, {
         signal: abortController.signal
       });
       console.log('Farm data response:', response.data);

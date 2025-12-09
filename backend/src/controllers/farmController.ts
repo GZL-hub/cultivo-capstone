@@ -17,21 +17,16 @@ interface Coordinate {
 }
 
 // Get all farms
-export const getAllFarms = async (req: Request, res: Response): Promise<void> => {
+export const getAllFarms = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    // Check if owner query parameter is provided
-    const filter: any = {};
-    if (req.query.owner) {
-      // Convert string ID to MongoDB ObjectId
-      try {
-        filter.owner = new mongoose.Types.ObjectId(req.query.owner as string);
-      } catch (err) {
-        // If invalid ObjectId format, return empty result instead of crashing
-        res.status(200).json({ success: true, data: [] });
-        return;
-      }
+    // Only return farms owned by the authenticated user
+    if (!req.user || !req.user.id) {
+      res.status(401).json({ success: false, error: 'User not authenticated' });
+      return;
     }
-    
+
+    const filter: any = { owner: new mongoose.Types.ObjectId(req.user.id) };
+
     const farms = await Farm.find(filter);
     res.status(200).json({ success: true, data: farms });
   } catch (error) {
@@ -40,15 +35,26 @@ export const getAllFarms = async (req: Request, res: Response): Promise<void> =>
 };
 
 // Get single farm
-export const getFarmById = async (req: Request, res: Response): Promise<void> => {
+export const getFarmById = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
+    if (!req.user || !req.user.id) {
+      res.status(401).json({ success: false, error: 'User not authenticated' });
+      return;
+    }
+
     const farm = await Farm.findById(req.params.id);
-    
+
     if (!farm) {
       res.status(404).json({ success: false, error: 'Farm not found' });
       return;
     }
-    
+
+    // Check if the user owns this farm
+    if (farm.owner.toString() !== req.user.id) {
+      res.status(403).json({ success: false, error: 'Not authorized to access this farm' });
+      return;
+    }
+
     res.status(200).json({ success: true, data: farm });
   } catch (error) {
     res.status(500).json({ success: false, error: 'Server Error' });
@@ -56,22 +62,18 @@ export const getFarmById = async (req: Request, res: Response): Promise<void> =>
 };
 
 // Create new farm
-export const createFarm = async (req: Request, res: Response): Promise<void> => {
+export const createFarm = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    // Ensure owner field is included in request body
-    if (!req.body.owner) {
-      res.status(400).json({ success: false, error: 'Owner ID is required' });
-      return;
-    }
-
-    // Validate owner ID format
-    if (!mongoose.Types.ObjectId.isValid(req.body.owner)) {
-      res.status(400).json({ success: false, error: 'Invalid owner ID format' });
+    if (!req.user || !req.user.id) {
+      res.status(401).json({ success: false, error: 'User not authenticated' });
       return;
     }
 
     // Remove farmBoundary and coordinates if they are empty/invalid
     const farmData = { ...req.body };
+
+    // Set the owner to the authenticated user (ignore any owner field from request body)
+    farmData.owner = req.user.id;
 
     // Don't include farmBoundary if it's empty or invalid
     if (farmData.farmBoundary) {
@@ -99,35 +101,49 @@ export const createFarm = async (req: Request, res: Response): Promise<void> => 
 };
 
 // Update farm
-export const updateFarm = async (req: Request, res: Response): Promise<void> => {
+export const updateFarm = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
+    if (!req.user || !req.user.id) {
+      res.status(401).json({ success: false, error: 'User not authenticated' });
+      return;
+    }
+
+    // First, check if the farm exists and user owns it
+    const existingFarm = await Farm.findById(req.params.id);
+
+    if (!existingFarm) {
+      res.status(404).json({ success: false, error: 'Farm not found' });
+      return;
+    }
+
+    // Check ownership
+    if (existingFarm.owner.toString() !== req.user.id) {
+      res.status(403).json({ success: false, error: 'Not authorized to update this farm' });
+      return;
+    }
+
     // Don't allow changing the owner
     if (req.body.owner) {
       delete req.body.owner;
     }
-    
+
     // Validate the incoming data
     const { name, type, operationDate } = req.body;
     const updateData: Partial<IFarm> = {};
-    
+
     // Only include fields that are provided in the request
     if (name !== undefined) updateData.name = name;
     if (type !== undefined) updateData.type = type;
     if (operationDate !== undefined) updateData.operationDate = operationDate;
-    
+
     // Always update the updatedAt timestamp
     updateData.updatedAt = new Date();
-    
+
     const farm = await Farm.findByIdAndUpdate(req.params.id, updateData, {
       new: true,
       runValidators: true
     });
-    
-    if (!farm) {
-      res.status(404).json({ success: false, error: 'Farm not found' });
-      return;
-    }
-    
+
     res.status(200).json({ success: true, data: farm });
   } catch (error) {
     if (error instanceof Error) {
@@ -139,15 +155,29 @@ export const updateFarm = async (req: Request, res: Response): Promise<void> => 
 };
 
 // Delete farm
-export const deleteFarm = async (req: Request, res: Response): Promise<void> => {
+export const deleteFarm = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const farm = await Farm.findByIdAndDelete(req.params.id);
-    
+    if (!req.user || !req.user.id) {
+      res.status(401).json({ success: false, error: 'User not authenticated' });
+      return;
+    }
+
+    // First, check if the farm exists and user owns it
+    const farm = await Farm.findById(req.params.id);
+
     if (!farm) {
       res.status(404).json({ success: false, error: 'Farm not found' });
       return;
     }
-    
+
+    // Check ownership
+    if (farm.owner.toString() !== req.user.id) {
+      res.status(403).json({ success: false, error: 'Not authorized to delete this farm' });
+      return;
+    }
+
+    await Farm.findByIdAndDelete(req.params.id);
+
     res.status(200).json({ success: true, data: {} });
   } catch (error) {
     res.status(500).json({ success: false, error: 'Server Error' });
@@ -155,15 +185,26 @@ export const deleteFarm = async (req: Request, res: Response): Promise<void> => 
 };
 
 // Get farm boundary polygon
-export const getFarmBoundary = async (req: Request, res: Response): Promise<void> => {
+export const getFarmBoundary = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
+    if (!req.user || !req.user.id) {
+      res.status(401).json({ success: false, error: 'User not authenticated' });
+      return;
+    }
+
     const farm = await Farm.findById(req.params.id);
-    
+
     if (!farm) {
       res.status(404).json({ success: false, error: 'Farm not found' });
       return;
     }
-    
+
+    // Check ownership
+    if (farm.owner.toString() !== req.user.id) {
+      res.status(403).json({ success: false, error: 'Not authorized to access this farm' });
+      return;
+    }
+
     res.status(200).json({ success: true, data: farm.farmBoundary });
   } catch (error) {
     res.status(500).json({ success: false, error: 'Server Error' });
@@ -171,28 +212,47 @@ export const getFarmBoundary = async (req: Request, res: Response): Promise<void
 };
 
 // Update farm boundary polygon
-export const updateFarmBoundary = async (req: Request, res: Response): Promise<void> => {
+export const updateFarmBoundary = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
+    if (!req.user || !req.user.id) {
+      res.status(401).json({ success: false, error: 'User not authenticated' });
+      return;
+    }
+
+    // First, check if the farm exists and user owns it
+    const existingFarm = await Farm.findById(req.params.id);
+
+    if (!existingFarm) {
+      res.status(404).json({ success: false, error: 'Farm not found' });
+      return;
+    }
+
+    // Check ownership
+    if (existingFarm.owner.toString() !== req.user.id) {
+      res.status(403).json({ success: false, error: 'Not authorized to update this farm' });
+      return;
+    }
+
     const { coordinates, area, perimeter } = req.body;
-    
+
     if (!coordinates) {
       res.status(400).json({ success: false, error: 'Coordinates are required' });
       return;
     }
-    
+
     // Convert the flat array of coordinates to GeoJSON format
     const geoJsonCoordinates = [coordinates.map((coord: Coordinate) => [coord.lng, coord.lat])];
-    
+
     // Make sure the polygon is closed
     if (geoJsonCoordinates[0].length > 0) {
       const firstPoint = geoJsonCoordinates[0][0];
       const lastPoint = geoJsonCoordinates[0][geoJsonCoordinates[0].length - 1];
-      
+
       if (firstPoint[0] !== lastPoint[0] || firstPoint[1] !== lastPoint[1]) {
         geoJsonCoordinates[0].push(firstPoint);
       }
     }
-    
+
     const farm = await Farm.findByIdAndUpdate(
       req.params.id,
       {
@@ -208,12 +268,7 @@ export const updateFarmBoundary = async (req: Request, res: Response): Promise<v
         runValidators: true
       }
     );
-    
-    if (!farm) {
-      res.status(404).json({ success: false, error: 'Farm not found' });
-      return;
-    }
-    
+
     res.status(200).json({ success: true, data: farm });
   } catch (error) {
     if (error instanceof Error) {

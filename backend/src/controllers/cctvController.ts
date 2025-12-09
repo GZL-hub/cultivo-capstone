@@ -3,10 +3,23 @@ import CCTV, { ICCTV } from '../models/CCTV';
 import Farm from '../models/Farm';
 import mongoose from 'mongoose';
 
+// Custom request type with user
+interface AuthRequest extends Request {
+  user?: {
+    id: string;
+    [key: string]: any;
+  };
+}
+
 // Get all CCTV devices for a specific farm
-export const getCCTVs = async (req: Request, res: Response): Promise<void> => {
+export const getCCTVs = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const farmId = req.params.farmId;
+
+    if (!req.user || !req.user.id) {
+      res.status(401).json({ message: 'User not authenticated' });
+      return;
+    }
 
     // Validate farmId
     if (!mongoose.Types.ObjectId.isValid(farmId)) {
@@ -14,10 +27,15 @@ export const getCCTVs = async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-    // Check if farm exists
-    const farmExists = await Farm.findById(farmId);
-    if (!farmExists) {
+    // Check if farm exists and user owns it
+    const farm = await Farm.findById(farmId);
+    if (!farm) {
       res.status(404).json({ message: 'Farm not found' });
+      return;
+    }
+
+    if (farm.owner.toString() !== req.user.id) {
+      res.status(403).json({ message: 'Not authorized to access this farm' });
       return;
     }
 
@@ -48,13 +66,30 @@ export const getCCTVs = async (req: Request, res: Response): Promise<void> => {
 };
 
 // Get a single CCTV device by ID
-export const getCCTVById = async (req: Request, res: Response): Promise<void> => {
+export const getCCTVById = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { farmId, cctvId } = req.params;
+
+    if (!req.user || !req.user.id) {
+      res.status(401).json({ message: 'User not authenticated' });
+      return;
+    }
 
     // Validate IDs
     if (!mongoose.Types.ObjectId.isValid(farmId) || !mongoose.Types.ObjectId.isValid(cctvId)) {
       res.status(400).json({ message: 'Invalid ID format' });
+      return;
+    }
+
+    // Verify farm ownership
+    const farm = await Farm.findById(farmId);
+    if (!farm) {
+      res.status(404).json({ message: 'Farm not found' });
+      return;
+    }
+
+    if (farm.owner.toString() !== req.user.id) {
+      res.status(403).json({ message: 'Not authorized to access this farm' });
       return;
     }
 
@@ -77,9 +112,14 @@ export const getCCTVById = async (req: Request, res: Response): Promise<void> =>
 };
 
 // Create a new CCTV device
-export const createCCTV = async (req: Request, res: Response): Promise<void> => {
+export const createCCTV = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const farmId = req.params.farmId;
+
+    if (!req.user || !req.user.id) {
+      res.status(401).json({ message: 'User not authenticated' });
+      return;
+    }
 
     // Validate farmId
     if (!mongoose.Types.ObjectId.isValid(farmId)) {
@@ -87,10 +127,15 @@ export const createCCTV = async (req: Request, res: Response): Promise<void> => 
       return;
     }
 
-    // Check if farm exists
-    const farmExists = await Farm.findById(farmId);
-    if (!farmExists) {
+    // Check if farm exists and user owns it
+    const farm = await Farm.findById(farmId);
+    if (!farm) {
       res.status(404).json({ message: 'Farm not found' });
+      return;
+    }
+
+    if (farm.owner.toString() !== req.user.id) {
+      res.status(403).json({ message: 'Not authorized to create CCTV devices for this farm' });
       return;
     }
 
@@ -119,13 +164,30 @@ export const createCCTV = async (req: Request, res: Response): Promise<void> => 
 };
 
 // Update an existing CCTV device
-export const updateCCTV = async (req: Request, res: Response): Promise<void> => {
+export const updateCCTV = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { farmId, cctvId } = req.params;
+
+    if (!req.user || !req.user.id) {
+      res.status(401).json({ message: 'User not authenticated' });
+      return;
+    }
 
     // Validate IDs
     if (!mongoose.Types.ObjectId.isValid(farmId) || !mongoose.Types.ObjectId.isValid(cctvId)) {
       res.status(400).json({ message: 'Invalid ID format' });
+      return;
+    }
+
+    // Verify farm ownership
+    const farm = await Farm.findById(farmId);
+    if (!farm) {
+      res.status(404).json({ message: 'Farm not found' });
+      return;
+    }
+
+    if (farm.owner.toString() !== req.user.id) {
+      res.status(403).json({ message: 'Not authorized to update CCTV devices for this farm' });
       return;
     }
 
@@ -151,13 +213,30 @@ export const updateCCTV = async (req: Request, res: Response): Promise<void> => 
 };
 
 // Delete a CCTV device
-export const deleteCCTV = async (req: Request, res: Response): Promise<void> => {
+export const deleteCCTV = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { farmId, cctvId } = req.params;
+
+    if (!req.user || !req.user.id) {
+      res.status(401).json({ message: 'User not authenticated' });
+      return;
+    }
 
     // Validate IDs
     if (!mongoose.Types.ObjectId.isValid(farmId) || !mongoose.Types.ObjectId.isValid(cctvId)) {
       res.status(400).json({ message: 'Invalid ID format' });
+      return;
+    }
+
+    // Verify farm ownership
+    const farm = await Farm.findById(farmId);
+    if (!farm) {
+      res.status(404).json({ message: 'Farm not found' });
+      return;
+    }
+
+    if (farm.owner.toString() !== req.user.id) {
+      res.status(403).json({ message: 'Not authorized to delete CCTV devices for this farm' });
       return;
     }
 

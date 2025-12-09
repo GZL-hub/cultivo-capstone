@@ -1,12 +1,13 @@
 # CLAUDE.md - Quick Reference Guide
 
-**Cultivo**: Full-stack farm management platform with WebRTC CCTV, Google Maps, worker management, and analytics.
+**Cultivo**: Full-stack farm management platform with WebRTC CCTV, IoT sensors, Google Maps, worker management, and analytics.
 
 ## Tech Stack
 - **Frontend:** React 19.1 (TypeScript) + Tailwind CSS + Google Maps
 - **Backend:** Express.js + MongoDB (Mongoose) + JWT auth
 - **Deployment:** Docker → Google Cloud Run (Asia Southeast 1)
 - **Streaming:** MediaMTX (WebRTC) + FFmpeg on GCE VM
+- **IoT:** ESP32 + 7-in-1 NPK Sensors + Blynk IoT (dual reporting)
 
 ## Quick Start
 ```bash
@@ -23,12 +24,12 @@ cd frontend && npm run tailwind
 ## Monorepo Structure
 ```
 frontend/       # React SPA
-  ├── components/   # Feature-based: login, dashboard, farm-management, etc.
-  ├── services/     # API clients (farmService, authService, etc.)
+  ├── components/   # Feature-based: dashboard, farm-management, devices, analytics
+  ├── services/     # API clients (farmService, sensorService, etc.)
   └── App.tsx       # Router + auth logic
 
 backend/        # Express API
-  ├── models/       # Mongoose schemas (User, Farm, Worker, CCTV)
+  ├── models/       # Mongoose schemas (User, Farm, Worker, CCTV, Sensor, SensorReading)
   ├── controllers/  # Business logic
   ├── routes/       # API endpoints
   └── middleware/   # Auth (protect middleware)
@@ -38,15 +39,18 @@ backend/        # Express API
 - **Auth:** JWT in localStorage → Axios interceptor → `protect` middleware → `req.user`
 - **API Base:** `/api` → Standard response: `{ success, data?, error? }`
 - **Services:** All API calls go through `services/*.tsx` (never direct axios in components)
-- **Nested Routes:** Workers live under farms: `/api/farms/:farmId/workers`
+- **Nested Routes:** Workers/Sensors under farms: `/api/farms/:farmId/workers`, `/api/farms/:farmId/sensors`
 - **GeoJSON:** Farm boundaries stored as polygons for Google Maps
 - **WebRTC:** Shared stream provider (1 connection for 16 cameras)
+- **IoT Dual Reporting:** ESP32 → Blynk (2s real-time) + Cloud Run (5min historical)
 
 ## Key Files
 - Backend entry: `backend/src/index.ts`
 - Frontend entry: `frontend/src/App.tsx`
 - Auth middleware: `backend/src/middleware/auth.ts`
 - WebRTC components: `frontend/src/components/farm-management/components/camera/`
+- Sensor components: `frontend/src/components/devices/sensor/`
+- Sensor models: `backend/src/models/Sensor.ts`, `backend/src/models/SensorReading.ts`
 
 ## Environment Variables
 ```bash
@@ -66,19 +70,28 @@ JWT_SECRET=your_secret
 - **Components:** Functional with hooks, feature-based organization
 - **Error Handling:** 400 (validation), 401 (auth), 404 (not found), 500 (server)
 
-## Detailed Documentation
+## Documentation Structure
 
-For comprehensive information, refer to these docs in `.claude/`:
+### Main Documentation
+1. **[01-PROJECT-OVERVIEW.md](./01-PROJECT-OVERVIEW.md)** - Project vision, tech stack, features (trimmed)
+2. **[02-GETTING-STARTED.md](./02-GETTING-STARTED.md)** - Setup and prerequisites (trimmed)
+3. **[03-ARCHITECTURE.md](./03-ARCHITECTURE.md)** - System architecture, data flow (trimmed)
+4. **[04-FRONTEND-GUIDE.md](./04-FRONTEND-GUIDE.md)** - React structure, patterns (trimmed)
+5. **[05-BACKEND-API.md](./05-BACKEND-API.md)** - API endpoints reference (trimmed)
+6. **[06-DATABASE-MODELS.md](./06-DATABASE-MODELS.md)** - Mongoose schemas (trimmed)
+7. **[07-DEPLOYMENT.md](./07-DEPLOYMENT.md)** - Docker, Cloud Run deployment (trimmed)
+8. **[08-FEATURES-GUIDE.md](./08-FEATURES-GUIDE.md)** - Feature implementations (trimmed)
 
-1. **[01-PROJECT-OVERVIEW.md](./01-PROJECT-OVERVIEW.md)** - Project vision, tech stack, features, architecture
-2. **[02-GETTING-STARTED.md](./02-GETTING-STARTED.md)** - Setup, prerequisites, running locally
-3. **[03-ARCHITECTURE.md](./03-ARCHITECTURE.md)** - Three-tier architecture, deployment, design patterns
-4. **[04-FRONTEND-GUIDE.md](./04-FRONTEND-GUIDE.md)** - React components, routing, state management
-5. **[05-BACKEND-API.md](./05-BACKEND-API.md)** - API endpoints reference, auth flow, error handling
-6. **[06-DATABASE-MODELS.md](./06-DATABASE-MODELS.md)** - Mongoose schemas, relationships, indexes
-7. **[07-DEPLOYMENT.md](./07-DEPLOYMENT.md)** - Docker builds, Cloud Run, MediaMTX server, CI/CD
-8. **[08-FEATURES-GUIDE.md](./08-FEATURES-GUIDE.md)** - Feature implementations, maps, CCTV, workers
-9. **[WebRTC.md](./WebRTC.md)** - WebRTC streaming architecture, FFmpeg, MediaMTX config, shared streams
+### Specialized Guides
+**IoT & Sensors:**
+- **[iot/IOT_ARCHITECTURE.md](./iot/IOT_ARCHITECTURE.md)** - ESP32 dual reporting, data flow
+- **[iot/ESP32_SETUP_GUIDE.md](./iot/ESP32_SETUP_GUIDE.md)** - Hardware specs, pin config
+- **[iot/SENSOR_MANAGEMENT_README.md](./iot/SENSOR_MANAGEMENT_README.md)** - Sensor features, dashboard
+
+**Streaming:**
+- **[WebRTC.md](./WebRTC.md)** - WebRTC streaming, FFmpeg, MediaMTX, shared streams
+
+**Note:** All documentation has been trimmed to remove code examples and verbose explanations. Focus is on current implementation and essential technical details only.
 
 ## Common Tasks
 
@@ -107,8 +120,9 @@ gcloud builds submit --config cloudbuild.yaml \
 ```
 
 ## Critical Notes
-- **WebRTC:** See `WebRTC.md` for full streaming setup (FFmpeg bridge → MediaMTX → React)
+- **WebRTC:** See `WebRTC.md` for streaming setup (FFmpeg bridge → MediaMTX → React)
 - **Maps:** Requires `REACT_APP_GOOGLE_MAPS_API_KEY` and enabled Maps JavaScript API
 - **Workers:** Compound unique index on (id, farmId) - unique per farm, not globally
+- **Sensors:** Dual reporting - Blynk (real-time) + Cloud Run API (historical)
 - **Deployment:** Multi-stage Docker serves both frontend (static) and backend (Express) on port 8080
 - **Auth:** Token in localStorage, checked in `App.tsx`, protected by middleware

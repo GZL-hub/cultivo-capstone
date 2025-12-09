@@ -1,260 +1,201 @@
-# ESP32 Setup Guide - Cultivo Dual Reporting System
+# ESP32 Setup Guide - Hardware Configuration
 
-This guide walks you through setting up your ESP32 device to send soil sensor data to both **Blynk Cloud** (for mobile app) and **Cultivo Cloud Run Backend** (for web dashboard and MongoDB storage).
-
----
-
-## Table of Contents
-
-1. [Prerequisites](#prerequisites)
-2. [Hardware Setup](#hardware-setup)
-3. [Arduino IDE Configuration](#arduino-ide-configuration)
-4. [Backend Configuration](#backend-configuration)
-5. [Device Registration](#device-registration)
-6. [Upload and Testing](#upload-and-testing)
-7. [Troubleshooting](#troubleshooting)
-8. [API Reference](#api-reference)
+This guide covers the hardware setup and configuration requirements for ESP32-based soil sensors.
 
 ---
 
-## Prerequisites
+## Hardware Requirements
 
-### Hardware Requirements
+### Core Components
 - **ESP32 Development Board** (ESP32-WROOM-32 or similar)
 - **Soil Sensors:**
   - Capacitive Soil Moisture Sensor
   - Temperature Sensor (LM35 or DHT22)
   - pH Sensor Module
   - EC (Electrical Conductivity) Sensor
-  - NPK Sensor (optional)
+  - NPK Sensor (7-in-1 RS485 recommended)
 - **5V Relay Module** (for pump control)
 - **Water Pump** (12V DC recommended)
 - **Power Supply** (5V for ESP32, 12V for pump)
 - **Jumper Wires** and **Breadboard**
 - **Micro-USB Cable** (for programming)
 
-### Software Requirements
-- **Arduino IDE** (1.8.19 or later) or **PlatformIO**
-- **ESP32 Board Support** (via Arduino Board Manager)
-- **Required Libraries:**
-  - `WiFi.h` (built-in)
-  - `WiFiClientSecure.h` (built-in)
-  - `HTTPClient.h` (built-in)
-  - `ArduinoJson` (by Benoit Blanchon)
-  - `Blynk` (by Volodymyr Shymanskyy)
-
-### Cloud Services
-- **Blynk Account** ([blynk.cloud](https://blynk.cloud))
-- **Cultivo Backend Access** (Google Cloud Run URL)
-- **WiFi Network** with internet access
+### Optional Components
+- OLED Display (SSD1306 128x64)
+- WS2812 RGB LED for status indication
+- External antenna for improved WiFi range
 
 ---
 
-## Hardware Setup
+## Pin Configuration
 
-### Wiring Diagram
+### Standard 7-Pin Analog Setup
 
-```
-ESP32 Pin          →  Component
-============================================
-GPIO 34 (ADC1_6)   →  Moisture Sensor (Analog Out)
-GPIO 35 (ADC1_7)   →  Temperature Sensor (Analog Out)
-GPIO 32 (ADC1_4)   →  pH Sensor (Analog Out)
-GPIO 33 (ADC1_5)   →  EC Sensor (Analog Out)
-GPIO 25 (ADC2_8)   →  Nitrogen Sensor (Analog Out)
-GPIO 26 (ADC2_9)   →  Phosphorus Sensor (Analog Out)
-GPIO 27 (ADC2_7)   →  Potassium Sensor (Analog Out)
-GPIO 14            →  Relay Module (IN)
-GPIO 2             →  Built-in LED
-3.3V               →  Sensor VCC (if 3.3V sensors)
-5V                 →  Relay VCC / 5V Sensors
-GND                →  Common Ground
-```
+| ESP32 Pin | Pin Type | Sensor Connection |
+|-----------|----------|-------------------|
+| GPIO 34 (ADC1_6) | Analog Input | Moisture Sensor |
+| GPIO 35 (ADC1_7) | Analog Input | Temperature Sensor |
+| GPIO 32 (ADC1_4) | Analog Input | pH Sensor |
+| GPIO 33 (ADC1_5) | Analog Input | EC Sensor |
+| GPIO 25 (ADC2_8) | Analog Input | Nitrogen Sensor |
+| GPIO 26 (ADC2_9) | Analog Input | Phosphorus Sensor |
+| GPIO 27 (ADC2_7) | Analog Input | Potassium Sensor |
+| GPIO 14 | Digital Output | Relay Module (IN) |
+| GPIO 2 | Digital Output | Built-in LED |
+| 3.3V | Power | Sensor VCC (if 3.3V sensors) |
+| 5V | Power | Relay VCC / 5V Sensors |
+| GND | Ground | Common Ground |
 
-### Important Notes:
-- **Use ADC1 pins** (GPIO 32-39) for analog readings when WiFi is active
-- **ADC2 pins** (GPIO 0, 2, 4, 12-15, 25-27) may not work reliably with WiFi
+### RS485 NPK Sensor Setup
+
+| ESP32 Pin | Pin Type | Connection |
+|-----------|----------|------------|
+| GPIO 17 | UART RX | RS485 Module RXD |
+| GPIO 18 | UART TX | RS485 Module TXD |
+| GPIO 47 | Digital Output | Pump Relay |
+| GPIO 8 | I2C SDA | OLED Display |
+| GPIO 9 | I2C SCL | OLED Display |
+| GPIO 38 | Digital Output | WS2812 LED |
+| 5V | Power | RS485 Module VCC |
+| GND | Ground | RS485 Module GND |
+
+---
+
+## Hardware Notes
+
+### ADC Pins
+- **Use ADC1 pins (GPIO 32-39)** for analog readings when WiFi is active
+- **ADC2 pins (GPIO 0, 2, 4, 12-15, 25-27)** may not work reliably with WiFi enabled
 - **Never exceed 3.3V** on ESP32 analog input pins
-- Use **voltage dividers** if your sensors output 5V
+- Use voltage dividers if sensors output 5V
+
+### Power Requirements
+- ESP32 draws 80-160mA during WiFi transmission
+- Ensure stable 5V power supply with at least 500mA capacity
+- For battery operation, consider LiPo battery with voltage regulator
+
+### Relay Module
+- Use optocoupler-isolated relay for noise reduction
+- Connect relay VCC to 5V (not 3.3V)
+- Relay signal pin can be driven from 3.3V GPIO
 
 ---
 
-## Arduino IDE Configuration
+## Software Requirements
 
-### 1. Install ESP32 Board Support
+### Arduino IDE
+- Arduino IDE 1.8.19 or later (or PlatformIO)
+- ESP32 Board Support Package
+- Board Manager URL: `https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json`
 
-1. Open Arduino IDE
-2. Go to **File → Preferences**
-3. Add this URL to **Additional Board Manager URLs:**
-   ```
-   https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json
-   ```
-4. Go to **Tools → Board → Boards Manager**
-5. Search for "ESP32" and install **esp32 by Espressif Systems**
+### Required Libraries
+- WiFi.h (built-in)
+- WiFiClientSecure.h (built-in)
+- HTTPClient.h (built-in)
+- ArduinoJson (by Benoit Blanchon)
+- Blynk (by Volodymyr Shymanskyy)
 
-### 2. Install Required Libraries
-
-Go to **Sketch → Include Library → Manage Libraries** and install:
-
-1. **ArduinoJson** (by Benoit Blanchon) - Latest version
-2. **Blynk** (by Volodymyr Shymanskyy) - Latest version
-
-### 3. Select Board and Port
-
-1. Connect ESP32 via USB
-2. **Tools → Board** → Select **ESP32 Dev Module**
-3. **Tools → Port** → Select the COM port (Windows) or /dev/ttyUSB0 (Linux/Mac)
-4. **Tools → Upload Speed** → 115200
+### Optional Libraries
+- Adafruit_SSD1306 (for OLED display)
+- Adafruit_NeoPixel (for WS2812 LED)
+- SoftwareSerial (for RS485 communication)
 
 ---
 
-## Backend Configuration
+## Configuration Parameters
 
-### Step 1: Register Your Device in Cultivo
+### WiFi Settings
+- WIFI_SSID: Network name
+- WIFI_PASSWORD: Network password
+- **Note:** ESP32 only supports 2.4GHz WiFi networks
 
-Before your ESP32 can send data, you must register it in the Cultivo system.
+### Blynk Configuration
+- BLYNK_TEMPLATE_ID: From Blynk Console
+- BLYNK_TEMPLATE_NAME: Device template name
+- BLYNK_AUTH_TOKEN: Device authentication token
 
-#### Using the Web Dashboard:
+### Cultivo Backend
+- CULTIVO_API_URL: Cloud Run endpoint URL
+- DEVICE_ID: Must match registered device in MongoDB
 
-1. Log in to your Cultivo dashboard
-2. Navigate to **Sensor Management**
-3. Click **Add New Sensor**
-4. Fill in the form:
-   - **Device ID:** `ESP32_001` (must match your Arduino code)
-   - **Device Name:** "Farm A - Soil Monitor"
-   - **Farm:** Select your farm
-   - **Blynk Template ID:** Your Blynk template ID
-   - **Blynk Auth Token:** Your Blynk auth token
+### Timing Parameters
+- SENSOR_READ_INTERVAL: 1000ms (sensor polling rate)
+- BLYNK_INTERVAL: 2000ms (real-time app updates)
+- CLOUD_INTERVAL: 300000ms (5 minutes for historical data)
 
-#### Using the API (Alternative):
-
-```bash
-curl -X POST https://cultivo-capstone-960317214611.asia-southeast1.run.app/api/farms/{farmId}/sensors \
-  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "deviceId": "ESP32_001",
-    "deviceName": "Farm A - Soil Monitor",
-    "farmId": "YOUR_FARM_ID",
-    "blynkTemplateId": "TMPL1234567890",
-    "blynkAuthToken": "YOUR_BLYNK_AUTH_TOKEN",
-    "settings": {
-      "moistureThreshold": 30,
-      "optimalPh": { "min": 6.0, "max": 7.5 },
-      "optimalTemperature": { "min": 20, "max": 30 }
-    }
-  }'
-```
-
-### Step 2: Configure Blynk
-
-1. Log in to [Blynk Console](https://blynk.cloud)
-2. Create a **New Template** or use an existing one
-3. Add **Datastreams:**
-   - V0: Moisture (%, 0-100)
-   - V1: Temperature (°C, 0-50)
-   - V2: pH (0-14)
-   - V3: EC (µS/cm, 0-5000)
-   - V4: Nitrogen (%, 0-100)
-   - V5: Phosphorus (%, 0-100)
-   - V6: Potassium (%, 0-100)
-   - V7: Pump Status (0-1, switch)
-   - V8: Terminal (string)
-4. Create a **Mobile Dashboard** with widgets for each datastream
-5. Get your **Auth Token** from the device settings
+### Sensor Thresholds
+- MOISTURE_THRESHOLD: 30% (pump activation trigger)
+- pH range: 6.0-7.5 (optimal)
+- Temperature range: 20-30°C (optimal)
 
 ---
 
 ## Device Registration
 
-### Step 1: Configure Arduino Sketch
+### Prerequisites
+1. Cultivo account with farm access
+2. Blynk account with configured template
+3. Unique device ID (e.g., ESP32_001)
 
-1. Open `.arduino/ESP32_Dual_Reporting.ino`
-2. Update the configuration section:
+### Registration Steps
+1. Log in to Cultivo dashboard
+2. Navigate to Sensor Management
+3. Click "Add New Sensor"
+4. Enter device details:
+   - Device ID (must match ESP32 code)
+   - Device Name (friendly identifier)
+   - Farm association
+   - Blynk Template ID
+   - Blynk Auth Token
+5. Configure thresholds and optimal ranges
+6. Save registration
 
-```cpp
-// WiFi Credentials
-const char* WIFI_SSID = "YourWiFiName";
-const char* WIFI_PASSWORD = "YourWiFiPassword";
+### Critical Requirement
+**Device ID in ESP32 code MUST exactly match the registered device ID in MongoDB**
+- Case-sensitive
+- Mismatch results in 404 errors
+- Verify match before deployment
 
-// Blynk Configuration
-#define BLYNK_TEMPLATE_ID "TMPL1234567890"
-#define BLYNK_TEMPLATE_NAME "Cultivo Soil Monitor"
-#define BLYNK_AUTH_TOKEN "Your_Blynk_Auth_Token"
+---
 
-// Cultivo Configuration
-const char* CULTIVO_API_URL = "https://cultivo-capstone-960317214611.asia-southeast1.run.app/api/sensors/data";
-const char* DEVICE_ID = "ESP32_001"; // MUST match your registered device
-```
+## Blynk Setup
 
-### Step 2: Verify Device ID Match
+### Datastream Configuration
 
-**CRITICAL:** The `DEVICE_ID` in your Arduino sketch **MUST** match the `deviceId` you registered in MongoDB/Cultivo dashboard. If they don't match, you'll get a 404 error.
+| Virtual Pin | Parameter | Unit | Range | Widget Type |
+|-------------|-----------|------|-------|-------------|
+| V0 | Moisture | % | 0-100 | Gauge |
+| V1 | Temperature | °C | 0-50 | Gauge |
+| V2 | pH | pH | 0-14 | Gauge |
+| V3 | EC | µS/cm | 0-5000 | Gauge |
+| V4 | Nitrogen | mg/kg | 0-200 | Gauge |
+| V5 | Phosphorus | mg/kg | 0-200 | Gauge |
+| V6 | Potassium | mg/kg | 0-400 | Gauge |
+| V7 | Pump Status | Boolean | 0-1 | LED/Switch |
+| V8 | Terminal | String | - | Terminal |
 
 ---
 
 ## Upload and Testing
 
-### Step 1: Upload the Sketch
+### Board Selection
+- Board: ESP32 Dev Module
+- Upload Speed: 115200
+- Flash Frequency: 80MHz
+- Flash Mode: QIO
+- Flash Size: 4MB
+- Partition Scheme: Default
 
-1. Connect ESP32 to your computer via USB
-2. Open Serial Monitor (**Tools → Serial Monitor**, 115200 baud)
-3. Click **Upload** button (→)
-4. Wait for compilation and upload to complete
-5. Press **RST button** on ESP32 to restart
+### Serial Monitor
+- Baud Rate: 115200
+- Line Ending: Both NL & CR
 
-### Step 2: Monitor Serial Output
-
-You should see output similar to this:
-
+### Expected Output
 ```
-=================================
-Cultivo ESP32 Dual Reporting System
-=================================
-
-Connecting to WiFi: YourWiFiName
-................
-✓ WiFi Connected!
-IP Address: 192.168.1.100
-
-Setup complete! Starting dual reporting...
-
-✓ Blynk: Data sent
-✓ Blynk: Data sent
-
---- Sending to Cultivo Cloud ---
-Device ID: ESP32_001
-Payload: {"deviceId":"ESP32_001","moisture":45.2,"temperature":25.3,"ph":6.8,"ec":1250,"nitrogen":78,"phosphorus":65,"potassium":82,"pumpStatus":false}
-✓ Cloud Response [201]: {"success":true,"message":"Data recorded successfully","data":{"readingId":"...","sensorId":"...","deviceName":"Farm A - Soil Monitor","timestamp":"2025-11-26T..."}}
---------------------------------
-```
-
-### Step 3: Verify Data Reception
-
-#### Blynk App:
-1. Open the Blynk app on your phone
-2. Check that sensor values are updating every 2 seconds
-3. Test pump control by toggling V7 switch
-
-#### Cultivo Web Dashboard:
-1. Log in to your Cultivo dashboard
-2. Navigate to **Sensor Management**
-3. Select your sensor device
-4. Verify that **Last Reading** shows recent data
-5. Check **Historical Data** for time-series charts
-
-#### MongoDB (Optional):
-```javascript
-// Connect to MongoDB Atlas
-use cultivo;
-
-// Check sensor document
-db.sensors.findOne({ deviceId: "ESP32_001" });
-
-// Check recent readings
-db.sensorreadings.find({ sensorId: ObjectId("...") })
-  .sort({ timestamp: -1 })
-  .limit(10);
+WiFi: Connected
+IP Address: 192.168.x.x
+Blynk: Data sent
+Cloud Response [201]: Success
 ```
 
 ---
@@ -262,247 +203,67 @@ db.sensorreadings.find({ sensorId: ObjectId("...") })
 ## Troubleshooting
 
 ### WiFi Connection Issues
-
-**Problem:** ESP32 can't connect to WiFi
-
-**Solutions:**
-- Verify SSID and password are correct
-- Ensure WiFi is 2.4GHz (ESP32 doesn't support 5GHz)
-- Check WiFi signal strength (move closer to router)
-- Disable WiFi MAC address filtering on router
+- Verify 2.4GHz network (ESP32 doesn't support 5GHz)
+- Check SSID and password spelling
+- Ensure signal strength is adequate
+- Disable MAC filtering on router temporarily
 
 ### Blynk Connection Failed
-
-**Problem:** `Blynk not connected`
-
-**Solutions:**
-- Verify `BLYNK_AUTH_TOKEN` is correct
-- Check Blynk server status: [status.blynk.cc](https://status.blynk.cc)
-- Ensure datastreams (V0-V8) are configured in Blynk Console
-- Check that device is activated in Blynk
+- Verify auth token is correct
+- Check Blynk server status
+- Ensure datastreams (V0-V8) are configured
+- Confirm device is activated in Blynk Console
 
 ### Cloud Run 404 Error
-
-**Problem:** `Cloud Response [404]: Sensor with deviceId 'XXX' not found`
-
-**Solutions:**
-- Device ID in Arduino code doesn't match registered device
-- Device hasn't been registered in Cultivo yet
-- Check spelling and case sensitivity (e.g., "ESP32_001" vs "esp32_001")
-
-**Fix:**
-1. Log in to Cultivo dashboard
-2. Go to Sensor Management → Add Sensor
-3. Use the exact same deviceId as in your code
-4. Reset ESP32 after registration
+- Device ID mismatch between code and registration
+- Device not registered in Cultivo dashboard
+- Check case sensitivity (ESP32_001 vs esp32_001)
 
 ### Cloud Run 400 Error
-
-**Problem:** `Cloud Response [400]: Missing required sensor data fields`
-
-**Solutions:**
-- One or more sensor readings are `undefined` or `null`
+- Missing or null sensor readings
 - Check sensor wiring and connections
 - Verify analog pins are reading correctly
-- Add debug prints before sending to cloud
-
-### SSL/HTTPS Errors
-
-**Problem:** `SSL handshake failed` or connection timeout
-
-**Solutions:**
-- Ensure stable internet connection
-- The code uses `wifiClient.setInsecure()` for testing
-- For production, implement proper certificate validation:
-
-```cpp
-// Add root CA certificate
-const char* root_ca = \
-"-----BEGIN CERTIFICATE-----\n" \
-"MIIDrzCCApegAwIBAgIQCDvgVpBCRrGhdWrJWZHHSjANBgkqhkiG9w0BAQUFADBh\n" \
-// ... rest of certificate ...
-"-----END CERTIFICATE-----\n";
-
-wifiClient.setCACert(root_ca);
-```
+- Add debug prints for sensor values
 
 ### Sensor Reading Issues
-
-**Problem:** Sensor values are 0 or nonsensical
-
-**Solutions:**
-- Check analog pin connections
-- Verify sensor power supply (3.3V or 5V)
-- Calibrate sensors using known reference values
-- Add voltage dividers if sensors output > 3.3V
-- Use ADC1 pins (32-39) instead of ADC2 when WiFi is active
+- Verify analog pin connections
+- Check sensor power supply voltage
+- Calibrate sensors with known reference values
+- Use voltage dividers if sensors output > 3.3V
+- Switch to ADC1 pins if using WiFi
 
 ### Memory Issues
-
-**Problem:** ESP32 crashes or resets randomly
-
-**Solutions:**
-- Reduce `StaticJsonDocument` size in code
-- Increase `CLOUD_INTERVAL` to reduce memory pressure
-- Check for memory leaks (HTTP connections not closed)
-- Monitor free heap: `Serial.println(ESP.getFreeHeap());`
-
----
-
-## API Reference
-
-### Endpoint: POST /api/sensors/data
-
-**URL:** `https://cultivo-capstone-960317214611.asia-southeast1.run.app/api/sensors/data`
-
-**Authentication:** None (public endpoint for IoT devices)
-
-**Request Body:**
-```json
-{
-  "deviceId": "ESP32_001",
-  "moisture": 45.2,
-  "temperature": 25.3,
-  "ph": 6.8,
-  "ec": 1250,
-  "nitrogen": 78,
-  "phosphorus": 65,
-  "potassium": 82,
-  "pumpStatus": false
-}
-```
-
-**Required Fields:**
-- `deviceId` (string): Unique device identifier
-- `moisture` (number): Soil moisture percentage (0-100)
-- `temperature` (number): Temperature in Celsius
-- `ph` (number): pH value (0-14)
-- `ec` (number): Electrical conductivity (µS/cm)
-- `nitrogen` (number): Nitrogen level (0-100)
-- `phosphorus` (number): Phosphorus level (0-100)
-- `potassium` (number): Potassium level (0-100)
-
-**Optional Fields:**
-- `pumpStatus` (boolean): Pump on/off status (default: false)
-
-**Success Response (201):**
-```json
-{
-  "success": true,
-  "message": "Data recorded successfully",
-  "data": {
-    "readingId": "674123abc...",
-    "sensorId": "673abc123...",
-    "deviceName": "Farm A - Soil Monitor",
-    "timestamp": "2025-11-26T10:30:45.123Z"
-  }
-}
-```
-
-**Error Responses:**
-
-**400 Bad Request:**
-```json
-{
-  "success": false,
-  "error": "Missing required field: deviceId"
-}
-```
-
-**404 Not Found:**
-```json
-{
-  "success": false,
-  "error": "Sensor with deviceId 'ESP32_001' not found. Please register this device first."
-}
-```
-
-**403 Forbidden:**
-```json
-{
-  "success": false,
-  "error": "Sensor is not active"
-}
-```
-
-**500 Server Error:**
-```json
-{
-  "success": false,
-  "error": "Server Error"
-}
-```
+- Reduce JSON document size
+- Increase CLOUD_INTERVAL to reduce memory pressure
+- Monitor free heap with ESP.getFreeHeap()
 
 ---
 
 ## Advanced Configuration
 
-### Custom Reporting Intervals
-
-Adjust timing in the configuration section:
-
-```cpp
-const unsigned long BLYNK_INTERVAL = 2000;      // 2 seconds
-const unsigned long CLOUD_INTERVAL = 300000;    // 5 minutes (300000ms) - recommended
-const unsigned long SENSOR_READ_INTERVAL = 1000; // 1 second
-```
-
-**Recommendations:**
-- **Blynk:** 2-5 seconds (for real-time app updates)
-- **Cloud Run:** 5 minutes (300000ms) - optimal balance between data freshness and API costs
-- **Sensor Read:** 1 second (for responsive pump control)
-
-**Note:** The Cultivo dashboard auto-refreshes sensor data every 1 minute and considers sensors offline if no data is received within 5 minutes.
-
 ### Sensor Calibration
 
-For accurate readings, calibrate your sensors:
+**Moisture Sensor:**
+- Calibrate in air (dry) and water (wet)
+- Map raw ADC values to 0-100% scale
 
-```cpp
-// Moisture sensor calibration
-int moistureDry = 4095;  // Reading in air
-int moistureWet = 1500;  // Reading in water
-moisture = map(moistureRaw, moistureWet, moistureDry, 100, 0);
+**pH Sensor:**
+- Use pH 4, 7, and 10 buffer solutions
+- Calculate voltage-to-pH conversion formula
 
-// pH sensor calibration
-// Test with pH 4, 7, and 10 buffer solutions
-float ph4Voltage = 2.03;
-float ph7Voltage = 2.50;
-float ph = 7.0 - ((voltage - ph7Voltage) / (ph7Voltage - ph4Voltage) * 3.0);
-```
+**EC Sensor:**
+- Calibrate with standard EC solution (1413 µS/cm)
 
 ### Power Management
-
-For battery-powered deployments:
-
-```cpp
-#include <esp_sleep.h>
-
-// Deep sleep for 5 minutes
-esp_sleep_enable_timer_wakeup(5 * 60 * 1000000); // microseconds
-esp_deep_sleep_start();
-```
+- Deep sleep mode for battery operation
+- Wake on timer (5-15 minute intervals)
+- Monitor battery voltage on ADC pin
 
 ---
 
-## Next Steps
-
-1. ✅ **Complete hardware setup** and verify connections
-2. ✅ **Register device** in Cultivo dashboard
-3. ✅ **Configure Blynk** template and datastreams
-4. ✅ **Upload sketch** and verify serial output
-5. ✅ **Test data flow** in both Blynk and Cultivo
-6. 🔄 **Calibrate sensors** for accurate readings
-7. 🔄 **Deploy to field** and monitor performance
-8. 🔄 **Set up alerts** in Cultivo for critical thresholds
-
----
-
-## Support
-
-- **Documentation:** [.claude/ folder](../.claude/)
-- **API Docs:** [05-BACKEND-API.md](./05-BACKEND-API.md)
-- **Issues:** Contact your Cultivo admin or developer team
+## Related Documentation
+- IOT_ARCHITECTURE.md - System architecture and data flow
+- SENSOR_MANAGEMENT_README.md - Dashboard and features
 
 ---
 

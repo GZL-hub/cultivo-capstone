@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { Alert, AlertSeverity, AlertType } from '../models/Alert';
+import Farm from '../models/Farm';
 import mongoose from 'mongoose';
 
 // Custom request type with user
@@ -11,13 +12,30 @@ interface AuthRequest extends Request {
 }
 
 // Get all alerts for a farm
-export const getAlertsByFarm = async (req: Request, res: Response): Promise<void> => {
+export const getAlertsByFarm = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { farmId } = req.params;
     const { isResolved, isRead, severity, type, limit = '50', offset = '0' } = req.query;
 
+    if (!req.user || !req.user.id) {
+      res.status(401).json({ success: false, error: 'User not authenticated' });
+      return;
+    }
+
     if (!mongoose.Types.ObjectId.isValid(farmId)) {
       res.status(400).json({ success: false, error: 'Invalid farm ID' });
+      return;
+    }
+
+    // Verify farm ownership
+    const farm = await Farm.findById(farmId);
+    if (!farm) {
+      res.status(404).json({ success: false, error: 'Farm not found' });
+      return;
+    }
+
+    if (farm.owner.toString() !== req.user.id) {
+      res.status(403).json({ success: false, error: 'Not authorized to access this farm' });
       return;
     }
 
@@ -63,9 +81,14 @@ export const getAlertsByFarm = async (req: Request, res: Response): Promise<void
 };
 
 // Get single alert by ID
-export const getAlertById = async (req: Request, res: Response): Promise<void> => {
+export const getAlertById = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { alertId } = req.params;
+
+    if (!req.user || !req.user.id) {
+      res.status(401).json({ success: false, error: 'User not authenticated' });
+      return;
+    }
 
     if (!mongoose.Types.ObjectId.isValid(alertId)) {
       res.status(400).json({ success: false, error: 'Invalid alert ID' });
@@ -79,6 +102,18 @@ export const getAlertById = async (req: Request, res: Response): Promise<void> =
       return;
     }
 
+    // Verify farm ownership
+    const farm = await Farm.findById(alert.farmId);
+    if (!farm) {
+      res.status(404).json({ success: false, error: 'Farm not found' });
+      return;
+    }
+
+    if (farm.owner.toString() !== req.user.id) {
+      res.status(403).json({ success: false, error: 'Not authorized to access this alert' });
+      return;
+    }
+
     res.status(200).json({ success: true, data: alert });
   } catch (error) {
     console.error('Error fetching alert:', error);
@@ -87,13 +122,30 @@ export const getAlertById = async (req: Request, res: Response): Promise<void> =
 };
 
 // Create a new alert
-export const createAlert = async (req: Request, res: Response): Promise<void> => {
+export const createAlert = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { farmId } = req.params;
     const { type, severity, title, message, sourceId, sourceName, metadata } = req.body;
 
+    if (!req.user || !req.user.id) {
+      res.status(401).json({ success: false, error: 'User not authenticated' });
+      return;
+    }
+
     if (!mongoose.Types.ObjectId.isValid(farmId)) {
       res.status(400).json({ success: false, error: 'Invalid farm ID' });
+      return;
+    }
+
+    // Verify farm ownership
+    const farm = await Farm.findById(farmId);
+    if (!farm) {
+      res.status(404).json({ success: false, error: 'Farm not found' });
+      return;
+    }
+
+    if (farm.owner.toString() !== req.user.id) {
+      res.status(403).json({ success: false, error: 'Not authorized to create alerts for this farm' });
       return;
     }
 
@@ -136,12 +188,36 @@ export const createAlert = async (req: Request, res: Response): Promise<void> =>
 };
 
 // Mark alert as read
-export const markAlertAsRead = async (req: Request, res: Response): Promise<void> => {
+export const markAlertAsRead = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { alertId } = req.params;
 
+    if (!req.user || !req.user.id) {
+      res.status(401).json({ success: false, error: 'User not authenticated' });
+      return;
+    }
+
     if (!mongoose.Types.ObjectId.isValid(alertId)) {
       res.status(400).json({ success: false, error: 'Invalid alert ID' });
+      return;
+    }
+
+    // Get alert first to check farm ownership
+    const existingAlert = await Alert.findById(alertId);
+    if (!existingAlert) {
+      res.status(404).json({ success: false, error: 'Alert not found' });
+      return;
+    }
+
+    // Verify farm ownership
+    const farm = await Farm.findById(existingAlert.farmId);
+    if (!farm) {
+      res.status(404).json({ success: false, error: 'Farm not found' });
+      return;
+    }
+
+    if (farm.owner.toString() !== req.user.id) {
+      res.status(403).json({ success: false, error: 'Not authorized to modify this alert' });
       return;
     }
 
@@ -151,11 +227,6 @@ export const markAlertAsRead = async (req: Request, res: Response): Promise<void
       { new: true }
     );
 
-    if (!alert) {
-      res.status(404).json({ success: false, error: 'Alert not found' });
-      return;
-    }
-
     res.status(200).json({ success: true, data: alert });
   } catch (error) {
     console.error('Error marking alert as read:', error);
@@ -164,13 +235,30 @@ export const markAlertAsRead = async (req: Request, res: Response): Promise<void
 };
 
 // Mark multiple alerts as read
-export const markAlertsAsRead = async (req: Request, res: Response): Promise<void> => {
+export const markAlertsAsRead = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { farmId } = req.params;
     const { alertIds } = req.body;
 
+    if (!req.user || !req.user.id) {
+      res.status(401).json({ success: false, error: 'User not authenticated' });
+      return;
+    }
+
     if (!mongoose.Types.ObjectId.isValid(farmId)) {
       res.status(400).json({ success: false, error: 'Invalid farm ID' });
+      return;
+    }
+
+    // Verify farm ownership
+    const farm = await Farm.findById(farmId);
+    if (!farm) {
+      res.status(404).json({ success: false, error: 'Farm not found' });
+      return;
+    }
+
+    if (farm.owner.toString() !== req.user.id) {
+      res.status(403).json({ success: false, error: 'Not authorized to modify alerts for this farm' });
       return;
     }
 
@@ -202,8 +290,32 @@ export const resolveAlert = async (req: AuthRequest, res: Response): Promise<voi
   try {
     const { alertId } = req.params;
 
+    if (!req.user || !req.user.id) {
+      res.status(401).json({ success: false, error: 'User not authenticated' });
+      return;
+    }
+
     if (!mongoose.Types.ObjectId.isValid(alertId)) {
       res.status(400).json({ success: false, error: 'Invalid alert ID' });
+      return;
+    }
+
+    // Get alert first to check farm ownership
+    const existingAlert = await Alert.findById(alertId);
+    if (!existingAlert) {
+      res.status(404).json({ success: false, error: 'Alert not found' });
+      return;
+    }
+
+    // Verify farm ownership
+    const farm = await Farm.findById(existingAlert.farmId);
+    if (!farm) {
+      res.status(404).json({ success: false, error: 'Farm not found' });
+      return;
+    }
+
+    if (farm.owner.toString() !== req.user.id) {
+      res.status(403).json({ success: false, error: 'Not authorized to resolve this alert' });
       return;
     }
 
@@ -217,11 +329,6 @@ export const resolveAlert = async (req: AuthRequest, res: Response): Promise<voi
       { new: true }
     );
 
-    if (!alert) {
-      res.status(404).json({ success: false, error: 'Alert not found' });
-      return;
-    }
-
     res.status(200).json({ success: true, data: alert });
   } catch (error) {
     console.error('Error resolving alert:', error);
@@ -230,21 +337,40 @@ export const resolveAlert = async (req: AuthRequest, res: Response): Promise<voi
 };
 
 // Delete an alert
-export const deleteAlert = async (req: Request, res: Response): Promise<void> => {
+export const deleteAlert = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { alertId } = req.params;
+
+    if (!req.user || !req.user.id) {
+      res.status(401).json({ success: false, error: 'User not authenticated' });
+      return;
+    }
 
     if (!mongoose.Types.ObjectId.isValid(alertId)) {
       res.status(400).json({ success: false, error: 'Invalid alert ID' });
       return;
     }
 
-    const alert = await Alert.findByIdAndDelete(alertId);
-
+    // Get alert first to check farm ownership
+    const alert = await Alert.findById(alertId);
     if (!alert) {
       res.status(404).json({ success: false, error: 'Alert not found' });
       return;
     }
+
+    // Verify farm ownership
+    const farm = await Farm.findById(alert.farmId);
+    if (!farm) {
+      res.status(404).json({ success: false, error: 'Farm not found' });
+      return;
+    }
+
+    if (farm.owner.toString() !== req.user.id) {
+      res.status(403).json({ success: false, error: 'Not authorized to delete this alert' });
+      return;
+    }
+
+    await Alert.findByIdAndDelete(alertId);
 
     res.status(200).json({ success: true, data: { message: 'Alert deleted successfully' } });
   } catch (error) {
@@ -254,12 +380,29 @@ export const deleteAlert = async (req: Request, res: Response): Promise<void> =>
 };
 
 // Get alert statistics for a farm
-export const getAlertStats = async (req: Request, res: Response): Promise<void> => {
+export const getAlertStats = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { farmId } = req.params;
 
+    if (!req.user || !req.user.id) {
+      res.status(401).json({ success: false, error: 'User not authenticated' });
+      return;
+    }
+
     if (!mongoose.Types.ObjectId.isValid(farmId)) {
       res.status(400).json({ success: false, error: 'Invalid farm ID' });
+      return;
+    }
+
+    // Verify farm ownership
+    const farm = await Farm.findById(farmId);
+    if (!farm) {
+      res.status(404).json({ success: false, error: 'Farm not found' });
+      return;
+    }
+
+    if (farm.owner.toString() !== req.user.id) {
+      res.status(403).json({ success: false, error: 'Not authorized to access this farm' });
       return;
     }
 

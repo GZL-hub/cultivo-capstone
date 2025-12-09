@@ -9,7 +9,12 @@
       "Bash(netstat:*)",
       "Bash(findstr:*)",
       "Bash(npm run build:*)",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "Bash(wc:*)",
+      "Bash(ls:*)",
+      "Bash(cat:*)",
+      "Bash(git checkout:*)",
+      "Bash(grep:*)"
     ],
     "deny": [],
     "ask": []

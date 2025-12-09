@@ -10,29 +10,30 @@ import {
 } from '../controllers/farmController';
 import workerRoutes from './workerRoutes';
 import cctvRoutes from './cctvRoutes';
+import { protect } from '../middleware/auth';
 
 const router = express.Router();
 
-// Make these routes public for development
+// All farm routes require authentication
 router.route('/')
-  .get(getAllFarms)
-  .post(createFarm);
+  .get(protect, getAllFarms)
+  .post(protect, createFarm);
 
 router.route('/:id')
-  .get(getFarmById)
-  .put(updateFarm)
-  .delete(deleteFarm);
+  .get(protect, getFarmById)
+  .put(protect, updateFarm)
+  .delete(protect, deleteFarm);
 
 // Farm boundary specific routes
 router.route('/:id/boundary')
-  .get(getFarmBoundary)
-  .put(updateFarmBoundary);
+  .get(protect, getFarmBoundary)
+  .put(protect, updateFarmBoundary);
 
-// Nested routes for workers
-router.use('/:farmId/workers', workerRoutes);
+// Nested routes for workers (protect middleware applied)
+router.use('/:farmId/workers', protect, workerRoutes);
 
-// Nested routes for CCTV devices
-router.use('/:farmId/cctvs', cctvRoutes);
+// Nested routes for CCTV devices (protect middleware applied)
+router.use('/:farmId/cctvs', protect, cctvRoutes);
 
 
 export default router;

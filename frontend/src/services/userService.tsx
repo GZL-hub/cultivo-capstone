@@ -1,6 +1,4 @@
-import axios from 'axios';
-
-const API_URL = '/api/users';
+import api from './api';
 
 /**
  * User interface representing user data from the API
@@ -23,7 +21,7 @@ export interface IUser {
  */
 export const getUserById = async (userId: string): Promise<IUser> => {
   try {
-    const response = await axios.get(`${API_URL}/${userId}`);
+    const response = await api.get(`/users/${userId}`);
     return response.data.data;
   } catch (error) {
     console.error('Error fetching user:', error);
@@ -42,7 +40,7 @@ export const updateUserProfile = async (
   userData: { name?: string; email?: string; phone?: string; role?: string }
 ): Promise<IUser> => {
   try {
-    const response = await axios.put(`${API_URL}/${userId}`, userData);
+    const response = await api.put(`/users/${userId}`, userData);
     return response.data.data;
   } catch (error) {
     console.error('Error updating user profile:', error);
@@ -58,7 +56,7 @@ export const updateUserProfile = async (
  */
 export const updateUserAvatar = async (userId: string, avatarUrl: string): Promise<{ avatarUrl: string }> => {
   try {
-    const response = await axios.put(`${API_URL}/${userId}/avatar`, { avatarUrl });
+    const response = await api.put(`/users/${userId}/avatar`, { avatarUrl });
     return response.data.data;
   } catch (error) {
     console.error('Error updating avatar:', error);
@@ -77,7 +75,7 @@ export const changePassword = async (
   passwords: { currentPassword: string; newPassword: string }
 ): Promise<{ message: string }> => {
   try {
-    const response = await axios.put(`${API_URL}/${userId}/password`, passwords);
+    const response = await api.put(`/users/${userId}/password`, passwords);
     return response.data;
   } catch (error) {
     console.error('Error changing password:', error);
@@ -92,7 +90,7 @@ export const changePassword = async (
  */
 export const deleteAccount = async (userId: string): Promise<{ message: string }> => {
   try {
-    const response = await axios.delete(`${API_URL}/${userId}`);
+    const response = await api.delete(`/users/${userId}`);
     return response.data;
   } catch (error) {
     console.error('Error deleting account:', error);
@@ -106,7 +104,7 @@ export const deleteAccount = async (userId: string): Promise<{ message: string }
  */
 export const getAllUsers = async (): Promise<IUser[]> => {
   try {
-    const response = await axios.get(API_URL);
+    const response = await api.get('/users');
     return response.data.data;
   } catch (error) {
     console.error('Error fetching all users:', error);

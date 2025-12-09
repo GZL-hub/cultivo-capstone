@@ -3,26 +3,44 @@ import Worker, { IWorker } from '../models/Worker';
 import Farm from '../models/Farm';
 import mongoose from 'mongoose';
 
+// Custom request type with user
+interface AuthRequest extends Request {
+  user?: {
+    id: string;
+    [key: string]: any;
+  };
+}
+
 // Type for MongoDB errors with code property
 interface MongoError extends Error {
   code?: number;
 }
 
 // Get all workers for a specific farm
-export const getWorkers = async (req: Request, res: Response): Promise<void> => {
+export const getWorkers = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const farmId = req.params.farmId;
-    
+
+    if (!req.user || !req.user.id) {
+      res.status(401).json({ message: 'User not authenticated' });
+      return;
+    }
+
     // Validate farmId
     if (!mongoose.Types.ObjectId.isValid(farmId)) {
       res.status(400).json({ message: 'Invalid farm ID format' });
       return;
     }
-    
-    // Check if farm exists
-    const farmExists = await Farm.findById(farmId);
-    if (!farmExists) {
+
+    // Check if farm exists and user owns it
+    const farm = await Farm.findById(farmId);
+    if (!farm) {
       res.status(404).json({ message: 'Farm not found' });
+      return;
+    }
+
+    if (farm.owner.toString() !== req.user.id) {
+      res.status(403).json({ message: 'Not authorized to access this farm' });
       return;
     }
     
@@ -54,27 +72,44 @@ export const getWorkers = async (req: Request, res: Response): Promise<void> => 
 };
 
 // Get a single worker by ID
-export const getWorkerById = async (req: Request, res: Response): Promise<void> => {
+export const getWorkerById = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { farmId, workerId } = req.params;
-    
+
+    if (!req.user || !req.user.id) {
+      res.status(401).json({ message: 'User not authenticated' });
+      return;
+    }
+
     // Validate IDs
     if (!mongoose.Types.ObjectId.isValid(farmId)) {
       res.status(400).json({ message: 'Invalid farm ID format' });
       return;
     }
-    
+
+    // Verify farm ownership
+    const farm = await Farm.findById(farmId);
+    if (!farm) {
+      res.status(404).json({ message: 'Farm not found' });
+      return;
+    }
+
+    if (farm.owner.toString() !== req.user.id) {
+      res.status(403).json({ message: 'Not authorized to access this farm' });
+      return;
+    }
+
     // Find worker by ID and farmId for security
-    const worker = await Worker.findOne({ 
-      id: workerId, 
-      farmId: farmId 
+    const worker = await Worker.findOne({
+      id: workerId,
+      farmId: farmId
     });
-    
+
     if (!worker) {
       res.status(404).json({ message: 'Worker not found' });
       return;
     }
-    
+
     res.status(200).json(worker);
   } catch (error: unknown) {
     const err = error as Error;
@@ -83,20 +118,30 @@ export const getWorkerById = async (req: Request, res: Response): Promise<void> 
 };
 
 // Create a new worker
-export const createWorker = async (req: Request, res: Response): Promise<void> => {
+export const createWorker = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const farmId = req.params.farmId;
-    
+
+    if (!req.user || !req.user.id) {
+      res.status(401).json({ message: 'User not authenticated' });
+      return;
+    }
+
     // Validate farmId
     if (!mongoose.Types.ObjectId.isValid(farmId)) {
       res.status(400).json({ message: 'Invalid farm ID format' });
       return;
     }
-    
-    // Check if farm exists
-    const farmExists = await Farm.findById(farmId);
-    if (!farmExists) {
+
+    // Check if farm exists and user owns it
+    const farm = await Farm.findById(farmId);
+    if (!farm) {
       res.status(404).json({ message: 'Farm not found' });
+      return;
+    }
+
+    if (farm.owner.toString() !== req.user.id) {
+      res.status(403).json({ message: 'Not authorized to create workers for this farm' });
       return;
     }
     
@@ -135,30 +180,47 @@ export const createWorker = async (req: Request, res: Response): Promise<void> =
 };
 
 // Update an existing worker
-export const updateWorker = async (req: Request, res: Response): Promise<void> => {
+export const updateWorker = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { farmId, workerId } = req.params;
-    
+
+    if (!req.user || !req.user.id) {
+      res.status(401).json({ message: 'User not authenticated' });
+      return;
+    }
+
     // Validate farmId
     if (!mongoose.Types.ObjectId.isValid(farmId)) {
       res.status(400).json({ message: 'Invalid farm ID format' });
       return;
     }
-    
+
+    // Verify farm ownership
+    const farm = await Farm.findById(farmId);
+    if (!farm) {
+      res.status(404).json({ message: 'Farm not found' });
+      return;
+    }
+
+    if (farm.owner.toString() !== req.user.id) {
+      res.status(403).json({ message: 'Not authorized to update workers for this farm' });
+      return;
+    }
+
     const { name, role, email, phone, joinDate, status } = req.body;
-    
+
     // Find and update worker
     const worker = await Worker.findOneAndUpdate(
       { id: workerId, farmId: farmId },
       { name, role, email, phone, joinDate, status },
       { new: true, runValidators: true }
     );
-    
+
     if (!worker) {
       res.status(404).json({ message: 'Worker not found' });
       return;
     }
-    
+
     res.status(200).json(worker);
   } catch (error: unknown) {
     const err = error as Error;
@@ -167,24 +229,41 @@ export const updateWorker = async (req: Request, res: Response): Promise<void> =
 };
 
 // Delete a worker
-export const deleteWorker = async (req: Request, res: Response): Promise<void> => {
+export const deleteWorker = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { farmId, workerId } = req.params;
-    
+
+    if (!req.user || !req.user.id) {
+      res.status(401).json({ message: 'User not authenticated' });
+      return;
+    }
+
     // Validate farmId
     if (!mongoose.Types.ObjectId.isValid(farmId)) {
       res.status(400).json({ message: 'Invalid farm ID format' });
       return;
     }
-    
+
+    // Verify farm ownership
+    const farm = await Farm.findById(farmId);
+    if (!farm) {
+      res.status(404).json({ message: 'Farm not found' });
+      return;
+    }
+
+    if (farm.owner.toString() !== req.user.id) {
+      res.status(403).json({ message: 'Not authorized to delete workers for this farm' });
+      return;
+    }
+
     // Find and delete worker
     const worker = await Worker.findOneAndDelete({ id: workerId, farmId: farmId });
-    
+
     if (!worker) {
       res.status(404).json({ message: 'Worker not found' });
       return;
     }
-    
+
     res.status(200).json({ message: 'Worker deleted successfully' });
   } catch (error: unknown) {
     const err = error as Error;

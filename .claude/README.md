@@ -1,23 +1,34 @@
 # Cultivo Documentation
 
-Quick navigation to comprehensive documentation for **Cultivo** - a full-stack farm management platform with WebRTC CCTV, Google Maps, and worker management.
+Comprehensive technical documentation for **Cultivo** - a full-stack farm management platform with WebRTC CCTV, IoT sensors, Google Maps, and worker management.
 
-## Documentation Index
+## Documentation Structure
 
-### Getting Started
-- **[01 - Project Overview](./01-PROJECT-OVERVIEW.md)** - Vision, tech stack, features, architecture
-- **[02 - Getting Started](./02-GETTING-STARTED.md)** - Prerequisites, setup, running locally
+All documentation has been **trimmed and optimized** to focus on current implementation details. Code examples, verbose explanations, and tutorial-style content have been removed.
 
-### Architecture & Development
-- **[03 - System Architecture](./03-ARCHITECTURE.md)** - Three-tier architecture, deployment, patterns
-- **[04 - Frontend Guide](./04-FRONTEND-GUIDE.md)** - React components, routing, state, styling
-- **[05 - Backend API](./05-BACKEND-API.md)** - API endpoints, auth flow, error handling
-- **[06 - Database Models](./06-DATABASE-MODELS.md)** - Mongoose schemas, indexes, relationships
+### Main Documentation
 
-### Deployment & Features
-- **[07 - Deployment Guide](./07-DEPLOYMENT.md)** - Docker, Cloud Run, MediaMTX, CI/CD
-- **[08 - Features Guide](./08-FEATURES-GUIDE.md)** - Auth, maps, CCTV, workers, analytics
-- **[WebRTC Streaming](./WebRTC.md)** - Complete WebRTC implementation, FFmpeg, MediaMTX config
+1. **[01-PROJECT-OVERVIEW.md](./01-PROJECT-OVERVIEW.md)** - Project vision, tech stack, key features
+2. **[02-GETTING-STARTED.md](./02-GETTING-STARTED.md)** - Prerequisites, installation, environment setup
+3. **[03-ARCHITECTURE.md](./03-ARCHITECTURE.md)** - Three-tier architecture, deployment, data flow
+4. **[04-FRONTEND-GUIDE.md](./04-FRONTEND-GUIDE.md)** - React components, routing, state management
+5. **[05-BACKEND-API.md](./05-BACKEND-API.md)** - API endpoints, authentication, response formats
+6. **[06-DATABASE-MODELS.md](./06-DATABASE-MODELS.md)** - Mongoose schemas, relationships, indexes
+7. **[07-DEPLOYMENT.md](./07-DEPLOYMENT.md)** - Docker builds, Cloud Run, CI/CD pipeline
+8. **[08-FEATURES-GUIDE.md](./08-FEATURES-GUIDE.md)** - Feature implementations, components
+
+### Specialized Guides
+
+**IoT & Sensors:**
+- **[iot/IOT_ARCHITECTURE.md](./iot/IOT_ARCHITECTURE.md)** - ESP32 dual reporting system, data flow, security
+- **[iot/ESP32_SETUP_GUIDE.md](./iot/ESP32_SETUP_GUIDE.md)** - Hardware specs, pin configuration tables
+- **[iot/SENSOR_MANAGEMENT_README.md](./iot/SENSOR_MANAGEMENT_README.md)** - Sensor dashboard features, NPK analysis
+
+**Streaming:**
+- **[WebRTC.md](./WebRTC.md)** - WebRTC streaming architecture, FFmpeg, MediaMTX configuration
+
+### Quick Reference
+- **[CLAUDE.md](./CLAUDE.md)** - Quick start guide for developers and AI agents
 
 ## Quick Start
 
@@ -32,80 +43,120 @@ cd frontend && npm install && npm start
 ```
 
 **Environment Setup:**
-- `backend/.env` → `MONGODB_URI=mongodb://localhost:27017/cultivo`
-- `frontend/.env` → `REACT_APP_GOOGLE_MAPS_API_KEY=your_key`
+- `backend/.env` → `MONGODB_URI`, `JWT_SECRET`
+- `frontend/.env` → `REACT_APP_GOOGLE_MAPS_API_KEY`
 
 ## Common Tasks
 
 | Task | Reference |
 |------|-----------|
-| **Run locally** | [02 - Getting Started](./02-GETTING-STARTED.md) |
-| **Add API endpoint** | [05 - Backend API](./05-BACKEND-API.md) |
-| **Create component** | [04 - Frontend Guide](./04-FRONTEND-GUIDE.md) |
-| **Deploy to Cloud** | [07 - Deployment Guide](./07-DEPLOYMENT.md) |
+| **System architecture** | [03-ARCHITECTURE.md](./03-ARCHITECTURE.md) |
+| **API endpoints** | [05-BACKEND-API.md](./05-BACKEND-API.md) |
+| **Database schema** | [06-DATABASE-MODELS.md](./06-DATABASE-MODELS.md) |
+| **Frontend structure** | [04-FRONTEND-GUIDE.md](./04-FRONTEND-GUIDE.md) |
+| **Deploy to cloud** | [07-DEPLOYMENT.md](./07-DEPLOYMENT.md) |
 | **WebRTC setup** | [WebRTC.md](./WebRTC.md) |
+| **IoT sensor setup** | [iot/ESP32_SETUP_GUIDE.md](./iot/ESP32_SETUP_GUIDE.md) |
+| **Sensor management** | [iot/SENSOR_MANAGEMENT_README.md](./iot/SENSOR_MANAGEMENT_README.md) |
 
 ## Tech Stack
 
 | Layer | Technology |
 |-------|-----------|
-| **Frontend** | React 19.1, TypeScript, Tailwind CSS, Google Maps |
-| **Backend** | Express.js, MongoDB (Mongoose), JWT auth |
-| **Streaming** | WebRTC (MediaMTX), FFmpeg |
-| **Deployment** | Docker, Google Cloud Run, GCP Compute Engine |
+| **Frontend** | React 19.1, TypeScript, Tailwind CSS, Google Maps API |
+| **Backend** | Express.js, MongoDB (Mongoose), JWT authentication |
+| **Streaming** | WebRTC (MediaMTX), FFmpeg transcoding |
+| **IoT** | ESP32, 7-in-1 NPK sensors, Blynk IoT platform |
+| **Deployment** | Docker (multi-stage), Google Cloud Run, GCP Compute Engine |
 
-## Architecture
+## Architecture Overview
 
 ```
 Browser (React + Maps + WebRTC)
     ↓ HTTPS/REST
 Cloud Run (Express + React static)
     ↓ MongoDB Protocol
-MongoDB Atlas (users, farms, workers, cctvs)
+MongoDB Atlas (users, farms, workers, cctvs, sensors, sensorreadings)
 
 Compute Engine VM (MediaMTX)
     ↑ RTSP Push
 FFmpeg Bridge (Local Network)
     ↑ RTSP
 Hikvision Camera
+
+ESP32 Devices (Field)
+    ├─ Blynk Cloud (2s interval, real-time monitoring)
+    └─ Cloud Run API (5min interval, historical data)
 ```
 
 ## Key Features
 
-- **Farm Management** - Google Maps polygons, GeoJSON boundaries
-- **Worker Management** - CRUD, nested routes, status tracking
-- **CCTV Streaming** - Ultra-low latency WebRTC (~0.5-1.5s), shared streams
-- **Authentication** - JWT tokens, bcrypt, protected routes
-- **Analytics** - Charts, weather forecasting, device monitoring
+- **Farm Management** - Google Maps polygons, GeoJSON boundaries, multi-farm support
+- **Worker Management** - CRUD operations, nested routes, status tracking, search
+- **CCTV Streaming** - Ultra-low latency WebRTC (~0.5-1.5s), shared stream (16x efficiency)
+- **IoT Sensors** - Soil moisture, temperature, pH, EC, NPK nutrients, automated irrigation
+- **Authentication** - JWT tokens, bcrypt password hashing, protected routes
+- **Analytics** - Charts, weather forecasting, device monitoring, historical data
+- **Alerts** - Real-time sensor alerts, configurable thresholds, status indicators
 
 ## Project Structure
 
 ```
 frontend/           # React SPA
-  ├── components/   # Feature-based components
-  └── services/     # API clients
+  ├── components/   # Feature-based: dashboard, farm-management, devices, analytics
+  └── services/     # API clients: authService, farmService, sensorService, etc.
 
 backend/            # Express API
-  ├── models/       # Mongoose schemas
-  ├── controllers/  # Business logic
-  ├── routes/       # API endpoints
-  └── middleware/   # Auth protection
+  ├── models/       # Mongoose schemas: User, Farm, Worker, CCTV, Sensor, SensorReading
+  ├── controllers/  # Business logic handlers
+  ├── routes/       # API endpoint definitions
+  └── middleware/   # Authentication, CORS, error handling
 
-.claude/            # Documentation
-Dockerfile          # Multi-stage build
-cloudbuild.yaml     # GCP deployment
+.claude/            # Documentation (trimmed, no code examples)
+  ├── 01-PROJECT-OVERVIEW.md through 08-FEATURES-GUIDE.md
+  ├── CLAUDE.md             # Quick reference
+  ├── README.md             # This file
+  ├── WebRTC.md             # Streaming guide
+  └── iot/                  # IoT documentation
+
+Dockerfile          # Multi-stage production build
+cloudbuild.yaml     # GCP Cloud Build configuration
 ```
+
+## Documentation Philosophy
+
+This documentation has been **optimized for clarity and conciseness**:
+
+✅ **Included:**
+- Current implementation architecture
+- Technical specifications
+- Configuration parameters
+- Component structures
+- Data flow descriptions
+- ASCII architecture diagrams
+
+❌ **Removed:**
+- Code examples and snippets
+- Sample JSON/documents
+- Verbose step-by-step tutorials
+- Example API requests/responses
+- Implementation how-tos
+
+**Focus:** "What is implemented" rather than "how to implement it"
 
 ## Support
 
-- **Quick Reference**: [CLAUDE.md](./CLAUDE.md) - Agent-friendly quick ref
-- **GitHub Issues**: Report bugs and feature requests
-- **External Docs**: [React](https://reactjs.org/) · [Express](https://expressjs.com/) · [MongoDB](https://www.mongodb.com/) · [Tailwind](https://tailwindcss.com/)
+- **Quick Reference**: [CLAUDE.md](./CLAUDE.md) - Developer quick start
+- **Project Overview**: [01-PROJECT-OVERVIEW.md](./01-PROJECT-OVERVIEW.md) - Vision and features
+- **Getting Started**: [02-GETTING-STARTED.md](./02-GETTING-STARTED.md) - Setup guide
+- **External Docs**: [React](https://reactjs.org/) · [Express](https://expressjs.com/) · [MongoDB](https://www.mongodb.com/) · [Tailwind](https://tailwindcss.com/) · [Google Maps](https://developers.google.com/maps)
 
 ---
 
-**New to the project?** → Start with [01 - Project Overview](./01-PROJECT-OVERVIEW.md)
+**New to the project?** → Start with [01-PROJECT-OVERVIEW.md](./01-PROJECT-OVERVIEW.md)
 
-**Ready to code?** → Follow [02 - Getting Started](./02-GETTING-STARTED.md)
+**Ready to code?** → Follow [02-GETTING-STARTED.md](./02-GETTING-STARTED.md)
 
-**Need API reference?** → Check [05 - Backend API](./05-BACKEND-API.md)
+**Need API reference?** → Check [05-BACKEND-API.md](./05-BACKEND-API.md)
+
+**Setting up IoT?** → Follow [iot/ESP32_SETUP_GUIDE.md](./iot/ESP32_SETUP_GUIDE.md)

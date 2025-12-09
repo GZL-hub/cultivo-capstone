@@ -2,41 +2,32 @@
 
 ## API Overview
 
-The Cultivo backend provides a RESTful API built with Express.js and TypeScript. All endpoints follow patterns for requests, responses, and error handling.
+RESTful API built with Express.js and TypeScript following standard patterns for requests, responses, and error handling.
 
 **Base URL:**
 - Development: `http://localhost:8080/api`
 - Production: `https://your-cloud-run-url.run.app/api`
 
 **Content-Type:** `application/json`
-
 **Authentication:** JWT Bearer Token (except auth endpoints)
 
 ## Response Format
 
-All API responses follow this standardized structure:
-
-### Success Response Example
-
+### Success Response
 ```json
 {
   "success": true,
-  "data": {
-    "_id": "60f7b3b3b3b3b3b3b3b3b3b3",
-    "name": "Green Valley Farm",
-    "type": "Crop Farm"
-  },
-  "message": "Farm retrieved successfully"
+  "data": { ... },
+  "message": "Optional message"
 }
 ```
 
-### Error Response Example
-
+### Error Response
 ```json
 {
   "success": false,
-  "error": "Farm not found",
-  "message": "No farm found with ID: 60f7b3b3b3b3b3b3b3b3b3b3"
+  "error": "Error message",
+  "message": "Optional details"
 }
 ```
 
@@ -44,823 +35,181 @@ All API responses follow this standardized structure:
 
 | Code | Meaning | Usage |
 |------|---------|-------|
-| **200** | OK | Successful GET, PUT, DELETE requests |
-| **201** | Created | Successful POST requests (resource created) |
-| **400** | Bad Request | Invalid input data, validation errors |
-| **401** | Unauthorized | Missing or invalid authentication token |
+| **200** | OK | Successful GET, PUT, DELETE |
+| **201** | Created | Successful POST (resource created) |
+| **400** | Bad Request | Invalid input, validation errors |
+| **401** | Unauthorized | Missing/invalid auth token |
 | **404** | Not Found | Resource not found |
-| **409** | Conflict | Duplicate resource (e.g., email already exists) |
+| **409** | Conflict | Duplicate resource |
 | **500** | Internal Server Error | Server-side errors |
 
 ## Authentication
 
-### Overview
-
-Cultivo uses **JWT (JSON Web Token)** for stateless authentication. Tokens are issued upon login/registration and must be included in the `Authorization` header for protected routes.
-
 ### JWT Token Format
-
 ```
 Authorization: Bearer <jwt_token>
 ```
 
 **Token Payload:**
+- `id`: User ID
+- `iat`: Issued at (Unix timestamp)
+- `exp`: Expires at (Unix timestamp)
 
-```json
-{
-  "id": "60f7b3b3b3b3b3b3b3b3b3b3",  // User ID
-  "iat": 1626768000,                  // Issued at (Unix timestamp)
-  "exp": 1629360000                   // Expires at (Unix timestamp)
-}
-```
-
-**Token Expiration:** 30 days (configurable in backend)
-
----
+**Token Expiration:** 30 days (configurable)
 
 ## Authentication Endpoints
 
 ### POST /api/auth/register
-
-Create a new user account.
+Create new user account.
 
 **Authentication:** Not required
 
 **Request Body:**
-
-```json
-{
-  "name": "John Doe",
-  "email": "john.doe@example.com",
-  "password": "SecurePassword123"
-}
-```
-
-**Validation Rules:**
 - `name`: Required, min 2 characters
 - `email`: Required, valid email format, must be unique
 - `password`: Required, min 6 characters
 
-**Success Response (201):**
-
-```json
-{
-  "success": true,
-  "data": {
-    "user": {
-      "_id": "60f7b3b3b3b3b3b3b3b3b3b3",
-      "name": "John Doe",
-      "email": "john.doe@example.com",
-      "role": "User",
-      "avatarUrl": "https://images.unsplash.com/photo-1758551051834-61f10a361b73?w=150",
-      "createdAt": "2023-10-01T12:00:00.000Z"
-    },
-    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-  },
-  "message": "User registered successfully"
-}
-```
-
----
+**Response (201):** Returns user object and JWT token
 
 ### POST /api/auth/login
-
 Authenticate user and receive JWT token.
 
 **Authentication:** Not required
 
 **Request Body:**
+- `email`: Required
+- `password`: Required
 
-```json
-{
-  "email": "john.doe@example.com",
-  "password": "SecurePassword123"
-}
-```
-
-**Success Response (200):**
-
-```json
-{
-  "success": true,
-  "data": {
-    "user": {
-      "_id": "60f7b3b3b3b3b3b3b3b3b3b3",
-      "name": "John Doe",
-      "email": "john.doe@example.com",
-      "role": "User",
-      "avatarUrl": "https://images.unsplash.com/photo-1758551051834-61f10a361b73?w=150"
-    },
-    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-  },
-  "message": "Login successful"
-}
-```
-
-**Error Responses:**
-
-```json
-// 400 - Missing Credentials
-{
-  "success": false,
-  "error": "Please provide email and password"
-}
-
-// 401 - Invalid Credentials
-{
-  "success": false,
-  "error": "Invalid email or password"
-}
-```
-
----
+**Response (200):** Returns user object and JWT token
 
 ### GET /api/auth/me
-
 Get current authenticated user's profile.
 
 **Authentication:** Required
 
-**Request Headers:**
-
-```
-Authorization: Bearer <jwt_token>
-```
-
-**Success Response (200):**
-
-```json
-{
-  "success": true,
-  "data": {
-    "_id": "60f7b3b3b3b3b3b3b3b3b3b3",
-    "name": "John Doe",
-    "email": "john.doe@example.com",
-    "phone": "+1234567890",
-    "role": "User",
-    "avatarUrl": "https://images.unsplash.com/photo-1758551051834-61f10a361b73?w=150",
-    "createdAt": "2023-10-01T12:00:00.000Z",
-    "updatedAt": "2023-10-15T14:30:00.000Z"
-  }
-}
-```
-
-**Error Response (401):**
-
-```json
-{
-  "success": false,
-  "message": "Not authorized to access this route"
-}
-```
-
----
+**Response (200):** Returns user object (password excluded)
 
 ## Farm Endpoints
 
 ### GET /api/farms
-
 Retrieve all farms (optionally filtered by owner).
 
-**Authentication:** Not currently required (TODO: Add protection)
-
 **Query Parameters:**
-
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `owner` | string | No | Filter farms by owner user ID |
-
-**Example Requests:**
-
-```bash
-# Get all farms
-GET /api/farms
-
-# Get farms for specific owner
-GET /api/farms?owner=60f7b3b3b3b3b3b3b3b3b3b3
-```
-
-**Success Response (200):**
-
-```json
-{
-  "success": true,
-  "data": [
-    {
-      "_id": "60f7b3b3b3b3b3b3b3b3b3b4",
-      "name": "Green Valley Farm",
-      "type": "Crop Farm",
-      "operationDate": "2020-05-15",
-      "areaSize": "50 hectares",
-      "coordinates": "12.9716, 77.5946",
-      "owner": "60f7b3b3b3b3b3b3b3b3b3b3",
-      "createdAt": "2023-10-01T12:00:00.000Z",
-      "updatedAt": "2023-10-01T12:00:00.000Z"
-    },
-    {
-      "_id": "60f7b3b3b3b3b3b3b3b3b3b5",
-      "name": "Sunrise Livestock Ranch",
-      "type": "Livestock",
-      "operationDate": "2019-03-20",
-      "areaSize": "120 hectares",
-      "farmBoundary": {
-        "type": "Polygon",
-        "coordinates": [
-          [
-            [77.5946, 12.9716],
-            [77.5956, 12.9716],
-            [77.5956, 12.9726],
-            [77.5946, 12.9726],
-            [77.5946, 12.9716]
-          ]
-        ]
-      },
-      "owner": "60f7b3b3b3b3b3b3b3b3b3b3",
-      "createdAt": "2023-09-20T10:00:00.000Z",
-      "updatedAt": "2023-10-10T15:30:00.000Z"
-    }
-  ]
-}
-```
-
----
+- `owner`: Filter by owner user ID (optional)
 
 ### GET /api/farms/:id
-
-Retrieve a single farm by ID.
-
-**Authentication:** Not currently required
-
-**URL Parameters:**
-
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `id` | string | Yes | MongoDB ObjectId of the farm |
-
-**Success Response (200):**
-
-```json
-{
-  "success": true,
-  "data": {
-    "_id": "60f7b3b3b3b3b3b3b3b3b3b4",
-    "name": "Green Valley Farm",
-    "type": "Crop Farm",
-    "operationDate": "2020-05-15",
-    "areaSize": "50 hectares",
-    "coordinates": "12.9716, 77.5946",
-    "owner": "60f7b3b3b3b3b3b3b3b3b3b3",
-    "createdAt": "2023-10-01T12:00:00.000Z",
-    "updatedAt": "2023-10-01T12:00:00.000Z"
-  }
-}
-```
-
-**Error Response (404):**
-
-```json
-{
-  "success": false,
-  "error": "Farm not found"
-}
-```
-
----
+Retrieve single farm by ID.
 
 ### POST /api/farms
-
-Create a new farm.
-
-**Authentication:** Not currently required
+Create new farm.
 
 **Request Body:**
-
-```json
-{
-  "name": "Mountain View Farm",
-  "type": "Mixed Farming",
-  "operationDate": "2023-10-20",
-  "areaSize": "75 hectares",
-  "coordinates": "13.0827, 80.2707",
-  "owner": "60f7b3b3b3b3b3b3b3b3b3b3"
-}
-```
-
-**Validation Rules:**
 - `name`: Required
 - `type`: Required
 - `operationDate`: Required (date string)
 - `areaSize`: Required
 - `owner`: Required (valid user ObjectId)
-
-**Success Response (201):**
-
-```json
-{
-  "success": true,
-  "data": {
-    "_id": "60f7b3b3b3b3b3b3b3b3b3b6",
-    "name": "Mountain View Farm",
-    "type": "Mixed Farming",
-    "operationDate": "2023-10-20",
-    "areaSize": "75 hectares",
-    "coordinates": "13.0827, 80.2707",
-    "owner": "60f7b3b3b3b3b3b3b3b3b3b3",
-    "createdAt": "2023-10-20T12:00:00.000Z",
-    "updatedAt": "2023-10-20T12:00:00.000Z"
-  },
-  "message": "Farm created successfully"
-}
-```
-
-**Error Response (400):**
-
-```json
-{
-  "success": false,
-  "error": "Please provide all required fields"
-}
-```
-
----
+- `coordinates`: Optional
+- `farmBoundary`: Optional (GeoJSON polygon)
 
 ### PUT /api/farms/:id
-
-Update an existing farm.
-
-**Authentication:** Not currently required
-
-**URL Parameters:**
-
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `id` | string | Yes | MongoDB ObjectId of the farm |
-
-**Request Body:** (Partial update supported)
-
-```json
-{
-  "name": "Updated Farm Name",
-  "areaSize": "80 hectares"
-}
-```
-
-**Success Response (200):**
-
-```json
-{
-  "success": true,
-  "data": {
-    "_id": "60f7b3b3b3b3b3b3b3b3b3b4",
-    "name": "Updated Farm Name",
-    "type": "Crop Farm",
-    "operationDate": "2020-05-15",
-    "areaSize": "80 hectares",
-    "coordinates": "12.9716, 77.5946",
-    "owner": "60f7b3b3b3b3b3b3b3b3b3b3",
-    "createdAt": "2023-10-01T12:00:00.000Z",
-    "updatedAt": "2023-10-20T16:45:00.000Z"
-  },
-  "message": "Farm updated successfully"
-}
-```
-
----
+Update existing farm (partial update supported).
 
 ### DELETE /api/farms/:id
-
-Delete a farm.
-
-**Authentication:** Not currently required
-
-**URL Parameters:**
-
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `id` | string | Yes | MongoDB ObjectId of the farm |
-
-**Success Response (200):**
-
-```json
-{
-  "success": true,
-  "message": "Farm deleted successfully"
-}
-```
-
-**Error Response (404):**
-
-```json
-{
-  "success": false,
-  "error": "Farm not found"
-}
-```
-
----
+Delete farm.
 
 ### GET /api/farms/:id/boundary
-
 Retrieve farm boundary (GeoJSON polygon).
 
-**Authentication:** Not required
-
-**Success Response (200):**
-
-```json
-{
-  "success": true,
-  "data": {
-    "farmBoundary": {
-      "type": "Polygon",
-      "coordinates": [
-        [
-          [77.5946, 12.9716],
-          [77.5956, 12.9716],
-          [77.5956, 12.9726],
-          [77.5946, 12.9726],
-          [77.5946, 12.9716]
-        ]
-      ]
-    }
-  }
-}
-```
-
----
-
 ### PUT /api/farms/:id/boundary
-
 Update farm boundary with GeoJSON polygon.
 
-**Authentication:** Not required
-
 **Request Body:**
-
-```json
-{
-  "farmBoundary": {
-    "type": "Polygon",
-    "coordinates": [
-      [
-        [77.5946, 12.9716],
-        [77.5956, 12.9716],
-        [77.5956, 12.9726],
-        [77.5946, 12.9726],
-        [77.5946, 12.9716]
-      ]
-    ]
-  }
-}
-```
+- `farmBoundary`: GeoJSON object with `type: "Polygon"` and `coordinates` array
 
 **GeoJSON Format:**
-- `type`: Must be "Polygon"
-- `coordinates`: Array of linear rings (first ring is exterior, others are holes)
-- Each ring: Array of [longitude, latitude] pairs
-- First and last coordinates must be identical (close the polygon)
-
-**Success Response (200):**
-
-```json
-{
-  "success": true,
-  "data": {
-    "_id": "60f7b3b3b3b3b3b3b3b3b3b4",
-    "name": "Green Valley Farm",
-    "farmBoundary": {
-      "type": "Polygon",
-      "coordinates": [...]
-    },
-    "updatedAt": "2023-10-20T16:45:00.000Z"
-  },
-  "message": "Farm boundary updated successfully"
-}
-```
-
----
+- Coordinates: `[longitude, latitude]` format
+- First and last points must be identical (close polygon)
+- Minimum 4 points (3 unique + 1 closing)
 
 ## Worker Endpoints (Nested Resource)
 
-Workers are **nested under farms** with routes: `/api/farms/:farmId/workers`
+Workers nested under farms: `/api/farms/:farmId/workers`
 
 ### GET /api/farms/:farmId/workers
-
-Retrieve all workers for a specific farm.
-
-**Authentication:** Not required
-
-**URL Parameters:**
-
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `farmId` | string | Yes | MongoDB ObjectId of the farm |
+Retrieve all workers for specific farm.
 
 **Query Parameters:**
-
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `status` | string | No | Filter by status: "active" or "inactive" |
-| `search` | string | No | Search by worker name or role |
-
-**Example Requests:**
-
-```bash
-# Get all workers for a farm
-GET /api/farms/60f7b3b3b3b3b3b3b3b3b3b4/workers
-
-# Get active workers only
-GET /api/farms/60f7b3b3b3b3b3b3b3b3b3b4/workers?status=active
-
-# Search workers by name
-GET /api/farms/60f7b3b3b3b3b3b3b3b3b3b4/workers?search=John
-```
-
-**Success Response (200):**
-
-```json
-{
-  "success": true,
-  "data": [
-    {
-      "_id": "60f7b3b3b3b3b3b3b3b3b3b7",
-      "id": "W001",
-      "name": "John Smith",
-      "role": "Farm Manager",
-      "email": "john.smith@example.com",
-      "phone": "+1234567890",
-      "joinDate": "2023-01-15",
-      "status": "active",
-      "farmId": "60f7b3b3b3b3b3b3b3b3b3b4",
-      "createdAt": "2023-01-15T10:00:00.000Z",
-      "updatedAt": "2023-10-01T12:00:00.000Z"
-    },
-    {
-      "_id": "60f7b3b3b3b3b3b3b3b3b3b8",
-      "id": "W002",
-      "name": "Jane Doe",
-      "role": "Field Worker",
-      "status": "active",
-      "farmId": "60f7b3b3b3b3b3b3b3b3b3b4",
-      "createdAt": "2023-03-20T14:30:00.000Z",
-      "updatedAt": "2023-10-15T09:15:00.000Z"
-    }
-  ]
-}
-```
-
----
+- `status`: Filter by "active" or "inactive" (optional)
+- `search`: Search by name or role (optional)
 
 ### GET /api/farms/:farmId/workers/:workerId
-
-Retrieve a single worker by ID.
-
-**Authentication:** Not required
-
-**URL Parameters:**
-
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `farmId` | string | Yes | MongoDB ObjectId of the farm |
-| `workerId` | string | Yes | MongoDB ObjectId of the worker |
-
-**Success Response (200):**
-
-```json
-{
-  "success": true,
-  "data": {
-    "_id": "60f7b3b3b3b3b3b3b3b3b3b7",
-    "id": "W001",
-    "name": "John Smith",
-    "role": "Farm Manager",
-    "email": "john.smith@example.com",
-    "phone": "+1234567890",
-    "joinDate": "2023-01-15",
-    "status": "active",
-    "farmId": "60f7b3b3b3b3b3b3b3b3b3b4"
-  }
-}
-```
-
----
+Retrieve single worker by ID.
 
 ### POST /api/farms/:farmId/workers
-
-Create a new worker for a specific farm.
-
-**Authentication:** Not required
-
-**URL Parameters:**
-
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `farmId` | string | Yes | MongoDB ObjectId of the farm |
+Create new worker for farm.
 
 **Request Body:**
-
-```json
-{
-  "id": "W003",
-  "name": "Alice Johnson",
-  "role": "Equipment Operator",
-  "email": "alice.johnson@example.com",
-  "phone": "+9876543210",
-  "joinDate": "2023-10-20",
-  "status": "active"
-}
-```
-
-**Validation Rules:**
-- `id`: Required, must be unique per farm (compound index)
+- `id`: Required, unique per farm (compound index)
 - `name`: Required
 - `role`: Required
-- `email`: Optional, must be valid email format
+- `email`: Optional, valid email format
 - `phone`: Optional
 - `joinDate`: Optional (date string)
 - `status`: Optional, defaults to "active"
 
-**Success Response (201):**
-
-```json
-{
-  "success": true,
-  "data": {
-    "_id": "60f7b3b3b3b3b3b3b3b3b3b9",
-    "id": "W003",
-    "name": "Alice Johnson",
-    "role": "Equipment Operator",
-    "email": "alice.johnson@example.com",
-    "phone": "+9876543210",
-    "joinDate": "2023-10-20",
-    "status": "active",
-    "farmId": "60f7b3b3b3b3b3b3b3b3b3b4",
-    "createdAt": "2023-10-20T12:00:00.000Z",
-    "updatedAt": "2023-10-20T12:00:00.000Z"
-  },
-  "message": "Worker created successfully"
-}
-```
-
-**Error Responses:**
-
-```json
-// 400 - Missing Required Fields
-{
-  "success": false,
-  "error": "Please provide worker id, name, and role"
-}
-
-// 409 - Duplicate Worker ID
-{
-  "success": false,
-  "error": "Worker with ID W003 already exists for this farm"
-}
-```
-
----
+**Validation:**
+- Worker IDs must be unique per farm (not globally)
+- Compound index: `(id, farmId)`
 
 ### PUT /api/farms/:farmId/workers/:workerId
-
-Update an existing worker.
-
-**Authentication:** Not required
-
-**URL Parameters:**
-
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `farmId` | string | Yes | MongoDB ObjectId of the farm |
-| `workerId` | string | Yes | MongoDB ObjectId of the worker |
-
-**Request Body:** (Partial update supported)
-
-```json
-{
-  "role": "Senior Equipment Operator",
-  "status": "inactive"
-}
-```
-
-**Success Response (200):**
-
-```json
-{
-  "success": true,
-  "data": {
-    "_id": "60f7b3b3b3b3b3b3b3b3b3b9",
-    "id": "W003",
-    "name": "Alice Johnson",
-    "role": "Senior Equipment Operator",
-    "email": "alice.johnson@example.com",
-    "phone": "+9876543210",
-    "joinDate": "2023-10-20",
-    "status": "inactive",
-    "farmId": "60f7b3b3b3b3b3b3b3b3b3b4",
-    "updatedAt": "2023-11-05T14:30:00.000Z"
-  },
-  "message": "Worker updated successfully"
-}
-```
-
----
+Update existing worker (partial update supported).
 
 ### DELETE /api/farms/:farmId/workers/:workerId
-
-Delete a worker.
-
-**Authentication:** Not required
-
-**URL Parameters:**
-
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `farmId` | string | Yes | MongoDB ObjectId of the farm |
-| `workerId` | string | Yes | MongoDB ObjectId of the worker |
-
-**Success Response (200):**
-
-```json
-{
-  "success": true,
-  "message": "Worker deleted successfully"
-}
-```
-
-**Error Response (404):**
-
-```json
-{
-  "success": false,
-  "error": "Worker not found"
-}
-```
-
----
+Delete worker.
 
 ## CCTV Endpoints (Nested Resource)
 
 ### GET /api/farms/:farmId/cctvs
+Retrieve all CCTV cameras for specific farm.
 
-Retrieve all CCTV cameras for a specific farm.
+**Response:** Array of CCTV objects with:
+- `name`: Camera name
+- `status`: "online" or "offline"
+- `type`: Camera type (PTZ, Fixed, Dome, etc.)
+- `streamUrl`: WebRTC WHEP endpoint URL
+- `farmId`: Reference to parent farm
 
-**Authentication:** Not required
-
-**Success Response (200):**
-
-```json
-{
-  "success": true,
-  "data": [
-    {
-      "_id": "60f7b3b3b3b3b3b3b3b3b3ba",
-      "name": "Front Gate Camera",
-      "status": "online",
-      "type": "PTZ",
-      "streamUrl": "https://136.110.0.27:8889/livefeed/whep",
-      "farmId": "60f7b3b3b3b3b3b3b3b3b3b4",
-      "createdAt": "2023-10-01T12:00:00.000Z",
-      "updatedAt": "2023-10-20T16:00:00.000Z"
-    }
-  ]
-}
+**Stream URL Format:**
+```
+https://136.110.0.27:8889/livefeed/whep
 ```
 
----
+Components:
+- Protocol: HTTPS (required for WebRTC)
+- Host: MediaMTX server IP/domain
+- Port: 8889 (WebRTC port)
+- Path: `/livefeed` (stream name)
+- Protocol: `/whep` (WebRTC HTTP Egress Protocol)
 
 ## User Management Endpoints
 
 ### GET /api/users
-
 Retrieve all users (admin only - future).
 
 **Authentication:** Required
 
 ### GET /api/users/:id
-
 Get user by ID.
 
 **Authentication:** Required
 
 ### PUT /api/users/:id
-
 Update user profile.
 
 **Authentication:** Required
 
 **Request Body:**
-
-```json
-{
-  "name": "Updated Name",
-  "phone": "+1234567890",
-  "avatarUrl": "https://example.com/avatar.jpg"
-}
-```
-
----
-
-## Next Steps
-
-- **[Database Models](./06-DATABASE-MODELS.md)** - Detailed schema documentation
-- **[Deployment](./07-DEPLOYMENT.md)** - Production deployment guide
+- `name`: Optional
+- `phone`: Optional
+- `avatarUrl`: Optional

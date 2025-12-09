@@ -59,7 +59,7 @@ This document describes the complete architecture for integrating ESP32 sensors 
 
 ### 1. Data Collection (ESP32)
 
-```cpp
+```
 ┌──────────────────────────────────────────────────────┐
 │                  ESP32 MAIN LOOP                     │
 ├──────────────────────────────────────────────────────┤
@@ -103,12 +103,7 @@ This document describes the complete architecture for integrating ESP32 sensors 
 │  POST /api/sensors/data                                       │
 │  ┌─────────────────────────────────────────────────────┐     │
 │  │  1. Receive JSON payload                            │     │
-│  │     {                                               │     │
-│  │       "deviceId": "ESP32_001",                      │     │
-│  │       "moisture": 45.2,                             │     │
-│  │       "temperature": 25.3,                          │     │
-│  │       ...                                           │     │
-│  │     }                                               │     │
+│  │     { deviceId, moisture, temperature, ... }        │     │
 │  └─────────────────────────────────────────────────────┘     │
 │                          ↓                                    │
 │  ┌─────────────────────────────────────────────────────┐     │
@@ -119,44 +114,22 @@ This document describes the complete architecture for integrating ESP32 sensors 
 │                          ↓                                    │
 │  ┌─────────────────────────────────────────────────────┐     │
 │  │  3. Find sensor by deviceId                         │     │
-│  │     const sensor = await Sensor.findOne({          │     │
-│  │       deviceId: "ESP32_001"                         │     │
-│  │     });                                             │     │
-│  │                                                     │     │
 │  │     If not found → 404 error                        │     │
 │  │     If inactive → 403 error                         │     │
 │  └─────────────────────────────────────────────────────┘     │
 │                          ↓                                    │
 │  ┌─────────────────────────────────────────────────────┐     │
 │  │  4. Create reading document                         │     │
-│  │     await SensorReading.create({                    │     │
-│  │       sensorId: sensor._id,                         │     │
-│  │       moisture, temperature, ph, ec,                │     │
-│  │       nitrogen, phosphorus, potassium,              │     │
-│  │       pumpStatus,                                   │     │
-│  │       timestamp: new Date()                         │     │
-│  │     });                                             │     │
+│  │     Store in SensorReading collection               │     │
 │  └─────────────────────────────────────────────────────┘     │
 │                          ↓                                    │
 │  ┌─────────────────────────────────────────────────────┐     │
 │  │  5. Update sensor's lastReading                     │     │
-│  │     await Sensor.findByIdAndUpdate(                 │     │
-│  │       sensor._id,                                   │     │
-│  │       { lastReading: {...} }                        │     │
-│  │     );                                              │     │
 │  └─────────────────────────────────────────────────────┘     │
 │                          ↓                                    │
 │  ┌─────────────────────────────────────────────────────┐     │
 │  │  6. Return success response (201)                   │     │
-│  │     {                                               │     │
-│  │       "success": true,                              │     │
-│  │       "message": "Data recorded successfully",      │     │
-│  │       "data": {                                     │     │
-│  │         "readingId": "674...",                      │     │
-│  │         "sensorId": "673...",                       │     │
-│  │         "timestamp": "2025-11-26T..."               │     │
-│  │       }                                             │     │
-│  │     }                                               │     │
+│  │     { success, message, data }                      │     │
 │  └─────────────────────────────────────────────────────┘     │
 │                                                               │
 └───────────────────────────────────────────────────────────────┘
@@ -171,51 +144,36 @@ This document describes the complete architecture for integrating ESP32 sensors 
 │                                                             │
 │  Collection: sensors                                        │
 │  ┌───────────────────────────────────────────────────┐     │
-│  │  {                                                │     │
-│  │    "_id": ObjectId("673..."),                     │     │
-│  │    "deviceId": "ESP32_001",                       │     │
-│  │    "deviceName": "Farm A - Soil Monitor",         │     │
-│  │    "farmId": ObjectId("672..."),                  │     │
-│  │    "blynkTemplateId": "TMPL1234567890",           │     │
-│  │    "blynkAuthToken": "AbCdEf...",                 │     │
-│  │    "isActive": true,                              │     │
-│  │    "lastReading": {                               │     │
-│  │      "timestamp": ISODate("2025-11-26..."),       │     │
-│  │      "moisture": 45.2,                            │     │
-│  │      "temperature": 25.3,                         │     │
-│  │      "ph": 6.8,                                   │     │
-│  │      "ec": 1250,                                  │     │
-│  │      "nitrogen": 78,                              │     │
-│  │      "phosphorus": 65,                            │     │
-│  │      "potassium": 82,                             │     │
-│  │      "pumpStatus": false                          │     │
-│  │    },                                             │     │
-│  │    "settings": {                                  │     │
-│  │      "moistureThreshold": 30,                     │     │
-│  │      "optimalPh": { "min": 6.0, "max": 7.5 },     │     │
-│  │      "optimalTemperature": { "min": 20, "max": 30 }│     │
-│  │    },                                             │     │
-│  │    "createdAt": ISODate("2025-11-20..."),         │     │
-│  │    "updatedAt": ISODate("2025-11-26...")          │     │
-│  │  }                                                │     │
+│  │  - _id: ObjectId                                  │     │
+│  │  - deviceId: string (unique)                      │     │
+│  │  - deviceName: string                             │     │
+│  │  - farmId: ObjectId (ref Farm)                    │     │
+│  │  - blynkTemplateId: string                        │     │
+│  │  - blynkAuthToken: string                         │     │
+│  │  - isActive: boolean                              │     │
+│  │  - lastReading: object                            │     │
+│  │    - timestamp, moisture, temperature, ph, ec,    │     │
+│  │      nitrogen, phosphorus, potassium, pumpStatus  │     │
+│  │  - settings: object                               │     │
+│  │    - moistureThreshold                            │     │
+│  │    - optimalPh: { min, max }                      │     │
+│  │    - optimalTemperature: { min, max }             │     │
+│  │  - createdAt, updatedAt: ISODate                  │     │
 │  └───────────────────────────────────────────────────┘     │
 │                                                             │
 │  Collection: sensorreadings (Time-Series)                   │
 │  ┌───────────────────────────────────────────────────┐     │
-│  │  {                                                │     │
-│  │    "_id": ObjectId("674..."),                     │     │
-│  │    "sensorId": ObjectId("673..."),                │     │
-│  │    "moisture": 45.2,                              │     │
-│  │    "temperature": 25.3,                           │     │
-│  │    "ph": 6.8,                                     │     │
-│  │    "ec": 1250,                                    │     │
-│  │    "nitrogen": 78,                                │     │
-│  │    "phosphorus": 65,                              │     │
-│  │    "potassium": 82,                               │     │
-│  │    "pumpStatus": false,                           │     │
-│  │    "timestamp": ISODate("2025-11-26T10:30:45Z")   │     │
-│  │  }                                                │     │
-│  │  ... (one document per reading)                   │     │
+│  │  - _id: ObjectId                                  │     │
+│  │  - sensorId: ObjectId (ref Sensor)                │     │
+│  │  - moisture: number                               │     │
+│  │  - temperature: number                            │     │
+│  │  - ph: number                                     │     │
+│  │  - ec: number                                     │     │
+│  │  - nitrogen: number                               │     │
+│  │  - phosphorus: number                             │     │
+│  │  - potassium: number                              │     │
+│  │  - pumpStatus: boolean                            │     │
+│  │  - timestamp: ISODate                             │     │
 │  └───────────────────────────────────────────────────┘     │
 │                                                             │
 │  Indexes:                                                   │
@@ -232,74 +190,32 @@ This document describes the complete architecture for integrating ESP32 sensors 
 
 ### HTTPS POST Request (ESP32 → Cloud Run)
 
-```http
-POST /api/sensors/data HTTP/1.1
-Host: cultivo-capstone-960317214611.asia-southeast1.run.app
-Content-Type: application/json
-Content-Length: 198
+**Endpoint:** `POST /api/sensors/data`
 
-{
-  "deviceId": "ESP32_001",
-  "moisture": 45.2,
-  "temperature": 25.3,
-  "ph": 6.8,
-  "ec": 1250,
-  "nitrogen": 78,
-  "phosphorus": 65,
-  "potassium": 82,
-  "pumpStatus": false
-}
-```
+**Required Fields:**
+- deviceId (string)
+- moisture (number, 0-100%)
+- temperature (number, °C)
+- ph (number, 0-14)
+- ec (number, µS/cm)
+- nitrogen (number, mg/kg)
+- phosphorus (number, mg/kg)
+- potassium (number, mg/kg)
+- pumpStatus (boolean)
 
-### Success Response (201 Created)
+### Response Codes
 
-```http
-HTTP/1.1 201 Created
-Content-Type: application/json
-
-{
-  "success": true,
-  "message": "Data recorded successfully",
-  "data": {
-    "readingId": "674123abc...",
-    "sensorId": "673abc123...",
-    "deviceName": "Farm A - Soil Monitor",
-    "timestamp": "2025-11-26T10:30:45.123Z"
-  }
-}
-```
-
-### Error Responses
-
-#### 404 - Device Not Registered
-```json
-{
-  "success": false,
-  "error": "Sensor with deviceId 'ESP32_001' not found. Please register this device first."
-}
-```
-
-#### 400 - Invalid Data
-```json
-{
-  "success": false,
-  "error": "Missing required sensor data fields"
-}
-```
-
-#### 403 - Inactive Device
-```json
-{
-  "success": false,
-  "error": "Sensor is not active"
-}
-```
+**201 Created** - Data recorded successfully
+**400 Bad Request** - Missing/invalid fields
+**403 Forbidden** - Sensor is not active
+**404 Not Found** - Device not registered
+**500 Server Error** - Internal error
 
 ---
 
 ## Security Architecture
 
-### Current Implementation (Testing/Development)
+### Current Implementation (Development)
 
 ```
 ESP32 → HTTPS (TLS 1.2) → Cloud Run
@@ -307,9 +223,7 @@ ESP32 → HTTPS (TLS 1.2) → Cloud Run
            (No certificate validation)
 ```
 
-**Note:** This is acceptable for testing but should be improved for production.
-
-### Recommended Production Setup
+### Recommended Production Layers
 
 ```
 ┌──────────────────────────────────────────────────────┐
@@ -372,32 +286,9 @@ ESP32 → HTTPS (TLS 1.2) → Cloud Run
 
 ### Optimization Strategies
 
-1. **Batch Reporting:**
-   ```cpp
-   // Send multiple readings in one request
-   {
-     "deviceId": "ESP32_001",
-     "readings": [
-       { "timestamp": "...", "moisture": 45.2, ... },
-       { "timestamp": "...", "moisture": 46.1, ... },
-       { "timestamp": "...", "moisture": 47.0, ... }
-     ]
-   }
-   ```
-
-2. **Data Aggregation:**
-   ```javascript
-   // Store 5-minute averages instead of raw readings
-   db.sensorreadings_5min.aggregate([...])
-   ```
-
-3. **Edge Processing:**
-   ```cpp
-   // Only send alerts/anomalies to cloud
-   if (moisture < threshold || ph > maxPh) {
-     sendAlertToCloud();
-   }
-   ```
+1. **Batch Reporting:** Send multiple readings in one request
+2. **Data Aggregation:** Store 5-minute averages instead of raw readings
+3. **Edge Processing:** Only send alerts/anomalies to cloud
 
 ---
 
@@ -482,41 +373,11 @@ Cultivo Dashboard:
 
 ## Future Enhancements
 
-### 1. Over-The-Air (OTA) Updates
-```cpp
-#include <ArduinoOTA.h>
-
-// Allow firmware updates without USB connection
-ArduinoOTA.begin();
-```
-
-### 2. Power Management
-```cpp
-// Deep sleep for battery operation
-esp_sleep_enable_timer_wakeup(5 * 60 * 1000000); // 5 min
-esp_deep_sleep_start();
-```
-
-### 3. Local Data Buffering
-```cpp
-// Store readings locally if cloud unavailable
-#include <SPIFFS.h>
-saveReadingToFlash(reading);
-```
-
-### 4. LoRaWAN Integration
-```
-ESP32 + LoRa Module → LoRaWAN Gateway → Cloud
-(for farms without WiFi coverage)
-```
-
-### 5. ML-Based Anomaly Detection
-```javascript
-// Backend: Detect sensor malfunctions
-if (isAnomalous(reading)) {
-  sendMaintenanceAlert();
-}
-```
+- Over-The-Air (OTA) firmware updates
+- Deep sleep power management for battery operation
+- Local data buffering (SPIFFS) for offline resilience
+- LoRaWAN integration for farms without WiFi coverage
+- ML-based anomaly detection for sensor malfunction alerts
 
 ---
 
@@ -535,13 +396,22 @@ if (isAnomalous(reading)) {
 
 ---
 
-## Related Documentation
+## Configuration Parameters
 
-- **[ESP32_SETUP_GUIDE.md](./ESP32_SETUP_GUIDE.md)** - Hardware setup and configuration
-- **[QUICK_START.md](../.arduino/QUICK_START.md)** - 5-step quick start guide
-- **[05-BACKEND-API.md](./05-BACKEND-API.md)** - Complete API reference
-- **[06-DATABASE-MODELS.md](./06-DATABASE-MODELS.md)** - Database schema
-- **[README.md](../.arduino/README.md)** - Arduino code documentation
+**ESP32 Timing:**
+- SENSOR_READ_INTERVAL: 1000ms (1 second)
+- BLYNK_INTERVAL: 2000ms (2 seconds)
+- CLOUD_INTERVAL: 300000ms (5 minutes)
+
+**Blynk Virtual Pins:**
+- V0: Moisture (%)
+- V1: Temperature (°C)
+- V2: pH (0-14)
+- V3: EC (µS/cm)
+- V4: Nitrogen (mg/kg)
+- V5: Phosphorus (mg/kg)
+- V6: Potassium (mg/kg)
+- V7: Pump Status (boolean)
 
 ---
 

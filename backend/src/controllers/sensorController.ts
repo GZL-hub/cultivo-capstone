@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { Sensor, SensorReading, ISensor } from '../models/Sensor';
+import Farm from '../models/Farm';
 import mongoose from 'mongoose';
 
 // Custom request type with user
@@ -11,12 +12,29 @@ interface AuthRequest extends Request {
 }
 
 // Get all sensors for a farm
-export const getSensorsByFarm = async (req: Request, res: Response): Promise<void> => {
+export const getSensorsByFarm = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { farmId } = req.params;
 
+    if (!req.user || !req.user.id) {
+      res.status(401).json({ success: false, error: 'User not authenticated' });
+      return;
+    }
+
     if (!mongoose.Types.ObjectId.isValid(farmId)) {
       res.status(400).json({ success: false, error: 'Invalid farm ID' });
+      return;
+    }
+
+    // Verify farm ownership
+    const farm = await Farm.findById(farmId);
+    if (!farm) {
+      res.status(404).json({ success: false, error: 'Farm not found' });
+      return;
+    }
+
+    if (farm.owner.toString() !== req.user.id) {
+      res.status(403).json({ success: false, error: 'Not authorized to access this farm' });
       return;
     }
 
@@ -29,9 +47,14 @@ export const getSensorsByFarm = async (req: Request, res: Response): Promise<voi
 };
 
 // Get single sensor by ID
-export const getSensorById = async (req: Request, res: Response): Promise<void> => {
+export const getSensorById = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { sensorId } = req.params;
+
+    if (!req.user || !req.user.id) {
+      res.status(401).json({ success: false, error: 'User not authenticated' });
+      return;
+    }
 
     if (!mongoose.Types.ObjectId.isValid(sensorId)) {
       res.status(400).json({ success: false, error: 'Invalid sensor ID' });
@@ -45,6 +68,18 @@ export const getSensorById = async (req: Request, res: Response): Promise<void> 
       return;
     }
 
+    // Verify farm ownership
+    const farm = await Farm.findById(sensor.farmId);
+    if (!farm) {
+      res.status(404).json({ success: false, error: 'Farm not found' });
+      return;
+    }
+
+    if (farm.owner.toString() !== req.user.id) {
+      res.status(403).json({ success: false, error: 'Not authorized to access this sensor' });
+      return;
+    }
+
     res.status(200).json({ success: true, data: sensor });
   } catch (error) {
     console.error('Error fetching sensor:', error);
@@ -53,9 +88,14 @@ export const getSensorById = async (req: Request, res: Response): Promise<void> 
 };
 
 // Create new sensor
-export const createSensor = async (req: Request, res: Response): Promise<void> => {
+export const createSensor = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { deviceId, deviceName, farmId, blynkTemplateId, blynkAuthToken, settings } = req.body;
+
+    if (!req.user || !req.user.id) {
+      res.status(401).json({ success: false, error: 'User not authenticated' });
+      return;
+    }
 
     // Validation
     if (!deviceId || !deviceName || !farmId || !blynkTemplateId || !blynkAuthToken) {
@@ -68,6 +108,18 @@ export const createSensor = async (req: Request, res: Response): Promise<void> =
 
     if (!mongoose.Types.ObjectId.isValid(farmId)) {
       res.status(400).json({ success: false, error: 'Invalid farm ID' });
+      return;
+    }
+
+    // Verify farm ownership
+    const farm = await Farm.findById(farmId);
+    if (!farm) {
+      res.status(404).json({ success: false, error: 'Farm not found' });
+      return;
+    }
+
+    if (farm.owner.toString() !== req.user.id) {
+      res.status(403).json({ success: false, error: 'Not authorized to create sensors for this farm' });
       return;
     }
 
@@ -103,13 +155,37 @@ export const createSensor = async (req: Request, res: Response): Promise<void> =
 };
 
 // Update sensor
-export const updateSensor = async (req: Request, res: Response): Promise<void> => {
+export const updateSensor = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { sensorId } = req.params;
     const { deviceName, isActive, settings } = req.body;
 
+    if (!req.user || !req.user.id) {
+      res.status(401).json({ success: false, error: 'User not authenticated' });
+      return;
+    }
+
     if (!mongoose.Types.ObjectId.isValid(sensorId)) {
       res.status(400).json({ success: false, error: 'Invalid sensor ID' });
+      return;
+    }
+
+    // Get sensor first to check farm ownership
+    const existingSensor = await Sensor.findById(sensorId);
+    if (!existingSensor) {
+      res.status(404).json({ success: false, error: 'Sensor not found' });
+      return;
+    }
+
+    // Verify farm ownership
+    const farm = await Farm.findById(existingSensor.farmId);
+    if (!farm) {
+      res.status(404).json({ success: false, error: 'Farm not found' });
+      return;
+    }
+
+    if (farm.owner.toString() !== req.user.id) {
+      res.status(403).json({ success: false, error: 'Not authorized to update this sensor' });
       return;
     }
 
@@ -125,11 +201,6 @@ export const updateSensor = async (req: Request, res: Response): Promise<void> =
       { new: true, runValidators: true }
     );
 
-    if (!sensor) {
-      res.status(404).json({ success: false, error: 'Sensor not found' });
-      return;
-    }
-
     res.status(200).json({ success: true, data: sensor });
   } catch (error) {
     console.error('Error updating sensor:', error);
@@ -142,21 +213,40 @@ export const updateSensor = async (req: Request, res: Response): Promise<void> =
 };
 
 // Delete sensor
-export const deleteSensor = async (req: Request, res: Response): Promise<void> => {
+export const deleteSensor = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { sensorId } = req.params;
+
+    if (!req.user || !req.user.id) {
+      res.status(401).json({ success: false, error: 'User not authenticated' });
+      return;
+    }
 
     if (!mongoose.Types.ObjectId.isValid(sensorId)) {
       res.status(400).json({ success: false, error: 'Invalid sensor ID' });
       return;
     }
 
-    const sensor = await Sensor.findByIdAndDelete(sensorId);
-
+    // Get sensor first to check farm ownership
+    const sensor = await Sensor.findById(sensorId);
     if (!sensor) {
       res.status(404).json({ success: false, error: 'Sensor not found' });
       return;
     }
+
+    // Verify farm ownership
+    const farm = await Farm.findById(sensor.farmId);
+    if (!farm) {
+      res.status(404).json({ success: false, error: 'Farm not found' });
+      return;
+    }
+
+    if (farm.owner.toString() !== req.user.id) {
+      res.status(403).json({ success: false, error: 'Not authorized to delete this sensor' });
+      return;
+    }
+
+    await Sensor.findByIdAndDelete(sensorId);
 
     // Optionally delete all readings for this sensor
     await SensorReading.deleteMany({ sensorId });
@@ -242,13 +332,36 @@ export const recordReading = async (req: Request, res: Response): Promise<void> 
 };
 
 // Get sensor readings with pagination and time filtering
-export const getSensorReadings = async (req: Request, res: Response): Promise<void> => {
+export const getSensorReadings = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { sensorId } = req.params;
     const { startDate, endDate, limit = 100, page = 1, aggregation } = req.query;
 
+    if (!req.user || !req.user.id) {
+      res.status(401).json({ success: false, error: 'User not authenticated' });
+      return;
+    }
+
     if (!mongoose.Types.ObjectId.isValid(sensorId)) {
       res.status(400).json({ success: false, error: 'Invalid sensor ID' });
+      return;
+    }
+
+    // Verify sensor exists and user owns the farm
+    const sensor = await Sensor.findById(sensorId);
+    if (!sensor) {
+      res.status(404).json({ success: false, error: 'Sensor not found' });
+      return;
+    }
+
+    const farm = await Farm.findById(sensor.farmId);
+    if (!farm) {
+      res.status(404).json({ success: false, error: 'Farm not found' });
+      return;
+    }
+
+    if (farm.owner.toString() !== req.user.id) {
+      res.status(403).json({ success: false, error: 'Not authorized to access this sensor' });
       return;
     }
 
@@ -400,9 +513,14 @@ export const getSensorReadings = async (req: Request, res: Response): Promise<vo
 };
 
 // Get latest reading for a sensor
-export const getLatestReading = async (req: Request, res: Response): Promise<void> => {
+export const getLatestReading = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { sensorId } = req.params;
+
+    if (!req.user || !req.user.id) {
+      res.status(401).json({ success: false, error: 'User not authenticated' });
+      return;
+    }
 
     if (!mongoose.Types.ObjectId.isValid(sensorId)) {
       res.status(400).json({ success: false, error: 'Invalid sensor ID' });
@@ -413,6 +531,18 @@ export const getLatestReading = async (req: Request, res: Response): Promise<voi
 
     if (!sensor) {
       res.status(404).json({ success: false, error: 'Sensor not found' });
+      return;
+    }
+
+    // Verify farm ownership
+    const farm = await Farm.findById(sensor.farmId);
+    if (!farm) {
+      res.status(404).json({ success: false, error: 'Farm not found' });
+      return;
+    }
+
+    if (farm.owner.toString() !== req.user.id) {
+      res.status(403).json({ success: false, error: 'Not authorized to access this sensor' });
       return;
     }
 
@@ -427,13 +557,36 @@ export const getLatestReading = async (req: Request, res: Response): Promise<voi
 };
 
 // Get sensor statistics for a time period
-export const getSensorStats = async (req: Request, res: Response): Promise<void> => {
+export const getSensorStats = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { sensorId } = req.params;
     const { startDate, endDate } = req.query;
 
+    if (!req.user || !req.user.id) {
+      res.status(401).json({ success: false, error: 'User not authenticated' });
+      return;
+    }
+
     if (!mongoose.Types.ObjectId.isValid(sensorId)) {
       res.status(400).json({ success: false, error: 'Invalid sensor ID' });
+      return;
+    }
+
+    // Verify sensor exists and user owns the farm
+    const sensor = await Sensor.findById(sensorId);
+    if (!sensor) {
+      res.status(404).json({ success: false, error: 'Sensor not found' });
+      return;
+    }
+
+    const farm = await Farm.findById(sensor.farmId);
+    if (!farm) {
+      res.status(404).json({ success: false, error: 'Farm not found' });
+      return;
+    }
+
+    if (farm.owner.toString() !== req.user.id) {
+      res.status(403).json({ success: false, error: 'Not authorized to access this sensor' });
       return;
     }
 

@@ -118,6 +118,7 @@ const WeatherCard: React.FC<WeatherCardProps> = ({ apiKey }) => {
     const isNoFarmError = error.includes('No farms registered') || error.includes('Farm boundary not drawn');
 
     if (isNoFarmError) {
+      const isBoundaryError = error.includes('boundary not drawn');
       return (
         <div className="p-4 rounded-2xl shadow-2xl" style={timeBasedStyle}>
           <div className="flex items-center justify-between mb-3">
@@ -125,10 +126,16 @@ const WeatherCard: React.FC<WeatherCardProps> = ({ apiKey }) => {
             <div className="text-sm text-white/80">{formattedDate}</div>
           </div>
           <div className="text-center py-4">
+            {/* Step Indicator */}
+            <div className="mb-2">
+              <span className="inline-block px-3 py-1 bg-white/20 text-white text-xs font-semibold rounded-full">
+                {isBoundaryError ? 'Step 2' : 'Step 1'}
+              </span>
+            </div>
             <p className="text-white/90 font-medium mb-1">
-              {error.includes('boundary not drawn')
-                ? 'Please draw your farm boundary on the map'
-                : 'Create a farm to view weather data'}
+              {isBoundaryError
+                ? 'Step 2: Draw farm boundary to view weather'
+                : 'Step 1: Create a farm to view weather data'}
             </p>
           </div>
         </div>

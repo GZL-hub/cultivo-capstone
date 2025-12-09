@@ -7,6 +7,7 @@ interface SensorAlertsProps {
   sensors: ISensor[];
   cameras: CCTV[];
   onAlertClick?: (type: string) => void;
+  onSetupDevices?: () => void;
 }
 
 interface Alert {
@@ -18,7 +19,9 @@ interface Alert {
   timestamp?: Date;
 }
 
-const SensorAlerts: React.FC<SensorAlertsProps> = ({ sensors, cameras, onAlertClick }) => {
+const SensorAlerts: React.FC<SensorAlertsProps> = ({ sensors, cameras, onAlertClick, onSetupDevices }) => {
+  const hasDevices = sensors.length > 0 || cameras.length > 0;
+
   // Generate alerts from sensor data
   const generateAlerts = (): Alert[] => {
     const alerts: Alert[] = [];
@@ -196,7 +199,25 @@ const SensorAlerts: React.FC<SensorAlertsProps> = ({ sensors, cameras, onAlertCl
 
       {/* Alerts List */}
       <div className="flex-1 overflow-y-auto space-y-2 pr-1">
-        {alerts.length === 0 ? (
+        {!hasDevices ? (
+          // No devices empty state
+          <div className="h-full flex flex-col items-center justify-center text-center py-8">
+            <AlertCircle className="w-12 h-12 text-gray-400 mb-2" />
+            <p className="text-sm font-semibold text-gray-700">No Monitoring Active</p>
+            <p className="text-xs text-gray-500 mt-2 mb-4 max-w-xs">
+              Add sensors and cameras to receive alerts and notifications about your farm
+            </p>
+            {onSetupDevices && (
+              <button
+                onClick={onSetupDevices}
+                className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors text-sm"
+              >
+                Setup Devices
+              </button>
+            )}
+          </div>
+        ) : alerts.length === 0 ? (
+          // All systems normal
           <div className="h-full flex flex-col items-center justify-center text-center py-8">
             <CheckCircle className="w-12 h-12 text-green-500 mb-2" />
             <p className="text-sm font-semibold text-gray-700">All Systems Normal</p>

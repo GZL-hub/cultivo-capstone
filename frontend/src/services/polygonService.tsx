@@ -1,7 +1,6 @@
-import axios from 'axios';
+import api from './api';
 import { calculatePolygonArea, calculatePolygonPerimeter } from '../components/farm-management/components/farm-map/polygon/Polygon-Utils';
-
-const API_URL = '/api';
+import axios from 'axios';
 
 export interface PolygonCoordinate {
   lat: number;
@@ -25,6 +24,16 @@ export interface ServiceResponse<T> {
   error?: string;
 }
 
+interface FarmResponse {
+  _id: string;
+  name: string;
+  location: string;
+  owner: string;
+  farmBoundary?: FarmBoundary;
+  createdAt: string;
+  updatedAt: string;
+}
+
 /**
  * Fetch the boundary polygon for a farm
  */
@@ -34,24 +43,33 @@ export const getFarmBoundary = async (
 ): Promise<ServiceResponse<FarmBoundary>> => {
   try {
     console.log(`Fetching boundary for farm: ${farmId}, owner: ${ownerId}`);
-    // Direct API call to farm endpoint instead of a separate boundary endpoint
-    const response = await axios.get(`${API_URL}/farms/${farmId}`);
-
-    if (response.data.success && response.data.data && response.data.data.farmBoundary) {
-      console.log('Farm boundary data received:', response.data.data.farmBoundary);
+    
+    // Type the response according to your API structure
+    const response = await api.get<FarmResponse>(`/farms/${farmId}`);
+    const farmData = response.data;
+    
+    // Check if farmBoundary exists in the response
+    if (farmData && farmData.farmBoundary) {
+      console.log('Farm boundary data received:', farmData.farmBoundary);
       return {
         success: true,
-        data: response.data.data.farmBoundary
+        data: farmData.farmBoundary
       };
     }
 
-    console.log('No farm boundary found in response:', response.data);
+    console.log('No farm boundary found in response:', farmData);
     return {
       success: false,
       error: 'No farm boundary found'
     };
   } catch (error) {
     console.error('Error fetching farm boundary:', error);
+    if (axios.isAxiosError(error)) {
+      return {
+        success: false,
+        error: error.response?.data?.error || error.message || 'Failed to fetch farm boundary'
+      };
+    }
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error occurred'
@@ -65,35 +83,33 @@ export const getFarmBoundary = async (
 export const saveFarmBoundary = async (
   farmId: string,
   polygonData: PolygonData & { ownerId?: string }
-): Promise<ServiceResponse<any>> => {
+): Promise<ServiceResponse<FarmResponse>> => {
   try {
-    const response = await axios.put(
-      `${API_URL}/farms/${farmId}/boundary`,
-      polygonData,
-      {
-        headers: {
-          'Content-Type': 'application/json',
-        }
-      }
+    // Type the response
+    const response = await api.put<FarmResponse>(
+      `/farms/${farmId}/boundary`,
+      polygonData
     );
 
-    if (response.data.success) {
+    const farmData = response.data;
+
+    if (farmData) {
       return {
         success: true,
-        data: response.data.data
+        data: farmData
       };
     }
 
     return {
       success: false,
-      error: response.data.error || 'Failed to save boundary'
+      error: 'Failed to save boundary'
     };
   } catch (error) {
     console.error('Error saving polygon:', error);
     if (axios.isAxiosError(error)) {
       return {
         success: false,
-        error: error.response?.data?.message || error.message || 'Network error occurred'
+        error: error.response?.data?.error || error.message || 'Network error occurred'
       };
     }
     return {

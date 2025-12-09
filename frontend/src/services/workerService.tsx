@@ -1,6 +1,4 @@
-import axios from 'axios';
-
-const API_URL = '/api';
+import api from './api';
 
 export interface Worker {
   id: string;
@@ -15,7 +13,7 @@ export interface Worker {
 
 export const getWorkers = async (farmId: string): Promise<Worker[]> => {
   try {
-    const response = await axios.get(`${API_URL}/farms/${farmId}/workers`);
+    const response = await api.get(`/farms/${farmId}/workers`);
     return response.data;
   } catch (error) {
     console.error('Error fetching workers:', error);
@@ -25,7 +23,7 @@ export const getWorkers = async (farmId: string): Promise<Worker[]> => {
 
 export const getWorkerById = async (farmId: string, workerId: string): Promise<Worker> => {
   try {
-    const response = await axios.get(`${API_URL}/farms/${farmId}/workers/${workerId}`);
+    const response = await api.get(`/farms/${farmId}/workers/${workerId}`);
     return response.data;
   } catch (error) {
     console.error('Error fetching worker:', error);
@@ -35,7 +33,7 @@ export const getWorkerById = async (farmId: string, workerId: string): Promise<W
 
 export const createWorker = async (farmId: string, workerData: Omit<Worker, 'id' | 'farmId'>): Promise<Worker> => {
   try {
-    const response = await axios.post(`${API_URL}/farms/${farmId}/workers`, workerData);
+    const response = await api.post(`/farms/${farmId}/workers`, workerData);
     return response.data;
   } catch (error) {
     console.error('Error creating worker:', error);
@@ -45,7 +43,7 @@ export const createWorker = async (farmId: string, workerData: Omit<Worker, 'id'
 
 export const updateWorker = async (farmId: string, workerId: string, workerData: Partial<Worker>): Promise<Worker> => {
   try {
-    const response = await axios.put(`${API_URL}/farms/${farmId}/workers/${workerId}`, workerData);
+    const response = await api.put(`/farms/${farmId}/workers/${workerId}`, workerData);
     return response.data;
   } catch (error) {
     console.error('Error updating worker:', error);
@@ -55,14 +53,13 @@ export const updateWorker = async (farmId: string, workerId: string, workerData:
 
 export const deleteWorker = async (farmId: string, workerId: string): Promise<void> => {
   try {
-    await axios.delete(`${API_URL}/farms/${farmId}/workers/${workerId}`);
+    await api.delete(`/farms/${farmId}/workers/${workerId}`);
   } catch (error) {
     console.error('Error deleting worker:', error);
     throw error;
   }
 };
 
-// Export the API methods
 export default {
   getWorkers,
   getWorkerById,

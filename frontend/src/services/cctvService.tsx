@@ -1,6 +1,4 @@
-import axios from 'axios';
-
-const API_URL = '/api';
+import api from './api';
 
 export interface CCTV {
   _id?: string;
@@ -15,7 +13,7 @@ export interface CCTV {
 
 export const getCCTVs = async (farmId: string): Promise<CCTV[]> => {
   try {
-    const response = await axios.get(`${API_URL}/farms/${farmId}/cctvs`);
+    const response = await api.get(`/farms/${farmId}/cctvs`);
     return response.data;
   } catch (error) {
     console.error('Error fetching CCTV devices:', error);
@@ -25,7 +23,7 @@ export const getCCTVs = async (farmId: string): Promise<CCTV[]> => {
 
 export const getCCTVById = async (farmId: string, cctvId: string): Promise<CCTV> => {
   try {
-    const response = await axios.get(`${API_URL}/farms/${farmId}/cctvs/${cctvId}`);
+    const response = await api.get(`/farms/${farmId}/cctvs/${cctvId}`);
     return response.data;
   } catch (error) {
     console.error('Error fetching CCTV device:', error);
@@ -35,7 +33,7 @@ export const getCCTVById = async (farmId: string, cctvId: string): Promise<CCTV>
 
 export const createCCTV = async (farmId: string, cctvData: Omit<CCTV, '_id' | 'farmId' | 'createdAt' | 'updatedAt'>): Promise<CCTV> => {
   try {
-    const response = await axios.post(`${API_URL}/farms/${farmId}/cctvs`, cctvData);
+    const response = await api.post(`/farms/${farmId}/cctvs`, cctvData);
     return response.data;
   } catch (error) {
     console.error('Error creating CCTV device:', error);
@@ -45,7 +43,7 @@ export const createCCTV = async (farmId: string, cctvData: Omit<CCTV, '_id' | 'f
 
 export const updateCCTV = async (farmId: string, cctvId: string, cctvData: Partial<CCTV>): Promise<CCTV> => {
   try {
-    const response = await axios.put(`${API_URL}/farms/${farmId}/cctvs/${cctvId}`, cctvData);
+    const response = await api.put(`/farms/${farmId}/cctvs/${cctvId}`, cctvData);
     return response.data;
   } catch (error) {
     console.error('Error updating CCTV device:', error);
@@ -55,7 +53,7 @@ export const updateCCTV = async (farmId: string, cctvId: string, cctvData: Parti
 
 export const deleteCCTV = async (farmId: string, cctvId: string): Promise<void> => {
   try {
-    await axios.delete(`${API_URL}/farms/${farmId}/cctvs/${cctvId}`);
+    await api.delete(`/farms/${farmId}/cctvs/${cctvId}`);
   } catch (error) {
     console.error('Error deleting CCTV device:', error);
     throw error;

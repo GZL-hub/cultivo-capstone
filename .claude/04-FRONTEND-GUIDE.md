@@ -2,7 +2,7 @@
 
 ## Frontend Architecture Overview
 
-The Cultivo frontend is a **Single Page Application (SPA)** built with React 19.1 and TypeScript. It follows a **feature-based component structure** with clear separation of concerns and a service layer for API communication.
+Single Page Application (SPA) built with React 19.1 and TypeScript with feature-based component structure and service layer for API communication.
 
 ## Technology Stack
 
@@ -31,23 +31,23 @@ frontend/
 │
 ├── src/
 │   ├── components/              # Feature-based components
-│   │   ├── alerts/              # Alerts & notifications feature
+│   │   ├── alerts/              # Alerts & notifications
 │   │   ├── analytics/           # Analytics & weather dashboard
-│   │   │   └── weather/         # Weather-specific components
+│   │   │   └── weather/         # Weather components
 │   │   ├── dashboard/           # Main dashboard
 │   │   │   └── cards/           # Dashboard stat cards
 │   │   ├── devices/             # Device management
 │   │   │   ├── camera/          # Camera device components
 │   │   │   └── sensor/          # Sensor device components
-│   │   ├── farm-management/     # Core farm management feature
+│   │   ├── farm-management/     # Core farm management
 │   │   │   └── components/
-│   │   │       ├── camera/      # CCTV streaming components
+│   │   │       ├── camera/      # CCTV streaming
 │   │   │       ├── farm-map/    # Map with polygon drawing
 │   │   │       ├── farm-overview/  # Farm overview & calendar
 │   │   │       └── worker/      # Worker management
-│   │   ├── layout/              # Layout components (Header, Sidebar)
+│   │   ├── layout/              # Layout (Header, Sidebar)
 │   │   ├── login/               # Authentication UI
-│   │   └── settings/            # Settings feature
+│   │   └── settings/            # Settings
 │   │       ├── account/         # Account settings
 │   │       └── farm/            # Farm settings
 │   │
@@ -72,7 +72,8 @@ frontend/
 └── tailwind.config.js           # Tailwind CSS configuration
 ```
 
-## Component Organization Principles
+## Component Organization
+
 ### Component Hierarchy
 
 ```
@@ -85,7 +86,7 @@ App.tsx (Root)
               └── Reusable UI Components
 ```
 
-## Key Components Breakdown
+## Key Components
 
 ### App.tsx (Root Component)
 
@@ -96,21 +97,20 @@ App.tsx (Root)
 - Login/logout flow
 
 **Key Features:**
-- **Protected Routes**: All routes wrapped in `Layout` require authentication
-- **Nested Routes**: Farm management uses nested routing
-- **API Key Loading**: Google Maps loaded before rendering map components
-- **User Context**: userId passed as prop to farm components
+- Protected routes (all routes in Layout require auth)
+- Nested routes for farm management
+- API key loading before map rendering
+- User context passed as props
 
 ### Layout Components
 
-#### Layout.tsx (Main Layout)
+#### Layout.tsx
 **Structure:**
-- **Sidebar**: Navigation menu (fixed left column)
-- **Header**: Top bar with user info and logout
-- **Main**: Scrollable content area
+- Sidebar: Navigation menu (fixed left)
+- Header: Top bar with user info and logout
+- Main: Scrollable content area
 
 #### Header.tsx
-
 **Features:**
 - User avatar and name display
 - Logout button
@@ -118,7 +118,6 @@ App.tsx (Root)
 - Notification bell (future)
 
 #### Sidebar.tsx
-
 **Navigation Links:**
 - Dashboard
 - Analytics (Farm/Weather)
@@ -131,50 +130,47 @@ App.tsx (Root)
 
 ### Design Philosophy
 
-All API communication is **abstracted into service modules**:
+All API communication abstracted into service modules:
 
 ```
 Component → Service → Axios → Backend API
 ```
 
 **Benefits:**
-- **Single Source of Truth**: API endpoints defined once
-- **Reusability**: Services used across multiple components
-- **Testability**: Easy to mock services for unit tests
-- **Consistency**: Standardized error handling and request format
+- Single source of truth for API endpoints
+- Reusability across multiple components
+- Easy to mock for testing
+- Standardized error handling
 
-## API Proxy ## (package.json):
+### API Proxy
 
+`package.json` proxy configuration:
 ```json
 {
   "proxy": "http://localhost:8080"
 }
 ```
 
-This proxies all `/api/*` requests to the backend server during development, avoiding CORS issues.
+Proxies all `/api/*` requests to backend during development, avoiding CORS issues.
 
 ## Routing Architecture
 
 ### React Router v7 Configuration
 **Nested Routing Benefits:**
-- **Shared Layouts**: Parent component renders common UI (tabs, headers)
-- **Code Organization**: Related routes grouped together
-- **URL Structure**: Logical hierarchy (`/farm/overview`, `/farm/map`)
-- **Default Routes**: `index` redirects to default child route
+- Shared layouts for related routes
+- Code organization by feature
+- Logical URL hierarchy (`/farm/overview`, `/farm/map`)
+- Default routes with `index`
 
 ## State Management
 
 ### Current Approach: React Hooks + Context API
 
-Cultivo uses **local state management** with hooks and Context API for global state.
-
 **State Types:**
-
 1. **Component State** (`useState`): UI state (modals, forms, loading)
-2. **Server State** (`useEffect` + `useState`): Data fetched from API
+2. **Server State** (`useEffect` + `useState`): Data from API
 3. **Global State** (Context API): Authentication, WebRTC streams
 4. **URL State** (React Router): Route parameters, query strings
-
 
 ## Google Maps Integration
 
@@ -188,10 +184,9 @@ Cultivo uses **local state management** with hooks and Context API for global st
 
 ## WebRTC Streaming Components
 
-See [WebRTC.md](../.claude/WebRTC.md) for detailed implementation.
+See `WebRTC.md` for detailed implementation.
 
 **Component Structure:**
-
 ```
 FarmCCTV.tsx (Main Component)
   └── SharedStreamProvider (Context)
@@ -199,39 +194,29 @@ FarmCCTV.tsx (Main Component)
           └── SharedVideoPlayer (Consumes shared stream)
 ```
 
-**Key Innovation**: Single WebRTC connection for multiple video players.
+**Key Innovation:** Single WebRTC connection for multiple video players.
 
 ## Best Practices
 
 ### 1. Component Design
-
-- **Single Responsibility**: Each component has one clear purpose
-- **Reusability**: Extract common UI patterns into shared components
-- **Props Interface**: Always define TypeScript interfaces for props
-- **Default Props**: Use TypeScript optional parameters with defaults
+- Single responsibility per component
+- Reusable UI patterns extracted
+- TypeScript interfaces for all props
+- Optional parameters with defaults
 
 ### 2. State Management
-
-- **Local First**: Use local state unless state needs to be shared
-- **Lift State Up**: Move state to parent when multiple children need access
-- **Avoid Prop Drilling**: Use Context API for deeply nested state
-- **Server State**: Fetch data in parent, pass down as props
+- Local first (use local state unless shared)
+- Lift state up when multiple children need access
+- Context API for deeply nested state
+- Fetch data in parent, pass as props
 
 ### 3. Performance
-
-- **Memoization**: Use `React.memo` for expensive components (future)
-- **Lazy Loading**: Use `React.lazy` for route-based code splitting (future)
-- **Debouncing**: Debounce search inputs to reduce API calls
-- **Virtualization**: Use react-window for large lists (future)
+- React.memo for expensive components (future)
+- React.lazy for route code splitting (future)
+- Debouncing for search inputs
+- Virtualization for large lists (future)
 
 ### 4. Code Organization
-
-- **Import Order**: React → Third-party → Components → Services → Types
-- **File Naming**: PascalCase for components, camelCase for services
-- **Colocation**: Keep related files together (component + styles + tests)
-
-## Next Steps
-
-- **[Backend API](./05-BACKEND-API.md)** - API endpoint reference
-- **[Database Models](./06-DATABASE-MODELS.md)** - Data schema documentation
-- **[Deployment](./07-DEPLOYMENT.md)** - Production deployment guide
+- Import order: React → Third-party → Components → Services → Types
+- File naming: PascalCase for components, camelCase for services
+- Colocation: Keep related files together
