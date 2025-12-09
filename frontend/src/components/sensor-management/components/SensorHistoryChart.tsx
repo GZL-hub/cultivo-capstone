@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { getSensorReadings, getSensorStats, ISensorReadingDocument, SensorStats } from '../../../services/sensorService';
-import { Calendar, TrendingUp, Loader } from 'lucide-react';
+import { Calendar, TrendingUp } from 'lucide-react';
+import LoadingSpinner from '../../common/LoadingSpinner';
 
 interface SensorHistoryChartProps {
   sensorId: string;
@@ -149,8 +150,7 @@ const SensorHistoryChart: React.FC<SensorHistoryChartProps> = ({ sensorId }) => 
       {/* Loading State */}
       {loading && (
         <div className="flex items-center justify-center py-12">
-          <Loader className="w-8 h-8 animate-spin text-green-600 mr-3" />
-          <span className="text-gray-600">Loading history...</span>
+          <LoadingSpinner size="lg" text="Loading history..." />
         </div>
       )}
 

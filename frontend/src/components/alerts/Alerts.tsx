@@ -12,12 +12,14 @@ import {
 } from '../../services/alertService';
 import { getFarms } from '../../services/farmService';
 import authService from '../../services/authService';
-import { Bell, AlertCircle, Loader, Filter, Plus } from 'lucide-react';
+import { Bell, AlertCircle, Filter, Plus } from 'lucide-react';
 import AlertsHeader from './components/AlertsHeader';
 import AlertsStats from './components/AlertsStats';
 import AlertsFilters from './components/AlertsFilters';
 import AlertsList from './components/AlertsList';
 import EmptyAlertsState from './components/EmptyAlertsState';
+import LoadingSpinner from '../common/LoadingSpinner';
+import EmptyState, { MapPin } from '../common/EmptyState';
 
 const Alerts = () => {
   const [alerts, setAlerts] = useState<IAlert[]>([]);
@@ -160,8 +162,7 @@ const Alerts = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-full">
-        <Loader className="w-8 h-8 animate-spin text-primary-600" />
-        <span className="ml-3 text-gray-600">Loading alerts...</span>
+        <LoadingSpinner size="lg" text="Loading alerts..." />
       </div>
     );
   }
@@ -169,30 +170,28 @@ const Alerts = () => {
   if (error) {
     return (
       <div className="flex items-center justify-center h-full">
-        <div className="text-center max-w-md">
-          <AlertCircle className={`w-12 h-12 mx-auto mb-3 ${
-            error.includes('No farm registered') ? 'text-yellow-500' : 'text-red-500'
-          }`} />
-          <h3 className="text-lg font-semibold text-gray-700 mb-2">
-            {error.includes('No farm registered') ? 'No Farm Found' : 'Error'}
-          </h3>
-          <p className="text-gray-600 mb-4">{error}</p>
-          {error.includes('No farm registered') ? (
-            <button
-              onClick={() => window.location.href = '/farm-management'}
-              className="px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition"
-            >
-              Create Farm
-            </button>
-          ) : (
+        {error.includes('No farm registered') ? (
+          <EmptyState
+            icon={MapPin}
+            title="No Farm Found"
+            description="Please create a farm first to view alerts."
+            actionLabel="Create Farm"
+            onAction={() => window.location.href = '/farm-management'}
+            variant="warning"
+          />
+        ) : (
+          <div className="text-center max-w-md">
+            <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-3" />
+            <h3 className="text-lg font-semibold text-gray-700 mb-2">Error</h3>
+            <p className="text-gray-600 mb-4">{error}</p>
             <button
               onClick={fetchUserFarm}
               className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
             >
               Retry
             </button>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     );
   }

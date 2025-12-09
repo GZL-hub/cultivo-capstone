@@ -1,6 +1,7 @@
 import React from 'react';
 import { Cloud, CloudRain, Sun, Droplet, } from 'lucide-react';
 import WeatherIcon from './icons/WeatherIcons';
+import LoadingSpinner from '../../common/LoadingSpinner';
 
 interface HourlyForecast {
   time: string;
@@ -158,7 +159,7 @@ const TodayForecast: React.FC<TodayForecastProps> = ({ data, isLoading, error, i
           </h2>
         </div>
         <div className="flex justify-center py-10">
-          <div className="h-8 w-8 border-4 border-blue-300 border-t-transparent rounded-full animate-spin" />
+          <LoadingSpinner size="lg" color="white" />
         </div>
       </div>
     );

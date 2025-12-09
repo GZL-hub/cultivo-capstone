@@ -6,6 +6,13 @@ import SensorAlerts from './cards/SensorAlerts';
 import SensorCard from './cards/SensorCard';
 import FarmMapCard from './cards/FarmMapCard';
 import OnboardingChecklist from './cards/OnboardingChecklist';
+import {
+  DeviceStatsSkeleton,
+  CardSkeleton,
+  SensorAlertsSkeleton,
+  SensorDashboardSkeleton,
+  MapCardSkeleton
+} from './cards/LoadingSkeleton';
 import api from '../../services/api';
 import authService from '../../services/authService';
 import {
@@ -86,7 +93,7 @@ const Dashboard: React.FC<DashboardProps> = ({ isLoaded }) => {
       cameras.length > 0
   }), [selectedFarmId, farmInfo, sensors, cameras]);
 
-  const showChecklist = !onboardingData.isComplete && !checklistDismissed;
+  const showChecklist = !isLoading && !onboardingData.isComplete;
 
   // Fetch farm data on component mount
   useEffect(() => {
@@ -246,11 +253,15 @@ const Dashboard: React.FC<DashboardProps> = ({ isLoaded }) => {
       {/* Top row - devices stats and weather */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
         {/* Device Statistics Component */}
-        <DeviceStatistics
-          totalRegistered={deviceStats.totalRegistered}
-          totalOnline={deviceStats.totalOnline}
-          onAddDevices={() => navigate('/device-settings/sensors')}
-        />
+        {isLoading ? (
+          <DeviceStatsSkeleton />
+        ) : (
+          <DeviceStatistics
+            totalRegistered={deviceStats.totalRegistered}
+            totalOnline={deviceStats.totalOnline}
+            onAddDevices={() => navigate('/device-settings/sensors')}
+          />
+        )}
 
         {/* Weather Card Component */}
         <WeatherCard />
@@ -262,21 +273,28 @@ const Dashboard: React.FC<DashboardProps> = ({ isLoaded }) => {
         <div className="md:col-span-4 flex flex-col space-y-4">
           {/* Sensor Alerts */}
           <div className="bg-white p-4 rounded-lg shadow-md flex-[2]">
-            <SensorAlerts
-              sensors={sensors}
-              cameras={cameras}
-              onAlertClick={(type) => {
-                if (type === 'alert' || type === 'warning') {
-                  navigate('/device-settings/sensors');
-                }
-              }}
-              onSetupDevices={() => navigate('/device-settings/sensors')}
-            />
+            {isLoading ? (
+              <SensorAlertsSkeleton />
+            ) : (
+              <SensorAlerts
+                sensors={sensors}
+                cameras={cameras}
+                onAlertClick={(type) => {
+                  if (type === 'alert' || type === 'warning') {
+                    navigate('/device-settings/sensors');
+                  }
+                }}
+                onSetupDevices={() => navigate('/device-settings/sensors')}
+              />
+            )}
           </div>
-          
+
           {/* Sensor Dashboard */}
           <div className="bg-white p-4 rounded-lg shadow-md flex-[3]">
-            <div className="grid grid-cols-2 gap-3 h-[calc(100%-1rem)]">
+            {isLoading ? (
+              <SensorDashboardSkeleton />
+            ) : (
+              <div className="grid grid-cols-2 gap-3 h-[calc(100%-1rem)]">
               {/* Plant Health Sensor - with green gradient background and white text */}
               <SensorCard
                 title="Plant Health"
@@ -370,17 +388,16 @@ const Dashboard: React.FC<DashboardProps> = ({ isLoaded }) => {
                 </div>
               </SensorCard>
             </div>
+            )}
           </div>
         </div>
-        
+
         {/* Right column - Farm Map with Farm Info and Active Devices */}
         <div className="md:col-span-8 flex">
           {isLoading ? (
-            <div className="bg-white p-4 rounded-lg shadow-md w-full flex items-center justify-center">
-              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-500"></div>
-            </div>
+            <MapCardSkeleton />
           ) : (
-            <FarmMapCard 
+            <FarmMapCard
               farmId={selectedFarmId || undefined}
               devices={devices}
               onViewFullMap={handleViewFullMap}

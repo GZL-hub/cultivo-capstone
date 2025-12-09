@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { fetchWeatherData, WeatherData } from '../../../components/analytics/weather/weatherService';
 import WeatherIcon from '../../../components/analytics/weather/icons/WeatherIcons';
 import { AlertCircle } from 'lucide-react';
+import LoadingSpinner from '../../common/LoadingSpinner';
 
 interface WeatherCardProps {
   apiKey?: string;
@@ -104,10 +105,9 @@ const WeatherCard: React.FC<WeatherCardProps> = ({ apiKey }) => {
       <div className="p-4 rounded-2xl shadow-2xl" style={timeBasedStyle}>
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold text-white">Weather</h2>
-          <div className="text-sm text-white/80">Loading...</div>
         </div>
         <div className="flex justify-center items-center h-16">
-          <div className="animate-spin rounded-full h-8 w-8 border-4 border-white/80 border-t-transparent"></div>
+          <LoadingSpinner size="md" color="white" />
         </div>
       </div>
     );

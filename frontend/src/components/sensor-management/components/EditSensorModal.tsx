@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { ISensor, updateSensor } from '../../../services/sensorService';
-import { X, Save, Loader, Settings } from 'lucide-react';
+import { X, Save, Settings } from 'lucide-react';
+import LoadingSpinner from '../../common/LoadingSpinner';
 
 interface EditSensorModalProps {
   sensor: ISensor;
@@ -264,7 +265,7 @@ const EditSensorModal: React.FC<EditSensorModalProps> = ({ sensor, onClose, onUp
           >
             {saving ? (
               <>
-                <Loader className="w-4 h-4 mr-2 animate-spin" />
+                <LoadingSpinner size="sm" color="white" className="mr-2" />
                 Saving...
               </>
             ) : (

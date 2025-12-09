@@ -10,9 +10,10 @@ import DeleteSensorModal from './components/DeleteSensorModal';
 import authService from '../../services/authService';
 import {
   Plus,
-  AlertCircle,
-  Loader
+  AlertCircle
 } from 'lucide-react';
+import LoadingSpinner from '../common/LoadingSpinner';
+import EmptyState, { MapPin, Activity } from '../common/EmptyState';
 
 interface SensorDashboardProps {}
 
@@ -171,8 +172,7 @@ const SensorDashboard: React.FC<SensorDashboardProps> = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-full">
-        <Loader className="w-8 h-8 animate-spin text-blue-600" />
-        <span className="ml-3 text-gray-600">Loading sensors...</span>
+        <LoadingSpinner size="lg" text="Loading sensors..." />
       </div>
     );
   }
@@ -180,28 +180,27 @@ const SensorDashboard: React.FC<SensorDashboardProps> = () => {
   if (error) {
     return (
       <div className="flex items-center justify-center h-full">
-        <div className="text-center max-w-md">
-          <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-3" />
-          <p className="text-red-600 font-medium mb-2">{error}</p>
-          {error.includes('No farm found') ? (
-            <div>
-              <p className="text-gray-600 mb-4">Create your farm to start adding sensors</p>
-              <button
-                onClick={() => navigate('/farm/overview')}
-                className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700"
-              >
-                Create Farm
-              </button>
-            </div>
-          ) : (
+        {error.includes('No farm found') ? (
+          <EmptyState
+            icon={MapPin}
+            title="No Farm Found"
+            description="Create your farm to start adding sensors"
+            actionLabel="Create Farm"
+            onAction={() => navigate('/farm/overview')}
+            variant="warning"
+          />
+        ) : (
+          <div className="text-center max-w-md">
+            <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-3" />
+            <p className="text-red-600 font-medium mb-2">{error}</p>
             <button
               onClick={fetchUserFarm}
               className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
             >
               Retry
             </button>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     );
   }
@@ -232,23 +231,13 @@ const SensorDashboard: React.FC<SensorDashboardProps> = () => {
       {/* Content */}
       <div className="px-4 py-4">
         {sensors.length === 0 ? (
-          <div className="flex-1 flex items-center justify-center">
-            <div className="text-center bg-white rounded-lg shadow-md p-12">
-              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                </svg>
-              </div>
-              <h3 className="text-xl font-semibold text-gray-700 mb-2">No Sensors Found</h3>
-              <p className="text-gray-500 mb-4">Get started by adding your first soil sensor</p>
-              <button
-                onClick={handleAddSensor}
-                className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
-              >
-                Add Your First Sensor
-              </button>
-            </div>
-          </div>
+          <EmptyState
+            icon={Activity}
+            title="No Sensors Found"
+            description="Get started by adding your first soil sensor"
+            actionLabel="Add Your First Sensor"
+            onAction={handleAddSensor}
+          />
         ) : (
           <div className="space-y-4">
             <SensorTable

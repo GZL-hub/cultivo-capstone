@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Calendar, CloudRain, Droplet, Wind, Sun } from 'lucide-react';
 import WeatherIcon from './icons/WeatherIcons';
+import LoadingSpinner from '../../common/LoadingSpinner';
 
 interface DailyForecast {
   date: string;
@@ -82,7 +83,7 @@ const getThemeColors = () => {
           <h2 className="text-xl font-bold text-white">5-Day Forecast</h2>
         </div>
         <div className="flex-grow flex items-center justify-center">
-          <div className="h-8 w-8 border-4 border-blue-300 border-t-transparent rounded-full animate-spin" />
+          <LoadingSpinner size="lg" color="white" />
         </div>
       </div>
     );

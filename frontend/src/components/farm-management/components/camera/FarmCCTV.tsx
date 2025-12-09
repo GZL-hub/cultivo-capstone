@@ -4,6 +4,8 @@ import { SharedStreamProvider, useSharedStream } from './SharedStreamProvider';
 import CameraGridItem from './CameraGridItem';
 import { useFarmManagement } from '../../FarmManagement';
 import { getCCTVs, CCTV } from '../../../../services/cctvService';
+import LoadingSpinner from '../../../common/LoadingSpinner';
+import EmptyState, { Camera } from '../../../common/EmptyState';
 
 type GridSize = '2x2' | '3x3' | '4x4';
 
@@ -87,10 +89,7 @@ const FarmCCTV: React.FC = () => {
   if (isLoading) {
     return (
       <div className="w-full h-full flex items-center justify-center bg-background">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500 mx-auto mb-4"></div>
-          <p className="text-gray-600 font-medium">Loading cameras...</p>
-        </div>
+        <LoadingSpinner size="lg" text="Loading cameras..." />
       </div>
     );
   }
@@ -111,18 +110,11 @@ const FarmCCTV: React.FC = () => {
   if (cameras.length === 0) {
     return (
       <div className="w-full h-full flex items-center justify-center bg-background">
-        <div className="text-center p-6 bg-white rounded-lg border border-gray-300 shadow-sm max-w-md">
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 mx-auto mb-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-          </svg>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No Cameras Registered</h3>
-          <p className="text-sm text-gray-500 mb-4">
-            No CCTV cameras have been registered for this farm yet.
-          </p>
-          <p className="text-xs text-gray-400">
-            Go to Device Settings → Cameras to add your first camera.
-          </p>
-        </div>
+        <EmptyState
+          icon={Camera}
+          title="No Cameras Registered"
+          description="No CCTV cameras have been registered for this farm yet. Go to Device Settings → Cameras to add your first camera."
+        />
       </div>
     );
   }

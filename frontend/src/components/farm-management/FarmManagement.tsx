@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Outlet, useOutletContext } from 'react-router-dom';
 import { getFarms } from '../../services/farmService';
 import authService from '../../services/authService';
+import LoadingSpinner from '../common/LoadingSpinner';
 
 // Define the context type for TypeScript
 type FarmManagementContext = {
@@ -67,10 +68,7 @@ const FarmManagement: React.FC = () => {
       {/* Loading Display */}
       {isLoading && !error && (
         <div className="flex items-center justify-center h-64 m-4">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500 mx-auto mb-4"></div>
-            <p className="text-gray-600 font-medium">Loading farms...</p>
-          </div>
+          <LoadingSpinner size="lg" text="Loading farms..." />
         </div>
       )}
 

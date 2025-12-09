@@ -1,6 +1,7 @@
 import React from 'react';
 import { ISensor, getSensorStatus } from '../../../services/sensorService';
 import { Pencil, Trash2, TrendingUp } from 'lucide-react';
+import EmptyState, { Activity } from '../../common/EmptyState';
 
 interface SensorTableProps {
   sensors: ISensor[];
@@ -57,9 +58,11 @@ const SensorTable: React.FC<SensorTableProps> = ({ sensors, onEdit, onDelete, on
       </div>
 
       {sensors.length === 0 && (
-        <div className="text-center py-8 text-gray-500">
-          No sensors found
-        </div>
+        <EmptyState
+          icon={Activity}
+          title="No Sensors Found"
+          description="No sensors found"
+        />
       )}
     </div>
   );

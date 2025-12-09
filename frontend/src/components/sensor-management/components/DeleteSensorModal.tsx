@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { ISensor } from '../../../services/sensorService';
-import { AlertTriangle, X, Loader } from 'lucide-react';
+import { AlertTriangle, X } from 'lucide-react';
+import LoadingSpinner from '../../common/LoadingSpinner';
 
 interface DeleteSensorModalProps {
   sensor: ISensor;
@@ -109,7 +110,7 @@ const DeleteSensorModal: React.FC<DeleteSensorModalProps> = ({ sensor, onClose, 
           >
             {deleting ? (
               <>
-                <Loader className="w-4 h-4 mr-2 animate-spin" />
+                <LoadingSpinner size="sm" color="white" className="mr-2" />
                 Deleting...
               </>
             ) : (

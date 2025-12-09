@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { createSensor } from '../../../services/sensorService';
-import { X, Plus, Loader, Cpu, Save } from 'lucide-react';
+import { X, Plus, Cpu, Save } from 'lucide-react';
+import LoadingSpinner from '../../common/LoadingSpinner';
 
 interface AddSensorModalProps {
   farmId: string;
@@ -310,7 +311,7 @@ const AddSensorModal: React.FC<AddSensorModalProps> = ({ farmId, onClose, onSucc
           >
             {loading ? (
               <>
-                <Loader className="w-4 h-4 mr-2 animate-spin" />
+                <LoadingSpinner size="sm" color="white" className="mr-2" />
                 Adding Sensor...
               </>
             ) : (

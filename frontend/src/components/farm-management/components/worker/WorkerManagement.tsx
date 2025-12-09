@@ -5,6 +5,7 @@ import AddWorkerModal from './AddWorkerModal';
 import { useFarmManagement } from '../../FarmManagement';
 import workerService, { Worker } from '../../../../services/workerService';
 import { X, AlertCircle } from 'lucide-react';
+import LoadingSpinner from '../../../common/LoadingSpinner';
 
 // Simple confirmation dialog component
 interface ConfirmDialogProps {
@@ -272,7 +273,7 @@ const WorkerManagement: React.FC = () => {
           {/* Loading State */}
           {isLoading ? (
             <div className="flex justify-center items-center h-64">
-              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500"></div>
+              <LoadingSpinner size="lg" />
             </div>
           ) : (
             <WorkerTable 

@@ -1,6 +1,7 @@
 import React from 'react';
 import { AlertCircle } from 'lucide-react';
 import { ConnectionStatus } from './WebRTCPlayer';
+import LoadingSpinner from '../../../common/LoadingSpinner';
 
 interface StatusIndicatorProps {
   status: ConnectionStatus;
@@ -23,7 +24,7 @@ const StatusIndicator: React.FC<StatusIndicatorProps> = ({ status, isPaused, err
   if (status === 'connecting') {
     return (
       <div className="absolute inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50 z-10">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-white"></div>
+        <LoadingSpinner size="lg" color="white" />
       </div>
     );
   }

@@ -1,6 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { User, Users, Search, Filter, X, Check, Loader2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { User, Search, Filter, X, Check, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Worker, getWorkers } from '../../../../../services/workerService';
+import LoadingSpinner from '../../../../common/LoadingSpinner';
+import EmptyState, { Users } from '../../../../common/EmptyState';
 
 interface WorkerCardProps {
   farmId: string;
@@ -243,8 +245,7 @@ const WorkerCard: React.FC<WorkerCardProps> = ({ farmId, className = "" }) => {
       {/* Main Content Area */}
       {isLoading ? (
         <div className="flex-1 flex flex-col items-center justify-center py-8">
-          <Loader2 className="animate-spin text-primary mb-2" size={24} />
-          <span className="text-sm text-gray-500">Loading workers...</span>
+          <LoadingSpinner size="md" text="Loading workers..." />
         </div>
       ) : error ? (
         <div className="flex-1 flex items-center justify-center text-center p-6">
@@ -332,25 +333,23 @@ const WorkerCard: React.FC<WorkerCardProps> = ({ farmId, className = "" }) => {
             </>
           ) : (
             <div className="flex-1 flex items-center justify-center py-8">
-              <div className="text-center">
-                <div className="text-gray-400 mb-2">
-                  <Users size={32} className="mx-auto" />
-                </div>
-                <p className="text-sm text-gray-500">
-                  {searchTerm ? 'No workers match your search' : 'No workers match filters'}
-                </p>
-              </div>
+              <EmptyState
+                icon={Users}
+                title="No Workers Found"
+                description={searchTerm ? 'No workers match your search' : 'No workers match filters'}
+                className="py-0"
+              />
             </div>
           )}
         </div>
       ) : (
         <div className="flex-1 flex items-center justify-center py-8">
-          <div className="text-center">
-            <div className="text-gray-300 mb-2">
-              <Users size={32} className="mx-auto" />
-            </div>
-            <p className="text-sm text-gray-500">No workers assigned</p>
-          </div>
+          <EmptyState
+            icon={Users}
+            title="No Workers Assigned"
+            description="No workers assigned to this farm yet"
+            className="py-0"
+          />
         </div>
       )}
     </div>

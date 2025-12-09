@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { GoogleMap, Polygon } from '@react-google-maps/api';
 import api from '../../../services/api';
 import { Map, MapPin } from 'lucide-react';
+import EmptyState from '../../common/EmptyState';
 
 // Define device status type
 type DeviceStatus = 'online' | 'offline' | 'low_battery';
@@ -196,33 +197,14 @@ const FarmMapCard: React.FC<FarmMapCardProps> = ({
   if (error && (error.includes('No farm registered') || error.includes('No farm data found'))) {
     return (
       <div className="bg-white p-4 rounded-lg shadow-md w-full h-full flex flex-col items-center justify-center">
-        <div className="text-center max-w-md">
-          {/* Step Indicator */}
-          <div className="mb-2">
-            <span className="inline-block px-3 py-1 bg-blue-100 text-blue-700 text-xs font-semibold rounded-full">
-              Step 1 of 4
-            </span>
-          </div>
-
-          {/* Icon */}
-          <div className="mb-4 text-gray-300">
-            <Map className="h-24 w-24 mx-auto" strokeWidth={1.5} />
-          </div>
-
-          {/* Message */}
-          <h3 className="text-xl font-semibold text-gray-700 mb-2">No Farm Registered</h3>
-          <p className="text-gray-500 mb-4">
-            You haven't created a farm yet. Get started by creating and drawing your farm boundary in Farm Management.
-          </p>
-
-          {/* Action button */}
-          <button
-            onClick={onViewFullMap}
-            className="px-6 py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition-colors"
-          >
-            Go to Farm Management
-          </button>
-        </div>
+        <EmptyState
+          icon={MapPin}
+          title="No Farm Registered"
+          description="You haven't created a farm yet. Get started by creating and drawing your farm boundary in Farm Management."
+          actionLabel="Go to Farm Management"
+          onAction={onViewFullMap}
+          variant="warning"
+        />
       </div>
     );
   }

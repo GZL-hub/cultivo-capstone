@@ -1,6 +1,7 @@
 import React from 'react';
 import { Worker } from '../../../../services/workerService';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import EmptyState, { Users } from '../../../common/EmptyState';
 
 interface WorkerTableProps {
   workers: Worker[];
@@ -90,13 +91,15 @@ const WorkerTable: React.FC<WorkerTableProps> = ({
           </tbody>
         </table>
       </div>
-      
+
       {workers.length === 0 && (
-        <div className="text-center py-8 text-gray-500">
-          No workers found matching your search criteria
-        </div>
+        <EmptyState
+          icon={Users}
+          title="No Workers Found"
+          description="No workers found matching your search criteria"
+        />
       )}
-      
+
       {/* Pagination */}
       {totalPages > 1 && (
         <div className="px-6 py-3 flex items-center justify-between border-t border-gray-200 bg-gray-50">

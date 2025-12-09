@@ -3,7 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { getSensorsByFarm, ISensor, getActiveSensors, calculateSensorAverages, getSensorHealthCounts } from '../../services/sensorService';
 import { getFarms } from '../../services/farmService';
 import authService from '../../services/authService';
-import { Activity, AlertCircle, Loader, RefreshCw } from 'lucide-react';
+import { Activity, AlertCircle, RefreshCw } from 'lucide-react';
+import LoadingSpinner from '../common/LoadingSpinner';
+import EmptyState, { MapPin } from '../common/EmptyState';
 
 // Import metric cards
 import MoistureCard from './cards/MoistureCard';
@@ -117,8 +119,7 @@ const SensorMonitoringDashboard: React.FC = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-full">
-        <Loader className="w-8 h-8 animate-spin text-blue-600" />
-        <span className="ml-3 text-gray-600">Loading sensors...</span>
+        <LoadingSpinner size="lg" text="Loading sensors..." />
       </div>
     );
   }
@@ -126,28 +127,27 @@ const SensorMonitoringDashboard: React.FC = () => {
   if (error) {
     return (
       <div className="flex items-center justify-center h-full">
-        <div className="text-center max-w-md">
-          <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-3" />
-          <p className="text-red-600 font-medium mb-2">{error}</p>
-          {error.includes('No farm found') ? (
-            <div>
-              <p className="text-gray-600 mb-4">Create your farm to start adding sensors</p>
-              <button
-                onClick={() => navigate('/farm/overview')}
-                className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700"
-              >
-                Create Farm
-              </button>
-            </div>
-          ) : (
+        {error.includes('No farm found') ? (
+          <EmptyState
+            icon={MapPin}
+            title="No Farm Found"
+            description="Create your farm to start monitoring sensors"
+            actionLabel="Create Farm"
+            onAction={() => navigate('/farm/overview')}
+            variant="warning"
+          />
+        ) : (
+          <div className="text-center max-w-md">
+            <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-3" />
+            <p className="text-red-600 font-medium mb-2">{error}</p>
             <button
               onClick={fetchUserFarm}
               className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
             >
               Retry
             </button>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     );
   }
@@ -209,19 +209,13 @@ const SensorMonitoringDashboard: React.FC = () => {
       {/* Content */}
       <div className="px-4 py-6">
         {sensors.length === 0 ? (
-          <div className="flex-1 flex items-center justify-center">
-            <div className="text-center">
-              <Activity className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-gray-700 mb-2">No Sensors Found</h3>
-              <p className="text-gray-500 mb-4">Add sensors from the Sensor Management page</p>
-              <button
-                onClick={() => navigate('/device-settings/sensors')}
-                className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
-              >
-                Go to Sensor Management
-              </button>
-            </div>
-          </div>
+          <EmptyState
+            icon={Activity}
+            title="No Sensors Found"
+            description="Add sensors from the Sensor Management page"
+            actionLabel="Go to Sensor Management"
+            onAction={() => navigate('/device-settings/sensors')}
+          />
         ) : (
           <div className="space-y-6">
             {/* Primary Metrics - Top Row */}

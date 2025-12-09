@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { useJsApiLoader } from '@react-google-maps/api';
 import Login from './components/login/Login';
 import Layout from './components/layout/Layout';
+import LoadingSpinner from './components/common/LoadingSpinner';
 import Dashboard from './components/dashboard/Dashboard';
 import Analytics from './components/analytics/Analytics';
 import FarmAnalytics from './components/analytics/FarmAnalytics';
@@ -115,10 +116,7 @@ function App() {
         />
       ) : !isLoaded ? (
         <div className="flex items-center justify-center h-screen bg-background">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-            <p className="text-text">Loading...</p>
-          </div>
+          <LoadingSpinner size="lg" text="Loading..." />
         </div>
       ) : (
         <Layout onLogout={handleLogout}>

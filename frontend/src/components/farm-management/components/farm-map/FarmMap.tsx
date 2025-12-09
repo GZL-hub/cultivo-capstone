@@ -8,6 +8,7 @@ import { toast } from 'react-hot-toast';
 import api from '../../../../services/api';
 import axios from 'axios'; // Keep for axios.isCancel check
 import { MapPin, ArrowRight } from 'lucide-react';
+import LoadingSpinner from '../../../common/LoadingSpinner';
 // Import the polygon service
 import { 
   getFarmBoundary, 
@@ -546,10 +547,7 @@ useEffect(() => {
       {/* Loading Overlay */}
       {isLoading && (
         <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-50">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500 mx-auto mb-4"></div>
-            <p className="text-gray-600 font-medium">Loading farm boundary...</p>
-          </div>
+          <LoadingSpinner size="lg" text="Loading farm boundary..." />
         </div>
       )}
 

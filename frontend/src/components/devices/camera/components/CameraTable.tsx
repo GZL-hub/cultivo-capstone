@@ -1,6 +1,7 @@
 import React from 'react';
 import { CCTV } from '../../../../services/cctvService';
 import { ExternalLink, Pencil, Trash2 } from 'lucide-react';
+import EmptyState, { Camera } from '../../../common/EmptyState';
 
 interface CameraTableProps {
   cameras: CCTV[];
@@ -46,9 +47,11 @@ const CameraTable: React.FC<CameraTableProps> = ({ cameras, onEdit, onDelete }) 
       </div>
 
       {cameras.length === 0 && (
-        <div className="text-center py-8 text-gray-500">
-          No cameras found matching your filter criteria
-        </div>
+        <EmptyState
+          icon={Camera}
+          title="No Cameras Found"
+          description="No cameras found matching your filter criteria"
+        />
       )}
     </div>
   );

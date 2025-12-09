@@ -2,6 +2,7 @@ import React from 'react';
 import { CloudRain, Thermometer, Wind, CloudOff, Eye, Gauge, Sun, Moon, Sunrise } from 'lucide-react';
 import { WiCloudy } from 'weather-icons-react';
 import WeatherIcon, { formatWeatherCondition } from './icons/WeatherIcons';
+import LoadingSpinner from '../../common/LoadingSpinner';
 /**
  * Function to get the correct icon URL based on icon base URI
  * According to Google Maps Weather API:
@@ -174,7 +175,7 @@ const CurrentWeather: React.FC<CurrentWeatherProps> = ({
   if (data.isLoading) {
     return (
       <div className={`${theme.bg} p-8 rounded-xl shadow-lg flex items-center justify-center h-96`}>
-        <div className="h-12 w-12 border-4 border-blue-300 border-t-transparent rounded-full animate-spin mr-3" />
+        <LoadingSpinner size="xl" color="white" />
       </div>
     );
   }

@@ -6,6 +6,7 @@ import DeleteConfirmModal from './components/DeleteConfirmModal';
 import { getCCTVs, createCCTV, updateCCTV, deleteCCTV, CCTV, checkAndUpdateCameraStatuses, checkCameraStatus } from '../../../services/cctvService';
 import { getFarms } from '../../../services/farmService';
 import authService from '../../../services/authService';
+import LoadingSpinner from '../../common/LoadingSpinner';
 
 const CameraDevices: React.FC = () => {
   const [cameras, setCameras] = useState<CCTV[]>([]);
@@ -224,10 +225,7 @@ const CameraDevices: React.FC = () => {
       {/* Loading Display */}
       {isLoading ? (
         <div className="flex items-center justify-center h-64 m-4">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500 mx-auto mb-4"></div>
-            <p className="text-gray-600 font-medium">Loading cameras...</p>
-          </div>
+          <LoadingSpinner size="lg" text="Loading cameras..." />
         </div>
       ) : (
         <div className="flex-1 overflow-auto p-4">
