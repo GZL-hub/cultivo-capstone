@@ -38,7 +38,7 @@ jobs:
       run: |
         gcloud builds submit --project=${{ secrets.GCP_PROJECT_ID }} \
         --config=cloudbuild.yaml \
-        --substitutions=_REACT_APP_GOOGLE_MAPS_API_KEY="${{ secrets.REACT_APP_GOOGLE_MAPS_API_KEY }}",_MONGODB_URI="${{ secrets.MONGODB_URI }}",_AR_HOSTNAME="${{ env.AR_HOSTNAME }}",_AR_REPOSITORY="${{ env.AR_REPOSITORY }}",_SERVICE_NAME="${{ env.SERVICE_NAME }}"
+        --substitutions=_REACT_APP_GOOGLE_MAPS_API_KEY="${{ secrets.REACT_APP_GOOGLE_MAPS_API_KEY }}",_MONGODB_URI="${{ secrets.MONGODB_URI }}",_JWT_SECRET="${{ secrets.JWT_SECRET }}",_AR_HOSTNAME="${{ env.AR_HOSTNAME }}",_AR_REPOSITORY="${{ env.AR_REPOSITORY }}",_SERVICE_NAME="${{ env.SERVICE_NAME }}"
     
     - name: Deploy to Cloud Run
       uses: google-github-actions/deploy-cloudrun@v1

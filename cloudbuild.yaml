@@ -1,9 +1,10 @@
 steps:
   # Build the container image
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['build', 
+    args: ['build',
        '--build-arg', 'REACT_APP_GOOGLE_MAPS_API_KEY=${_REACT_APP_GOOGLE_MAPS_API_KEY}',
        '--build-arg', 'MONGODB_URI=${_MONGODB_URI}',
+       '--build-arg', 'JWT_SECRET=${_JWT_SECRET}',
        '-t', '${_AR_HOSTNAME}/${PROJECT_ID}/${_AR_REPOSITORY}/${_SERVICE_NAME}:latest',
        '.']
   
@@ -16,6 +17,7 @@ substitutions:
   _AR_REPOSITORY: cloud-run-source-deploy
   _SERVICE_NAME: cultivo-capstone
   _MONGODB_URI: ${_MONGODB_URI}
+  _JWT_SECRET: ${_JWT_SECRET}
   _REACT_APP_GOOGLE_MAPS_API_KEY: "" # Default empty, will be overridden by --substitutions flag
 
 images:

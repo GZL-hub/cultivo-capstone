@@ -19,16 +19,20 @@ RUN npm run build
 FROM node:18 AS backend-builder
 WORKDIR /app/backend
 
-# Add MongoDB URI as build argument
+# Add MongoDB URI and JWT_SECRET as build arguments
 ARG MONGODB_URI
+ARG JWT_SECRET
 ENV MONGODB_URI=$MONGODB_URI
+ENV JWT_SECRET=$JWT_SECRET
 
 COPY backend/package*.json ./
 RUN npm install
 COPY backend/ ./
 
 # Create .env file for backend
-RUN echo "MONGODB_URI=$MONGODB_URI" > .env
+RUN echo "MONGODB_URI=$MONGODB_URI" > .env && \
+    echo "JWT_SECRET=$JWT_SECRET" >> .env && \
+    echo "PORT=8080" >> .env
 
 RUN npm run build
 
@@ -36,9 +40,12 @@ RUN npm run build
 FROM node:18-slim
 WORKDIR /app
 
-# Pass the MongoDB URI to the final image
+# Pass the MongoDB URI and JWT_SECRET to the final image
 ARG MONGODB_URI
+ARG JWT_SECRET
 ENV MONGODB_URI=$MONGODB_URI
+ENV JWT_SECRET=$JWT_SECRET
+ENV PORT=8080
 
 # Copy backend build
 COPY --from=backend-builder /app/backend/dist ./dist
