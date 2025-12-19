@@ -2,6 +2,7 @@ import React from 'react';
 import { CCTV } from '../../../../services/cctvService';
 import { ExternalLink, Pencil, Trash2 } from 'lucide-react';
 import EmptyState, { Camera } from '../../../common/EmptyState';
+import CameraSnapshot from './CameraSnapshot';
 
 interface CameraTableProps {
   cameras: CCTV[];
@@ -84,13 +85,12 @@ const CameraRow: React.FC<CameraRowProps> = ({ camera, onEdit, onDelete }) => {
     <tr className="hover:bg-gray-50">
       <td className="px-6 py-4 whitespace-nowrap">
         <div className="flex items-center">
-          <div className="h-10 w-10 flex-shrink-0 bg-gray-100 rounded overflow-hidden">
-            <div className="h-10 w-10 flex items-center justify-center text-gray-400">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-              </svg>
-            </div>
-          </div>
+          <CameraSnapshot
+            streamUrl={camera.streamUrl}
+            cameraName={camera.name}
+            className="h-16 w-28 flex-shrink-0 rounded border border-gray-200"
+            onClick={camera.streamUrl ? openStream : undefined}
+          />
           <div className="ml-4">
             <div className="text-sm font-medium text-gray-900">{camera.name}</div>
             <div className="text-xs text-gray-500">{camera._id}</div>

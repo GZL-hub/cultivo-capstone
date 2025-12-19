@@ -8,7 +8,8 @@ import {
   markAlertAsRead,
   resolveAlert,
   deleteAlert,
-  getAlertStats
+  getAlertStats,
+  createAlert
 } from '../../services/alertService';
 import { getFarms } from '../../services/farmService';
 import authService from '../../services/authService';
@@ -18,6 +19,7 @@ import AlertsStats from './components/AlertsStats';
 import AlertsFilters from './components/AlertsFilters';
 import AlertsList from './components/AlertsList';
 import EmptyAlertsState from './components/EmptyAlertsState';
+import AddAlertModal from './components/AddAlertModal';
 import LoadingSpinner from '../common/LoadingSpinner';
 import EmptyState, { MapPin } from '../common/EmptyState';
 
@@ -32,6 +34,7 @@ const Alerts = () => {
     isResolved?: boolean;
   }>({});
   const [showFilters, setShowFilters] = useState(false);
+  const [showAddModal, setShowAddModal] = useState(false);
   const [farmId, setFarmId] = useState<string | null>(null);
   const [farmName, setFarmName] = useState<string>('');
 
@@ -159,6 +162,24 @@ const Alerts = () => {
     setFilter({});
   };
 
+  const handleCreateAlert = async (alertData: {
+    type: AlertType;
+    severity: AlertSeverity;
+    title: string;
+    message: string;
+    sourceId?: string;
+    sourceName?: string;
+  }) => {
+    if (!farmId) {
+      throw new Error('No farm selected');
+    }
+
+    await createAlert(farmId, alertData);
+    // Refresh alerts and stats
+    await fetchAlerts();
+    await fetchStats();
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-full">
@@ -204,6 +225,14 @@ const Alerts = () => {
         alertCount={alerts.length}
         showFilters={showFilters}
         onToggleFilters={() => setShowFilters(!showFilters)}
+        onCreateAlert={() => setShowAddModal(true)}
+      />
+
+      {/* Add Alert Modal */}
+      <AddAlertModal
+        isOpen={showAddModal}
+        onClose={() => setShowAddModal(false)}
+        onSubmit={handleCreateAlert}
       />
 
       {/* Content */}

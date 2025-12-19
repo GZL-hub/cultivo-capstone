@@ -1,18 +1,20 @@
 import React from 'react';
-import { Bell, Filter } from 'lucide-react';
+import { Bell, Filter, Plus } from 'lucide-react';
 
 interface AlertsHeaderProps {
   farmName: string;
   alertCount: number;
   showFilters: boolean;
   onToggleFilters: () => void;
+  onCreateAlert: () => void;
 }
 
 const AlertsHeader: React.FC<AlertsHeaderProps> = ({
   farmName,
   alertCount,
   showFilters,
-  onToggleFilters
+  onToggleFilters,
+  onCreateAlert
 }) => {
   return (
     <div className="bg-white shadow-sm border-b border-gray-200 z-10">
@@ -29,17 +31,26 @@ const AlertsHeader: React.FC<AlertsHeaderProps> = ({
               </p>
             </div>
           </div>
-          <button
-            onClick={onToggleFilters}
-            className={`flex items-center px-4 py-2 rounded-lg border transition-colors ${
-              showFilters
-                ? 'bg-primary-50 border-primary-300 text-primary-700'
-                : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
-            }`}
-          >
-            <Filter className="w-4 h-4 mr-2" />
-            Filters
-          </button>
+          <div className="flex items-center space-x-3">
+            <button
+              onClick={onCreateAlert}
+              className="flex items-center px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Create Alert
+            </button>
+            <button
+              onClick={onToggleFilters}
+              className={`flex items-center px-4 py-2 rounded-lg border transition-colors ${
+                showFilters
+                  ? 'bg-primary-50 border-primary-300 text-primary-700'
+                  : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+              }`}
+            >
+              <Filter className="w-4 h-4 mr-2" />
+              Filters
+            </button>
+          </div>
         </div>
       </div>
     </div>
