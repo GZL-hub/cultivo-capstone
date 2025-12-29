@@ -37,12 +37,6 @@ app.use('/api/cctvs', cctvRoutes);
 app.use('/api', sensorRoutes);
 app.use('/api', alertRoutes);
 
-// Basic route for testing
-app.get('/api/message', (req, res) => {
-  console.log('Message endpoint accessed');
-  res.status(200).json({ message: 'ok', success: true });
-});
-
 // IMPORTANT: Serve static frontend files from public directory
 app.use(express.static(path.join(__dirname, '../public')));
 
